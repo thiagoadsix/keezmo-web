@@ -33,7 +33,7 @@ export default async function DashboardPage() {
             <div className="hidden sm:flex flex-col">
               <h1 className="text-lg sm:text-2xl font-bold">Olá, Thiago!</h1>
               <p className="text-xs sm:text-sm text-neutral-500">
-                {new Intl.DateTimeFormat("pt-BR", {
+                Hoje é {new Intl.DateTimeFormat("pt-BR", {
                   weekday: "long",
                   day: "numeric",
                   month: "long",
