@@ -6,6 +6,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { ptBR } from "@clerk/localizations";
 import { dark } from "@clerk/themes";
 import Sidebar from "./components/sidebar";
+import { MobileSidebarProvider } from "./contexts/mobile-sidebar";
 
 export const metadata: Metadata = {
   title: "Memora",
@@ -44,14 +45,16 @@ export default function RootLayout({
             attribute="class"
             enableSystem={true}
           >
-            <div className="flex h-screen">
-              <SignedIn>
-                <Sidebar />
-              </SignedIn>
-              <main className="flex-1 overflow-y-auto px-8 py-4">
-                {children}
-              </main>
-            </div>
+            <MobileSidebarProvider>
+              <div className="flex h-screen">
+                <SignedIn>
+                  <Sidebar />
+                </SignedIn>
+                <main className="flex-1 overflow-y-auto px-8 py-4">
+                  {children}
+                </main>
+              </div>
+            </MobileSidebarProvider>
           </ThemeProvider>
         </body>
       </html>
