@@ -19,29 +19,34 @@ export default function StatsOverview() {
   const { totalDecks, totalCards, totalStudySessions } = mockedStats;
 
   return (
-    <div className="lg:grid lg:grid-cols-3 lg:gap-6 flex overflow-x-auto snap-x snap-mandatory gap-6" style={{ scrollbarWidth: "none" }}>
-      <div className="flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
+    <div
+      className="lg:grid lg:grid-cols-3 lg:gap-6 flex overflow-x-auto snap-x snap-mandatory gap-4 relative"
+      style={{ scrollbarWidth: "none" }}
+    >
+      <div className="w-[calc(100%-3rem)] flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-4 sm:p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
         <div className="flex flex-col">
-          <h3 className="text-2xl font-bold">Total de Decks</h3>
-          <p className="text-2xl font-extralight">{totalDecks}</p>
+          <h3 className="text-lg sm:text-2xl font-bold">Total de Decks</h3>
+          <p className="text-lg sm:text-2xl font-extralight">{totalDecks}</p>
         </div>
-        <FolderOpen className="text-white w-8 h-8" />
+        <FolderOpen className="text-white w-6 h-6 sm:w-8 sm:h-8" />
       </div>
 
-      <div className="flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
+      <div className="w-[calc(100%-3rem)] flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-4 sm:p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
         <div className="flex flex-col">
-          <h3 className="text-2xl font-bold">Total de Cards</h3>
-          <p className="text-2xl font-extralight">{totalCards}</p>
+          <h3 className="text-lg sm:text-2xl font-bold">Total de Cards</h3>
+          <p className="text-lg sm:text-2xl font-extralight">{totalCards}</p>
         </div>
-        <CardsIcon className="text-white w-8 h-8" />
+        <CardsIcon className="text-white w-6 h-6 sm:w-8 sm:h-8" />
       </div>
 
-      <div className="flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
+      <div className="w-[calc(100%-3rem)] flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-4 sm:p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
         <div className="flex flex-col">
-          <h3 className="text-2xl font-bold">Sessões de Estudos</h3>
-          <p className="text-2xl font-extralight">{totalStudySessions}</p>
+          <h3 className="text-lg sm:text-2xl font-bold">Sessões</h3>
+          <p className="text-lg sm:text-2xl font-extralight">
+            {totalStudySessions}
+          </p>
         </div>
-        <BookCheck className="text-white w-8 h-8" />
+        <BookCheck className="text-white w-6 h-6 sm:w-8 sm:h-8" />
       </div>
     </div>
   );
