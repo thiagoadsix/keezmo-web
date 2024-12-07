@@ -1,62 +1,48 @@
 "use client";
 
-import { BookOpen, Files, Folders } from "lucide-react";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { BookCheck, BookOpen, Files, FolderOpen, Folders } from "lucide-react";
+import { CardsIcon } from "../icons/cards";
 
 type Stats = {
   totalDecks: number;
   totalCards: number;
   totalStudySessions: number;
-  hits: number;
-  misses: number;
 };
 
 const mockedStats: Stats = {
   totalDecks: 5,
   totalCards: 120,
   totalStudySessions: 30,
-  hits: 250,
-  misses: 50,
 };
 
 export default function StatsOverview() {
-  const { totalDecks, totalCards, totalStudySessions, hits, misses } =
-    mockedStats;
+  const { totalDecks, totalCards, totalStudySessions } = mockedStats;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Folders className="h-4 w-4" />
-            Total Decks
-          </CardTitle>
-          <CardDescription>{totalDecks}</CardDescription>
-        </CardHeader>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Files className="h-4 w-4" />
-            Total Cards
-          </CardTitle>
-          <CardDescription>{totalCards}</CardDescription>
-        </CardHeader>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            Study Sessions
-          </CardTitle>
-          <CardDescription>{totalStudySessions}</CardDescription>
-        </CardHeader>
-      </Card>
+    <div className="lg:grid lg:grid-cols-3 lg:gap-6 flex overflow-x-auto snap-x snap-mandatory gap-6" style={{ scrollbarWidth: "none" }}>
+      <div className="flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
+        <div className="flex flex-col">
+          <h3 className="text-2xl font-bold">Total de Decks</h3>
+          <p className="text-2xl font-extralight">{totalDecks}</p>
+        </div>
+        <FolderOpen className="text-white w-8 h-8" />
+      </div>
+
+      <div className="flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
+        <div className="flex flex-col">
+          <h3 className="text-2xl font-bold">Total de Cards</h3>
+          <p className="text-2xl font-extralight">{totalCards}</p>
+        </div>
+        <CardsIcon className="text-white w-8 h-8" />
+      </div>
+
+      <div className="flex-shrink-0 snap-center flex flex-row items-center justify-between rounded-lg p-6 bg-gradient-to-r from-[#4AF8FF]/15 from-0% to-transparent">
+        <div className="flex flex-col">
+          <h3 className="text-2xl font-bold">Sessões de Estudos</h3>
+          <p className="text-2xl font-extralight">{totalStudySessions}</p>
+        </div>
+        <BookCheck className="text-white w-8 h-8" />
+      </div>
     </div>
   );
 }

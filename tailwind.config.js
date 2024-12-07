@@ -9,9 +9,16 @@ module.exports = {
   theme: {
   	extend: {
   		colors: {
-  			'primary-600': '#6C47FF',
-  			'primary-700': '#5639CC',
-  			'primary-50': '#F4F2FF',
+  			'primary-50': '#E5FEFF',
+  			'primary-100': '#CCFDFF',
+  			'primary-200': '#99FBFF',
+  			'primary-300': '#66F9FF',
+  			'primary-400': '#4AF8FF',
+  			'primary-500': '#1AF6FF',
+  			'primary-600': '#00E1EC',
+  			'primary-700': '#00B3BA',
+  			'primary-800': '#008589',
+  			'primary-900': '#005657',
   			'success-700': '#027A48',
   			'success-50': '#ECFDF3',
   			background: 'hsl(var(--background))',

@@ -7,11 +7,8 @@ import { ptBR } from "@clerk/localizations";
 import { dark } from "@clerk/themes";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://clerk-next-app.vercel.app/"),
-  title: "Next.js Clerk Template",
-  description:
-    "A simple and powerful Next.js template featuring authentication and user management powered by Clerk.",
-  openGraph: { images: ["/og.png"] },
+  title: "Memora",
+  description: "An AI-powered flashcard generator for your PDFs.",
 };
 
 const geistSans = localFont({
@@ -44,8 +41,7 @@ export default function RootLayout({
         <body className={`min-h-screen flex flex-col antialiased`}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            // enableSystem={true}
+            enableSystem={true}
           >
             {children}
           </ThemeProvider>
