@@ -3,6 +3,7 @@ import { Button } from "@/app/components/ui/button";
 import { Plus } from "lucide-react";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
+import Link from "next/link";
 
 export default function DecksPage() {
   const data = [
@@ -50,12 +51,14 @@ export default function DecksPage() {
         mobileTitle="Decks"
         showRightContentOnMobile={true}
         rightContent={
-          <button className="flex items-center gap-1 sm:gap-2 border border-neutral-400 rounded-3xl p-2 sm:p-3 bg-[#10111F] hover:border-primary group">
+          <Link href="/decks/create">
+            <button className="flex items-center gap-1 sm:gap-2 border border-neutral-400 rounded-3xl p-2 sm:p-3 bg-[#10111F] hover:border-primary group">
             <Plus className="h-4 w-4 text-neutral-200 group-hover:text-primary" />
             <p className="text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-primary">
               Adicionar deck
             </p>
           </button>
+          </Link>
         }
       />
 
