@@ -1,10 +1,69 @@
+"use client";
+
+import { useState } from "react";
 import Header from "@/app/components/header";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { PdfIcon } from "@/app/icons/pdf";
+import { Check, FolderOpen, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export default function CreateDeckPage() {
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [createdDeckId, setCreatedDeckId] = useState<string | null>(null);
+
+  const handleCreateDeck = () => {
+    setCreatedDeckId("new-deck-id");
+    setIsCompleted(true);
+  };
+
+  if (isCompleted) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="bg-[#10111F] rounded-md border border-neutral-800 p-8 w-full max-w-xl flex flex-col items-center gap-6">
+          {/* Success Icon */}
+          <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+            <Check className="h-8 w-8 text-green-500" />
+          </div>
+
+          <div className="text-center gap-2 flex flex-col items-center">
+            <h2 className="text-2xl font-bold">
+              Deck criado com sucesso!
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              O Deck já está disponível na página de Decks.
+            </p>
+          </div>
+
+          <div className="flex gap-4 w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              asChild
+            >
+              <Link href="/decks" className="flex items-center justify-center gap-2">
+                <FolderOpen className="h-4 w-4" />
+                Ver todos os Decks
+              </Link>
+            </Button>
+            <Button
+              className="w-full"
+              asChild
+            >
+              <Link
+                href={`/decks/${createdDeckId}/study`}
+                className="flex items-center justify-center gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                Estudar deck criado
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <Header
@@ -80,7 +139,7 @@ export default function CreateDeckPage() {
             <Button variant="destructive" asChild>
               <Link href="/decks">Cancelar</Link>
             </Button>
-            <Button>Criar deck</Button>
+            <Button onClick={handleCreateDeck}>Criar deck</Button>
           </div>
         </div>
       </main>
