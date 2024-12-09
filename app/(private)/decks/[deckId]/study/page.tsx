@@ -1,94 +1,231 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import CardStudy from '@/app/components/card-study';
-import Link from 'next/link';
-import { Button } from '@/app/components/ui/button';
-import {Skeleton} from '@/app/components/ui/skeleton';
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/app/components/ui/button";
+import { ArrowLeft, Check, X } from "lucide-react";
 
-type Card = {
-  cardId: string;
+type Question = {
+  id: string;
   question: string;
   options: string[];
   correctAnswer: string;
-  createdAt: string;
 };
 
 export default function StudyPage() {
+  const router = useRouter();
   const { deckId } = useParams();
-  const [cards, setCards] = useState<Card[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
+  const [remainingQuestions, setRemainingQuestions] = useState(5);
 
-  const fetchCards = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Replace this with your actual API call
-      const response = {
-        cards: [
-          {
-            cardId: '0c73cfc2-1e45-4917-9889-f2cfac0c8963',
-            question: "What operation is represented by the symbol '×'?",
-            options: ['Multiplication', 'Addition', 'Subtraction', 'Division'],
-            correctAnswer: 'Multiplication',
-            createdAt: '2024-11-28T20:04:11.826369',
-          },
-          {
-            cardId: '29577bea-6325-466a-8088-da77604711f7',
-            question: 'What is the metric conversion for 1 liter in milliliters?',
-            options: ['1000 mL', '100 mL', '10 mL', '500 mL'],
-            correctAnswer: '1000 mL',
-            createdAt: '2024-11-28T20:04:11.814422',
-          },
-          // Add more cards with varying correct answers
-        ],
-      };
+  const questions: Question[] = [
+    {
+      id: "1",
+      question: "Qual das seguintes afirmações sobre o Brasil está correta?",
+      options: [
+        "O Brasil é formado por 26 estados e 1 distrito federal, com sua capital localizada em São Paulo.",
+        "A moeda oficial do Brasil é o dólar, e o país possui um clima predominantemente tropical.",
+        "O Brasil é o maior país da América do Sul, sua capital é Brasília, e sua língua oficial é o português.",
+        "A maior floresta tropical do mundo, a Floresta Amazônica, está localizada inteiramente no território brasileiro.",
+        "O Brasil foi colonizado por espanhóis e tornou-se independente no século XIX.",
+      ],
+      correctAnswer:
+        "O Brasil é o maior país da América do Sul, sua capital é Brasília, e sua língua oficial é o português.",
+    },
+    {
+      id: "2",
+      question: "Qual é a principal função do Poder Judiciário no Brasil?",
+      options: [
+        "Criar e aprovar leis",
+        "Interpretar as leis e julgar conflitos",
+        "Executar as políticas públicas",
+        "Comandar as forças armadas",
+        "Administrar os recursos do tesouro nacional",
+      ],
+      correctAnswer: "Interpretar as leis e julgar conflitos",
+    },
+    {
+      id: "3",
+      question:
+        "Qual destes é um direito fundamental garantido pela Constituição brasileira?",
+      options: [
+        "Direito de não pagar impostos",
+        "Direito de portar armas livremente",
+        "Direito à liberdade de expressão",
+        "Direito de ignorar as leis",
+        "Direito de escolher não trabalhar",
+      ],
+      correctAnswer: "Direito à liberdade de expressão",
+    },
+    {
+      id: "4",
+      question: "O que caracteriza o sistema político brasileiro?",
+      options: [
+        "Monarquia constitucional",
+        "República parlamentarista",
+        "República presidencialista",
+        "Estado unitário",
+        "Confederação de estados",
+      ],
+      correctAnswer: "República presidencialista",
+    },
+    {
+      id: "5",
+      question: "Qual é a principal fonte de energia elétrica no Brasil?",
+      options: [
+        "Energia Nuclear",
+        "Energia Solar",
+        "Energia Eólica",
+        "Energia Hidrelétrica",
+        "Energia Térmica",
+      ],
+      correctAnswer: "Energia Hidrelétrica",
+    },
+  ];
 
-      // Simulate an API call delay
-      setTimeout(() => {
-        setCards(response.cards);
-        setLoading(false);
-      }, 1000);
-    } catch (err) {
-      setError('Failed to fetch cards.');
-      setLoading(false);
-    }
+  const handleOptionClick = (option: string) => {
+    if (isAnswerConfirmed) return;
+    setSelectedOption(option);
   };
 
-  useEffect(() => {
-    if (deckId) {
-      fetchCards();
-    }
-  }, [deckId]);
+  const handleConfirmAnswer = () => {
+    if (!selectedOption) return;
+    setIsAnswerConfirmed(true);
+    setRemainingQuestions((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    setSelectedOption(null);
+    setIsAnswerConfirmed(false);
+    setCurrentQuestion((prev) => prev + 1);
+  };
 
   return (
-    <div className="max-w-[75rem] w-full mx-auto p-4">
-      <div className="mb-4">
-        <Button variant="outline" asChild>
-          <Link href={`/decks/${deckId}`}>
-            &larr; Back to Deck
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto p-4">
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/decks" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para os Decks
           </Link>
         </Button>
+        <div className="flex items-center gap-2 border border-neutral-800 rounded-md bg-[#10111F] p-2">
+          <div className="relative w-8 h-8">
+            <svg className="w-full h-full" viewBox="0 0 100 100">
+              {/* Background circle */}
+              <circle
+                className="stroke-neutral-800 fill-none"
+                cx="50"
+                cy="50"
+                r="45"
+                strokeWidth="10"
+              />
+              {/* Progress circle */}
+              <circle
+                className="stroke-primary fill-none"
+                cx="50"
+                cy="50"
+                r="45"
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 45}`}
+                strokeDashoffset={
+                  2 * Math.PI * 45 * (1 - currentQuestion / questions.length)
+                }
+                transform="rotate(-90 50 50)"
+              />
+              <text
+                x="50"
+                y="50"
+                className="fill-white text-xl font-medium"
+                dominantBaseline="middle"
+                textAnchor="middle"
+              >
+                {Math.round((currentQuestion / questions.length) * 100)}%
+              </text>
+            </svg>
+          </div>
+          <span className="text-sm">Faltam {remainingQuestions} questões</span>
+        </div>
       </div>
-      {loading ? (
-        <div>
-          <Skeleton className="h-8 w-1/4 mb-4" />
-          <Skeleton className="h-6 w-1/2 mb-2" />
-          <Skeleton className="h-6 w-1/3 mb-6" />
-          <Skeleton className="h-10 w-1/4" />
+
+      <div className="bg-[#10111F] border border-neutral-800 rounded-md p-8 flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl font-medium">
+            {questions[currentQuestion].question}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Selecione uma das opções abaixo.
+          </p>
         </div>
-      ) : error ? (
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={fetchCards}>Retry</Button>
+
+        <div className="flex flex-col gap-4">
+          {questions[currentQuestion].options.map((option, index) => {
+            const isCorrect =
+              option === questions[currentQuestion].correctAnswer;
+            const isSelected = option === selectedOption;
+
+            return (
+              <button
+                key={index}
+                onClick={() => handleOptionClick(option)}
+                disabled={isAnswerConfirmed}
+                className={`p-4 rounded-lg text-left transition-colors flex flex-col items-start gap-2 ${
+                  isAnswerConfirmed
+                    ? isCorrect
+                      ? "bg-green-500/20 text-green-500"
+                      : isSelected
+                      ? "bg-red-500/20 text-red-500"
+                      : "bg-neutral-800/50 text-neutral-400"
+                    : isSelected
+                    ? "bg-white/10 border border-white/20"
+                    : "hover:bg-white/5 bg-neutral-800/30"
+                }`}
+              >
+                {isAnswerConfirmed && isSelected && (
+                  <div className="flex items-center gap-2">
+                    {isCorrect ? (
+                      <>
+                        <Check className="h-5 w-5 text-green-500" />
+                        <span>Resposta correta</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-5 w-5 text-red-500" />
+                        <span>Resposta incorreta</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                {isAnswerConfirmed && isCorrect && !isSelected && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span>Resposta correta</span>
+                  </div>
+                )}
+                <span>{option}</span>
+              </button>
+            );
+          })}
         </div>
-      ) : cards.length === 0 ? (
-        <p className="text-center">No cards available for this deck.</p>
-      ) : (
-        <CardStudy cards={cards} />
-      )}
+
+        <div className="flex justify-end">
+          {!isAnswerConfirmed ? (
+            <Button
+              onClick={handleConfirmAnswer}
+              disabled={!selectedOption}
+              variant="outline"
+            >
+              Confirmar resposta
+            </Button>
+          ) : (
+            <Button onClick={handleNext}>Próxima questão →</Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
