@@ -1,55 +1,65 @@
-"use client"
+"use client";
 
-import { ColumnDef } from "@tanstack/react-table"
-import { Deck } from "../decks/columns"
-import { cn } from "@/lib/utils"
-import { Badge } from "@/app/components/ui/badge"
+import { ColumnDef } from "@tanstack/react-table";
+import { Deck } from "../decks/columns";
+import { Badge } from "@/app/components/ui/badge";
 
 export type StudySession = {
-  id: string
-  deckId: string
-  hits: number
-  misses: number
-  deck: Deck
-  createdAt: string
-}
+  id: string;
+  deckId: string;
+  hits: number;
+  misses: number;
+  deck: Deck;
+  createdAt: string;
+};
 
 export const columns: ColumnDef<StudySession>[] = [
   {
     id: "deckTitle",
     accessorFn: (row) => row.deck.title,
-    header: "DECK ESTUDADO",
-  },
-  {
-    accessorFn: (row) => row.deck.totalCards,
-    header: "CARDS",
+    header: "DECK",
+    cell: ({ row }) => {
+      const deck = row.original.deck;
+      return (
+        <div className="flex flex-col">
+          <span>{deck.title}</span>
+          <span className="text-xs text-muted-foreground">
+  {deck.totalCards} cards
+</span>
+
+        </div>
+      );
+    },
   },
   {
     accessorKey: "hits",
     header: "ACERTOS",
     cell: ({ row }) => {
       const hits = row.getValue("hits") as number;
-
       return (
-        <Badge className="bg-green-500 text-white hover:bg-green-500/80">{hits}</Badge>
-      )
-    }
+        <Badge className="bg-green-500 text-white hover:bg-green-500/80">
+          {hits}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "misses",
     header: "ERROS",
     cell: ({ row }) => {
       const misses = row.getValue("misses") as number;
-
-      return (
-        <Badge variant="destructive">
-          {misses}
-        </Badge>
-      )
-    }
+      return <Badge variant="destructive">{misses}</Badge>;
+    },
   },
   {
     accessorKey: "createdAt",
-    header: "DATA DE CRIAÇÃO",
+    header: "DATA",
+    cell: ({ row }) => {
+      const date = row.getValue("createdAt") as string;
+      return <div className="hidden md:block">{date}</div>;
+    },
+    meta: {
+      className: "hidden md:table-cell",
+    },
   },
-]
+];
