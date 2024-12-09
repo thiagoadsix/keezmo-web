@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/app/components/ui/button";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, Check, X, BookOpen, RotateCw, FolderOpen } from "lucide-react";
 
 type Question = {
   id: string;
@@ -20,6 +20,8 @@ export default function StudyPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
   const [remainingQuestions, setRemainingQuestions] = useState(5);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [hits, setHits] = useState(0);
 
   const questions: Question[] = [
     {
@@ -95,13 +97,88 @@ export default function StudyPage() {
     if (!selectedOption) return;
     setIsAnswerConfirmed(true);
     setRemainingQuestions((prev) => prev - 1);
+
+    if (selectedOption === questions[currentQuestion].correctAnswer) {
+      setHits(prev => prev + 1);
+    }
   };
 
   const handleNext = () => {
+    if (currentQuestion === questions.length - 1) {
+      setIsCompleted(true);
+      return;
+    }
+
     setSelectedOption(null);
     setIsAnswerConfirmed(false);
     setCurrentQuestion((prev) => prev + 1);
   };
+
+  if (isCompleted) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="bg-[#10111F] rounded-md border border-neutral-800 p-8 w-full max-w-xl flex flex-col items-center gap-6">
+          <div className="relative w-24 h-24">
+            <svg className="w-full h-full" viewBox="0 0 100 100">
+              <circle
+                className="stroke-primary fill-none"
+                cx="50"
+                cy="50"
+                r="45"
+                strokeWidth="10"
+              />
+              <text
+                x="50"
+                y="50"
+                className="fill-white text-xl font-medium"
+                dominantBaseline="middle"
+                textAnchor="middle"
+              >
+                100%
+              </text>
+            </svg>
+          </div>
+
+          <div className="text-center gap-4 flex flex-col items-center">
+            <h2 className="text-2xl font-bold mb-2">
+              Parabéns! Deck estudado com sucesso.
+            </h2>
+            <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full">
+              <Check className="h-4 w-4" />
+              <span>Você acertou {hits} questões de {questions.length}</span>
+            </div>
+          </div>
+
+          <div className="flex gap-4 w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              asChild
+            >
+              <Link href="/decks" className="flex items-center gap-2">
+                <FolderOpen className="h-4 w-4" />
+                Estudar outro Deck
+              </Link>
+            </Button>
+            <Button
+              className="w-full flex items-center justify-center gap-2"
+              onClick={() => {
+                setCurrentQuestion(0);
+                setSelectedOption(null);
+                setIsAnswerConfirmed(false);
+                setIsCompleted(false);
+                setRemainingQuestions(questions.length);
+                setHits(0);
+              }}
+            >
+              <RotateCw className="h-4 w-4" />
+              Estudar novamente
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto p-4">
