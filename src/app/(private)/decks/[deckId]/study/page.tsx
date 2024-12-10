@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
@@ -16,77 +16,58 @@ type Question = {
 export default function StudyPage() {
   const router = useRouter();
   const { deckId } = useParams();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
-  const [remainingQuestions, setRemainingQuestions] = useState(5);
+  const [remainingQuestions, setRemainingQuestions] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [hits, setHits] = useState(0);
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const questions: Question[] = [
-    {
-      id: "1",
-      question: "Qual das seguintes afirmações sobre o Brasil está correta?",
-      options: [
-        "O Brasil é formado por 26 estados e 1 distrito federal, com sua capital localizada em São Paulo.",
-        "A moeda oficial do Brasil é o dólar, e o país possui um clima predominantemente tropical.",
-        "O Brasil é o maior país da América do Sul, sua capital é Brasília, e sua língua oficial é o português.",
-        "A maior floresta tropical do mundo, a Floresta Amazônica, está localizada inteiramente no território brasileiro.",
-        "O Brasil foi colonizado por espanhóis e tornou-se independente no século XIX.",
-      ],
-      correctAnswer:
-        "O Brasil é o maior país da América do Sul, sua capital é Brasília, e sua língua oficial é o português.",
-    },
-    {
-      id: "2",
-      question: "Qual é a principal função do Poder Judiciário no Brasil?",
-      options: [
-        "Criar e aprovar leis",
-        "Interpretar as leis e julgar conflitos",
-        "Executar as políticas públicas",
-        "Comandar as forças armadas",
-        "Administrar os recursos do tesouro nacional",
-      ],
-      correctAnswer: "Interpretar as leis e julgar conflitos",
-    },
-    {
-      id: "3",
-      question:
-        "Qual destes é um direito fundamental garantido pela Constituição brasileira?",
-      options: [
-        "Direito de não pagar impostos",
-        "Direito de portar armas livremente",
-        "Direito à liberdade de expressão",
-        "Direito de ignorar as leis",
-        "Direito de escolher não trabalhar",
-      ],
-      correctAnswer: "Direito à liberdade de expressão",
-    },
-    {
-      id: "4",
-      question: "O que caracteriza o sistema político brasileiro?",
-      options: [
-        "Monarquia constitucional",
-        "República parlamentarista",
-        "República presidencialista",
-        "Estado unitário",
-        "Confederação de estados",
-      ],
-      correctAnswer: "República presidencialista",
-    },
-    {
-      id: "5",
-      question: "Qual é a principal fonte de energia elétrica no Brasil?",
-      options: [
-        "Energia Nuclear",
-        "Energia Solar",
-        "Energia Eólica",
-        "Energia Hidrelétrica",
-        "Energia Térmica",
-      ],
-      correctAnswer: "Energia Hidrelétrica",
-    },
-  ];
+  useEffect(() => {
+    if (!deckId || deckId === 'undefined') {
+      setError('Deck ID inválido');
+      return;
+    }
+
+    async function fetchCards() {
+      try {
+        const host = window.location.host;
+        const protocol = window.location.protocol;
+        const url = `${protocol}//${host}/api/decks/${deckId}/cards`;
+
+        const response = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': 'default_user'
+          },
+          cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch cards');
+        const data = await response.json();
+
+        if (!data.cards || data.cards.length === 0) {
+          setError('Este deck não possui cards');
+          return;
+        }
+
+        setQuestions(data.cards);
+        setStartTime(new Date().toISOString());
+        setRemainingQuestions(data.cards.length);
+      } catch (error) {
+        console.error('Failed to fetch cards:', error);
+        setError('Erro ao carregar os cards');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchCards();
+  }, [deckId]);
 
   const handleOptionClick = (option: string) => {
     if (isAnswerConfirmed) return;
@@ -103,9 +84,44 @@ export default function StudyPage() {
     }
   };
 
+  const handleStudyComplete = async () => {
+    try {
+      const host = window.location.host;
+      const protocol = window.location.protocol;
+      const url = `${protocol}//${host}/api/study-sessions`;
+
+      if (!startTime) {
+        throw new Error('Start time not set');
+      }
+
+      const endTime = new Date().toISOString();
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': 'default_user'
+        },
+        body: JSON.stringify({
+          deckId,
+          hits,
+          misses: questions.length - hits,
+          totalQuestions: questions.length,
+          startTime,
+          endTime
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to save study session');
+      setIsCompleted(true);
+    } catch (error) {
+      console.error('Failed to save study session:', error);
+    }
+  };
+
   const handleNext = () => {
     if (currentQuestion === questions.length - 1) {
-      setIsCompleted(true);
+      handleStudyComplete();
       return;
     }
 
@@ -113,6 +129,32 @@ export default function StudyPage() {
     setIsAnswerConfirmed(false);
     setCurrentQuestion((prev) => prev + 1);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="bg-[#10111F] rounded-md border border-neutral-800 p-8">
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || questions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="bg-[#10111F] rounded-md border border-neutral-800 p-8 flex flex-col gap-4">
+          <p className="text-red-500">{error || 'Nenhum card encontrado'}</p>
+          <Button variant="outline" asChild>
+            <Link href="/decks" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para os Decks
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isCompleted) {
     return (
@@ -180,6 +222,8 @@ export default function StudyPage() {
     );
   }
 
+  const currentQuestionData = questions[currentQuestion];
+
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto p-4">
       <div className="flex items-center justify-between">
@@ -232,7 +276,7 @@ export default function StudyPage() {
       <div className="bg-[#10111F] border border-neutral-800 rounded-md p-8 flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <h2 className="text-xl font-medium">
-            {questions[currentQuestion].question}
+            {currentQuestionData.question}
           </h2>
           <p className="text-sm text-muted-foreground">
             Selecione uma das opções abaixo.
@@ -240,9 +284,8 @@ export default function StudyPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {questions[currentQuestion].options.map((option, index) => {
-            const isCorrect =
-              option === questions[currentQuestion].correctAnswer;
+          {currentQuestionData.options.map((option, index) => {
+            const isCorrect = option === currentQuestionData.correctAnswer;
             const isSelected = option === selectedOption;
 
             return (

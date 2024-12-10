@@ -6,7 +6,7 @@ import { BookOpen } from "lucide-react"
 import Link from "next/link"
 
 export type Deck = {
-  id: string
+  deckId: string
   title: string
   description: string
   totalCards: number
@@ -27,7 +27,7 @@ export const columns: ColumnDef<Deck>[] = [
             size="sm"
             className="hover:text-white hover:bg-white/60 bg-white text-black transition-colors"
           >
-            <Link href={`/decks/${deck.id}/study`} className="flex items-center">
+            <Link href={`/decks/${deck.deckId}/study`} className="flex items-center">
               <BookOpen className="h-4 w-4 mr-2" />
               Estudar
             </Link>
