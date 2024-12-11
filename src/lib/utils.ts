@@ -6,5 +6,5 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function isStudyRoute(pathname: string) {
-  return /^\/decks\/[^/]+\/study/.test(pathname);
+  return /^\/decks\/[^/]+\/study/.test(pathname) || pathname === '/decks/create';
 }

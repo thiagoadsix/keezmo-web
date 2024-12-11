@@ -11,7 +11,7 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideNavigation = isStudyRoute(pathname);
+  const hideNavigation = isStudyRoute(pathname) || pathname === '/decks/create';
 
   return (
     <div className="flex h-screen">
