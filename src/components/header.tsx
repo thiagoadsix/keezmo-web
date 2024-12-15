@@ -2,8 +2,14 @@
 
 import * as React from "react";
 import { UserButton } from "@clerk/nextjs";
-import { Coins } from "lucide-react";
+import { Coins, Frown } from "lucide-react";
 import { useMobileSidebar } from "../contexts/mobile-sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/src/components/ui/tooltip";
 
 interface HeaderProps {
   // Title and subtitle for both mobile and desktop
@@ -53,19 +59,31 @@ export default function Header({
 
   return (
     <header className="flex items-center justify-between w-full h-16 gap-4">
-      {/* Small screens: Title and burger */}
+      {/* Small screens */}
       <div className="sm:hidden flex items-center justify-between w-full">
         <h1 className="text-lg font-bold">{mobileTitle}</h1>
         <div className="flex items-center gap-4">
-          {/* Small screens: right content */}
           {showRightContentOnMobile && rightContent}
-
-          {/* Small screens: credits */}
           {showCredits && (
-            <div className="sm:hidden flex items-center gap-1 border border-neutral-400 rounded-3xl p-2 bg-[#10111F]">
-              <Coins className="h-4 w-4 text-primary" />
-              <p className="text-xs font-medium">{credits} créditos</p>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="sm:hidden flex items-center gap-1 border border-neutral-400 rounded-3xl p-2 bg-[#10111F]">
+                    {credits > 0 ? (
+                      <Coins className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Frown className="h-4 w-4 text-neutral-500" />
+                    )}
+                    <p className="text-xs font-medium">
+                      {credits > 0 ? `${credits} créditos` : "Sem créditos"}
+                    </p>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Clique para comprar mais créditos</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           <button
             className="p-2 border border-neutral-400 rounded-md text-neutral-200"
@@ -78,26 +96,41 @@ export default function Header({
         </div>
       </div>
 
-      {/* Large screens: show title and subtitle */}
+      {/* Large screens */}
       <div className="hidden sm:flex flex-col">
-        <h1 className="text-lg sm:text-2xl font-bold">
-          {title}
-        </h1>
+        <h1 className="text-lg sm:text-2xl font-bold">{title}</h1>
         {subtitle && (
-          <p className="text-xs sm:text-sm text-neutral-500">
-            {subtitle}
-          </p>
+          <p className="text-xs sm:text-sm text-neutral-500">{subtitle}</p>
         )}
       </div>
-
-      {/* Large screens: right content */}
       <div className="hidden sm:flex items-center gap-2 sm:gap-4">
         {rightContent}
         {showCredits && (
-          <div className="flex items-center gap-1 sm:gap-2 border border-neutral-400 rounded-3xl p-2 sm:p-3 bg-[#10111F]">
-            <Coins className="h-4 w-4 text-primary" />
-            <p className="text-xs sm:text-sm font-medium">{credits} créditos</p>
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="flex items-center gap-1 sm:gap-2 border border-neutral-400 rounded-3xl p-2 sm:p-3 bg-[#10111F]">
+                  {credits > 0 ? (
+                    <Coins className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Frown className="h-4 w-4 text-yellow-500" />
+                  )}
+                  {credits > 0 ? (
+                    <p className="text-xs sm:text-sm font-medium">
+                      {credits} créditos
+                    </p>
+                  ) : (
+                    <p className="text-xs sm:text-sm font-medium text-yellow-500">
+                      Sem créditos
+                    </p>
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Clique para comprar mais créditos</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         {showUserButton && <UserButton {...userButtonProps} />}
       </div>
