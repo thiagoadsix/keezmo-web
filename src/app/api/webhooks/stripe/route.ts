@@ -35,11 +35,13 @@ const STRIPE_PLANS: { [key: string]: StripePlanInfo } = {
 };
 
 export async function POST(req: NextRequest) {
+  console.log('Received Stripe webhook event')
   const body = await req.text();
   const headerPayload = await headers();
   const signature = String(headerPayload.get("stripe-signature"));
 
   if (!signature) {
+    console.error('Webhook Error: Missing Stripe signature')
     return NextResponse.json({ error: "Missing signature" }, { status: 400 });
   }
 
@@ -48,7 +50,9 @@ export async function POST(req: NextRequest) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
+    console.log('Webhook event verified:', eventType)
   } catch (error) {
+    console.error('Webhook Error: Invalid signature', error)
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
@@ -57,8 +61,15 @@ export async function POST(req: NextRequest) {
   try {
     switch (eventType) {
       case "checkout.session.completed":
+        console.log('Processing checkout.session.completed')
         const stripeObject: Stripe.Checkout.Session = event.data.object as Stripe.Checkout.Session;
         const session = await findCheckoutSession(stripeObject.id);
+
+        console.log('Checkout session found:', {
+          sessionId: stripeObject.id,
+          customerId: session?.customer,
+          userId: session?.metadata?.userId
+        })
 
         const customerId = session?.customer;
         const priceId = session?.line_items?.data[0]?.price?.id!;
@@ -68,27 +79,27 @@ export async function POST(req: NextRequest) {
           customerId as string
         )) as Stripe.Customer;
 
-        if (!planInfo) break;
-
-        interface CreditHistory {
-          amount: number;
-          type: 'add' | 'use';
-          timestamp: number;
-          source: string;
+        if (!planInfo) {
+          console.error('Invalid price ID or plan not found:', priceId)
+          break;
         }
 
         try {
-          // Get user email from Stripe customer
           const userEmail = customer.email;
-          if (!userEmail) throw new Error("No email found for customer");
+          if (!userEmail) {
+            console.error('No email found for customer:', customerId)
+            throw new Error("No email found for customer");
+          }
 
-          // Validate session exists
           if (!session || !session.metadata?.userId) {
+            console.error('Invalid session or missing userId:', {
+              session: session?.id,
+              metadata: session?.metadata
+            })
             throw new Error("Invalid session or missing userId");
           }
 
-          // Prepare the credit history entry for the plan purchase
-          const creditHistoryEntry: CreditHistory = {
+          const creditHistoryEntry = {
             amount: planInfo.credits,
             type: 'add',
             timestamp: Date.now(),
@@ -96,9 +107,13 @@ export async function POST(req: NextRequest) {
           };
 
           const userId = session.metadata.userId;
+          console.log('Updating user credits:', {
+            userId,
+            credits: planInfo.credits,
+            planName: planInfo.name
+          })
 
-          // Update user in DynamoDB
-          await dynamoDbClient.send(new UpdateCommand({
+          const result = await dynamoDbClient.send(new UpdateCommand({
             TableName: process.env.DYNAMODB_TABLE_NAME!,
             Key: {
               pk: `USER#${userId}`,
@@ -121,14 +136,24 @@ export async function POST(req: NextRequest) {
             ReturnValues: 'ALL_NEW'
           }));
 
+          console.log('User credits updated successfully:', {
+            userId,
+            newCredits: planInfo.credits,
+            timestamp: Date.now()
+          })
+
         } catch (error) {
-          console.error('Error updating user in DynamoDB:', error);
+          console.error('Error updating user in DynamoDB:', {
+            error,
+            customerId,
+            sessionId: session?.id
+          });
           throw error;
         }
-
         break;
 
       case "customer.subscription.deleted": {
+        console.log('Processing subscription deletion')
         const stripeObject: Stripe.CustomerSubscriptionDeletedEvent = event.data.object as Stripe.CustomerSubscriptionDeletedEvent;
         const subscription = await stripe.subscriptions.retrieve(
           stripeObject.id
@@ -153,10 +178,12 @@ export async function POST(req: NextRequest) {
           ReturnValues: 'ALL_NEW'
         }));
 
+        console.log('Subscription cancelled for user:', userId)
         break;
       }
 
       case "invoice.paid": {
+        console.log('Processing paid invoice')
         const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
         const invoice = await stripe.invoices.retrieve(stripeObject.id);
         const customerId = invoice.customer;
@@ -178,17 +205,23 @@ export async function POST(req: NextRequest) {
           ReturnValues: 'ALL_NEW'
         }));
 
+        console.log('Invoice processed for user:', userId)
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${eventType}`);
+        console.log(`Unhandled event type: ${eventType}`)
         break;
     }
   } catch (error) {
-    console.error("stripe error: ", error);
+    console.error("Stripe webhook error:", {
+      error,
+      eventType,
+      eventId: event?.id
+    });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 
+  console.log('Webhook processed successfully:', eventType)
   return NextResponse.json({});
 }
