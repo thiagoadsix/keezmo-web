@@ -4,9 +4,9 @@ const nextConfig = {
     remotePatterns: [ {
         protocol: 'https',
         hostname: 'img.clerk.com',
-        port: '',        
+        port: '',
       },],
-  },
+  }
 };
 
 module.exports = nextConfig;

@@ -3,6 +3,7 @@
 import { BookCheck, FolderOpen } from "lucide-react";
 import { CardsIcon } from "../icons/cards";
 import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 
 type Stats = {
   totalDecks: number;
@@ -17,11 +18,14 @@ const initialStats: Stats = {
 };
 
 export default function StatsOverview() {
+  const { user } = useUser();
   const [stats, setStats] = useState<Stats>(initialStats);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
+      if (!user) return;
+
       try {
         const host = window.location.host;
         const protocol = window.location.protocol;
@@ -31,7 +35,7 @@ export default function StatsOverview() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-id': 'default_user'
+            'x-user-id': user.id
           },
           cache: 'no-store'
         });
@@ -47,7 +51,7 @@ export default function StatsOverview() {
     }
 
     fetchStats();
-  }, []);
+  }, [user]);
 
   return (
     <div className="relative -mx-8">

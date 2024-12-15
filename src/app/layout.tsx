@@ -9,7 +9,7 @@ import { MobileSidebarProvider } from "@/src/contexts/mobile-sidebar";
 import ClientLayout from "@/src/app/client-layout";
 
 export const metadata: Metadata = {
-  title: "Decki",
+  title: "Keezmo",
   description: "An AI-powered flashcard generator for your PDFs.",
 };
 

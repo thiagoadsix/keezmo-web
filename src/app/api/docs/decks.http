@@ -1,5 +1,0 @@
-@url = http://localhost:3000/api
-
-### Get all decks
-GET {{url}}/decks
-Content-Type: application/json

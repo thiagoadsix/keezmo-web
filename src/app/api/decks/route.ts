@@ -11,7 +11,7 @@ interface Deck {
   totalCards: number;
 }
 
-const TABLE_NAME = process.env.DYNAMODB_MEMORA_TABLE_NAME || '';
+const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
 export async function GET(req: NextRequest) {
   console.log('➡️ [GET /api/decks] Request received');

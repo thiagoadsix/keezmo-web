@@ -7,6 +7,7 @@ import { Input } from "@/src/components/ui/input";
 import { PdfIcon } from "@/src/icons/pdf";
 import { Check, FolderOpen, BookOpen, Loader2, FileText, Brain, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 
 type ProcessStep = {
   id: number;
@@ -17,6 +18,7 @@ type ProcessStep = {
 };
 
 export default function CreateDeckPage() {
+  const { user } = useUser();
   const [isCompleted, setIsCompleted] = useState(false);
   const [createdDeckId, setCreatedDeckId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -102,7 +104,7 @@ export default function CreateDeckPage() {
       const response = await fetch(`${protocol}//${host}/api/rag-pdf`, {
         method: 'POST',
         headers: {
-          'x-user-id': 'default_user'
+          'x-user-id': user?.id || ''
         },
         body: formData
       });
@@ -238,7 +240,7 @@ export default function CreateDeckPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 px-8 py-4">
       <Header
         title="Criar deck"
         mobileTitle="Criar deck"

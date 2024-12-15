@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
-import { ArrowLeft, Check, X, BookOpen, RotateCw, FolderOpen } from "lucide-react";
+import { ArrowLeft, Check, X, RotateCw, FolderOpen } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 type Question = {
   id: string;
@@ -14,8 +15,8 @@ type Question = {
 };
 
 export default function StudyPage() {
-  const router = useRouter();
   const { deckId } = useParams();
+  const { user } = useUser();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -42,7 +43,7 @@ export default function StudyPage() {
         const response = await fetch(url, {
           headers: {
             'Content-Type': 'application/json',
-            'x-user-id': 'default_user'
+            'x-user-id': user?.id || ''
           },
           cache: 'no-store'
         });
@@ -100,7 +101,7 @@ export default function StudyPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'default_user'
+          'x-user-id': user?.id || ''
         },
         body: JSON.stringify({
           deckId,

@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { BookCheck, CheckCircle2, FolderOpen, XCircle } from "lucide-react";
+import { BookCheck, CheckCircle2, FolderOpen, XCircle, Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useUser } from "@clerk/nextjs";
 
 type Deck = {
   deckId: string;
@@ -43,10 +44,13 @@ const initialState: RecentActivityState = {
 };
 
 export default function RecentActivity() {
+  const { user } = useUser();
   const [state, setState] = useState<RecentActivityState>(initialState);
 
   useEffect(() => {
     async function fetchRecentActivity() {
+      if (!user) return;
+
       try {
         const host = window.location.host;
         const protocol = window.location.protocol;
@@ -55,14 +59,14 @@ export default function RecentActivity() {
           fetch(`${protocol}//${host}/api/decks`, {
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': 'default_user'
+              'x-user-id': user.id
             },
             cache: 'no-store'
           }),
           fetch(`${protocol}//${host}/api/study-sessions`, {
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': 'default_user'
+              'x-user-id': user.id
             },
             cache: 'no-store'
           })
@@ -93,7 +97,7 @@ export default function RecentActivity() {
     }
 
     fetchRecentActivity();
-  }, []);
+  }, [user]);
 
   const formatDate = (date: string) => {
     return format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
@@ -106,79 +110,118 @@ export default function RecentActivity() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col gap-4">
-          <div className="flex flex-col gap-4">
+        <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
+          <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">Decks criados recentemente</h2>
             {state.isLoading ? (
               <p className="text-neutral-400">Carregando...</p>
             ) : state.decks.length > 0 ? (
-              state.decks.map((deck, index) => (
-                <React.Fragment key={deck.deckId}>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-primary">{deck.title}</h3>
-                    <p className="text-xs sm:text-sm text-neutral-400">Possui {deck.totalCards} cards</p>
-                    <span className="text-xs sm:text-sm text-neutral-400">
-                      Criado em {formatDate(deck.createdAt)}
-                    </span>
-                  </div>
-                  {index < state.decks.length - 1 && (
-                    <div className="w-full h-[2px] bg-neutral-800" />
-                  )}
-                </React.Fragment>
-              ))
+              <>
+                <div className="flex flex-col gap-4">
+                  {state.decks.map((deck, index) => (
+                    <React.Fragment key={deck.deckId}>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-bold text-primary">{deck.title}</h3>
+                        <p className="text-xs sm:text-sm text-neutral-400">Possui {deck.totalCards} cards</p>
+                        <span className="text-xs sm:text-sm text-neutral-400">
+                          Criado em {formatDate(deck.createdAt)}
+                        </span>
+                      </div>
+                      {index < state.decks.length - 1 && (
+                        <div className="w-full h-[2px] bg-neutral-800" />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+                <Link href="/decks" className="mt-auto pt-4">
+                  <Button variant="outline" className="w-[160px] sm:w-[180px]">
+                    <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">Ver todos</span>
+                  </Button>
+                </Link>
+              </>
             ) : (
-              <p className="text-neutral-400">Nenhum deck criado recentemente</p>
+              <>
+                <p className="text-neutral-400">
+                  Você ainda não possui nenhum Deck criado.
+                </p>
+                <Link href="/decks/create" className="mt-auto pt-4">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-neutral-400 p-2 sm:p-3 bg-[#10111F]"
+                  >
+                    <Plus className="h-4 w-4 text-neutral-200 group-hover:text-primary" />
+                    <span className="text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-primary">
+                      Criar um Deck
+                    </span>
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
-          <Link href="/decks">
-            <Button variant="outline" className="w-[160px] sm:w-[180px]">
-              <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm">Ver todos</span>
-            </Button>
-          </Link>
         </div>
 
-        <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col gap-4">
-          <div className="flex flex-col gap-4">
+        <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
+          <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">Sessões de estudos recentes</h2>
             {state.isLoading ? (
               <p className="text-neutral-400">Carregando...</p>
             ) : state.studySessions.length > 0 ? (
-              state.studySessions.map((session, index) => (
-                <React.Fragment key={session.id}>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-primary">
-                      {session.deck?.title || 'Deck não encontrado'}
-                    </h3>
-                    <div className="flex flex-row gap-4">
-                      <div className="flex flex-row items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                        <p className="text-xs sm:text-sm text-green-500">{session.hits} acertos</p>
+              <>
+                <div className="flex flex-col gap-4">
+                  {state.studySessions.map((session, index) => (
+                    <React.Fragment key={session.id}>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-bold text-primary">
+                          {session.deck?.title || 'Deck não encontrado'}
+                        </h3>
+                        <div className="flex flex-row gap-4">
+                          <div className="flex flex-row items-center gap-1">
+                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                            <p className="text-xs sm:text-sm text-green-500">{session.hits} acertos</p>
+                          </div>
+                          <div className="flex flex-row items-center gap-1">
+                            <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                            <p className="text-xs sm:text-sm text-red-500">{session.misses} erros</p>
+                          </div>
+                        </div>
+                        <span className="text-xs sm:text-sm text-neutral-400">
+                          Criado em {formatDate(session.createdAt)}
+                        </span>
                       </div>
-                      <div className="flex flex-row items-center gap-1">
-                        <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
-                        <p className="text-xs sm:text-sm text-red-500">{session.misses} erros</p>
-                      </div>
-                    </div>
-                    <span className="text-xs sm:text-sm text-neutral-400">
-                      Criado em {formatDate(session.createdAt)}
-                    </span>
-                  </div>
-                  {index < state.studySessions.length - 1 && (
-                    <div className="w-full h-[2px] bg-neutral-800" />
-                  )}
-                </React.Fragment>
-              ))
+                      {index < state.studySessions.length - 1 && (
+                        <div className="w-full h-[2px] bg-neutral-800" />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+                <Link href="/study-sessions" className="mt-auto pt-4">
+                  <Button variant="outline" className="w-[160px] sm:w-[180px]">
+                    <BookCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-xs sm:text-sm">Ver todos</span>
+                  </Button>
+                </Link>
+              </>
             ) : (
-              <p className="text-neutral-400">Nenhuma sessão de estudo recente</p>
+              <>
+                <div className="text-neutral-400">
+                  <p>Você ainda não possui nenhuma Sessão de Estudo.</p>
+                  <p>Para visualizar suas sessões de estudo, crie e estude um Deck.</p>
+                </div>
+                <Link href="/decks/create" className="mt-auto pt-4">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-neutral-400 p-2 sm:p-3 bg-[#10111F]"
+                  >
+                    <Plus className="h-4 w-4 text-neutral-200 group-hover:text-primary" />
+                    <span className="text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-primary">
+                      Criar um Deck
+                    </span>
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
-          <Link href="/study-sessions">
-            <Button variant="outline" className="w-[160px] sm:w-[180px]">
-              <BookCheck className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm">Ver todos</span>
-            </Button>
-          </Link>
         </div>
       </div>
     </div>

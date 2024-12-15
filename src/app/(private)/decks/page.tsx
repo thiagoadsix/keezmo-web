@@ -4,21 +4,20 @@ import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import Link from "next/link";
 import { headers } from 'next/headers';
+import { auth } from "@clerk/nextjs/server";
 
 export default async function DecksPage() {
+  const { userId } = await auth();
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const url = `${protocol}://${host}/api/decks`;
 
-  // Replace 'some-user-id' with logic to retrieve the user's ID from your actual auth system
-  const userId = 'default_user';
-
   const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'x-user-id': userId
+      'x-user-id': userId || ''
     },
     cache: 'no-store'
   });

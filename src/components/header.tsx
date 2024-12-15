@@ -32,7 +32,7 @@ interface HeaderProps {
 }
 
 export default function Header({
-  mobileTitle = "Decki",
+  mobileTitle = "Keezmo",
   title = "Olá, seja bem-vindo(a)!",
   subtitle,
   rightContent,

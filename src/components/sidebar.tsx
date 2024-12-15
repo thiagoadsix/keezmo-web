@@ -51,7 +51,7 @@ export default function Sidebar() {
       icon: FolderOpen,
     },
     {
-      title: "Study Sessions",
+      title: "Sessões de Estudo",
       href: "/study-sessions",
       icon: BookOpen,
     },
@@ -112,7 +112,7 @@ export default function Sidebar() {
             <h1 className={cn(
               "font-bold transition-all duration-300 text-2xl",
             )}>
-              {!isMobile && isCollapsed ? "D" : "Decki"}
+              {!isMobile && isCollapsed ? "K" : "Keezmo"}
             </h1>
           </div>
 
@@ -145,7 +145,7 @@ export default function Sidebar() {
                 )}
               >
                 <LogOut className="h-5 w-5" />
-                {showFullSidebar && <span>Sign Out</span>}
+                {showFullSidebar && <span>Sair</span>}
               </Button>
             </SignOutButton>
           </div>
