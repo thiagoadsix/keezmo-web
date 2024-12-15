@@ -142,6 +142,21 @@ export async function POST(req: NextRequest) {
             timestamp: Date.now()
           })
 
+          await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/users/credits`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': userId
+            },
+            body: JSON.stringify({
+              amount: planInfo.credits,
+              type: 'add',
+              source: 'stripe_purchase'
+            })
+          });
+
+          console.log('Credits updated successfully for user:', userId);
+
         } catch (error) {
           console.error('Error updating user in DynamoDB:', {
             error,

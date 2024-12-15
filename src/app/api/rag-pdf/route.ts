@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     };
 
     const command = new InvokeCommand({
-      FunctionName: 'memo-backend-dev-rag-pdf-invoke',
+      FunctionName: 'keezmo-dev-rag-pdf-invoke',
       Payload: JSON.stringify(payload)
     });
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const result = response.Payload ? JSON.parse(Buffer.from(response.Payload).toString()) : null;
     console.log('✅ [Lambda] Function executed successfully');
 
-    return NextResponse.json(result);
+    return NextResponse.json({deckId: result.body.deckId});
 
   } catch (error: any) {
     console.error('❌ [Error] Failed to process PDF:', {

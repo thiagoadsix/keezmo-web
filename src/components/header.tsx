@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { UserButton } from "@clerk/nextjs";
-import { Coins, Frown } from "lucide-react";
+import { Coins, Frown, Loader2 } from "lucide-react";
 import { useMobileSidebar } from "../contexts/mobile-sidebar";
 import {
   Tooltip,
@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/src/components/ui/tooltip";
+import { useCredits } from "@/src/hooks/use-credits"
 
 interface HeaderProps {
   // Title and subtitle for both mobile and desktop
@@ -44,7 +45,6 @@ export default function Header({
   rightContent,
   showRightContentOnMobile = false,
   showCredits = true,
-  credits = 100,
   showUserButton = true,
   userButtonProps = {
     afterSignOutUrl: "/",
@@ -56,6 +56,7 @@ export default function Header({
   },
 }: HeaderProps) {
   const { setIsMobileOpen } = useMobileSidebar();
+  const { credits, isLoading } = useCredits();
 
   return (
     <header className="flex items-center justify-between w-full h-16 gap-4">
@@ -69,13 +70,17 @@ export default function Header({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button className="sm:hidden flex items-center gap-1 border border-neutral-400 rounded-3xl p-2 bg-[#10111F]">
-                    {credits > 0 ? (
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : credits && credits > 0 ? (
                       <Coins className="h-4 w-4 text-primary" />
                     ) : (
                       <Frown className="h-4 w-4 text-neutral-500" />
                     )}
                     <p className="text-xs font-medium">
-                      {credits > 0 ? `${credits} créditos` : "Sem créditos"}
+                      {isLoading ? "Carregando..." :
+                       credits && credits > 0 ? `${credits} créditos` :
+                       "Sem créditos"}
                     </p>
                   </button>
                 </TooltipTrigger>
@@ -110,12 +115,16 @@ export default function Header({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button className="flex items-center gap-1 sm:gap-2 border border-neutral-400 rounded-3xl p-2 sm:p-3 bg-[#10111F]">
-                  {credits > 0 ? (
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : credits && credits > 0 ? (
                     <Coins className="h-4 w-4 text-primary" />
                   ) : (
                     <Frown className="h-4 w-4 text-yellow-500" />
                   )}
-                  {credits > 0 ? (
+                  {isLoading ? (
+                    <p className="text-xs sm:text-sm font-medium">Carregando...</p>
+                  ) : credits && credits > 0 ? (
                     <p className="text-xs sm:text-sm font-medium">
                       {credits} créditos
                     </p>

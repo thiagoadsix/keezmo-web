@@ -22,22 +22,9 @@ export default async function StudySessionsPage() {
 
   const { studySessions } = await studySessionsResponse.json();
 
-  const usersUrl = `${protocol}://${host}/api/users`;
-
-  const usersResponse = await fetch(usersUrl, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-user-id': userId || ''
-    },
-    cache: 'no-store'
-  });
-
-  const { user } = await usersResponse.json();
-
   return (
     <div>
-      <Header title="Sessões de estudo" mobileTitle="Sessões de estudo" credits={user?.credits} />
+      <Header title="Sessões de estudo" mobileTitle="Sessões de estudo" />
 
       <DataTable columns={columns} data={studySessions} />
     </div>

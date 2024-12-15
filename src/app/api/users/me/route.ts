@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { QueryCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { dynamoDbClient } from '../clients/dynamodb';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { dynamoDbClient } from '../../clients/dynamodb';
 
 export async function GET(req: NextRequest) {
   const userId = req.headers.get('x-user-id');
