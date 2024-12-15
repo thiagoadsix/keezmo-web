@@ -11,9 +11,9 @@ export default async function DecksPage() {
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const url = `${protocol}://${host}/api/decks`;
+  const decksUrl = `${protocol}://${host}/api/decks`;
 
-  const response = await fetch(url, {
+  const decksResponse = await fetch(decksUrl, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -22,13 +22,27 @@ export default async function DecksPage() {
     cache: 'no-store'
   });
 
-  const { decks } = await response.json();
+  const { decks } = await decksResponse.json();
+
+  const usersUrl = `${protocol}://${host}/api/users`;
+
+  const usersResponse = await fetch(usersUrl, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': userId || ''
+    },
+    cache: 'no-store'
+  });
+
+  const { user } = await usersResponse.json();
 
   return (
     <div className="gap-5 flex flex-col">
       <Header
         title="Decks"
         mobileTitle="Decks"
+        credits={user?.credits}
         showRightContentOnMobile={true}
         rightContent={
           <Link href="/decks/create">

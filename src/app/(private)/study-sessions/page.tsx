@@ -9,9 +9,9 @@ export default async function StudySessionsPage() {
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const url = `${protocol}://${host}/api/study-sessions`;
+  const studySessionsUrl = `${protocol}://${host}/api/study-sessions`;
 
-  const response = await fetch(url, {
+  const studySessionsResponse = await fetch(studySessionsUrl, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -20,11 +20,24 @@ export default async function StudySessionsPage() {
     cache: 'no-store'
   });
 
-  const { studySessions } = await response.json();
+  const { studySessions } = await studySessionsResponse.json();
+
+  const usersUrl = `${protocol}://${host}/api/users`;
+
+  const usersResponse = await fetch(usersUrl, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': userId || ''
+    },
+    cache: 'no-store'
+  });
+
+  const { user } = await usersResponse.json();
 
   return (
     <div>
-      <Header title="Sessões de estudo" mobileTitle="Sessões de estudo" />
+      <Header title="Sessões de estudo" mobileTitle="Sessões de estudo" credits={user?.credits} />
 
       <DataTable columns={columns} data={studySessions} />
     </div>
