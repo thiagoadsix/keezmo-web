@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { Github, Twitter } from "lucide-react";
+import { Mail } from "lucide-react";
+import { XIcon } from "@/src/icons/x";
+import { InstagramIcon } from "@/src/icons/instagram";
 
 export function Footer() {
   return (
-    <footer id="footer" className="bg-neutral-900/50 border-t border-neutral-800">
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer id="footer" className="mt-24 bg-neutral-900/50 border-t border-neutral-800">
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 px-4 py-8">
           {/* Brand */}
           <div className="col-span-1">
             <Link href="/" className="flex items-center">
@@ -13,22 +15,22 @@ export function Footer() {
                 Keezmo
               </span>
             </Link>
-            <p className="mt-4 text-sm text-gray-600">
+            <p className="mt-4 text-sm text-neutral-400">
               AI-powered flashcards for effective learning
             </p>
           </div>
 
           {/* Product */}
           <div>
-            <h3 className="font-semibold mb-3">Product</h3>
+            <h3 className="font-semibold mb-3 text-white">Product</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#features" className="text-sm text-gray-600 hover:text-primary">
+                <Link href="#features" className="text-sm text-neutral-400 transition-colors hover:text-primary">
                   Features
                 </Link>
               </li>
               <li>
-                <Link href="#plans" className="text-sm text-gray-600 hover:text-primary">
+                <Link href="#plans" className="text-sm text-neutral-400 transition-colors hover:text-primary">
                   Pricing
                 </Link>
               </li>
@@ -37,15 +39,15 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold mb-3">Company</h3>
+            <h3 className="font-semibold mb-3 text-white">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#about" className="text-sm text-gray-600 hover:text-primary">
+                <Link href="#about" className="text-sm text-neutral-400 transition-colors hover:text-primary">
                   About
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="text-sm text-gray-600 hover:text-primary">
+                <Link href="/blog" className="text-sm text-neutral-400 transition-colors hover:text-primary">
                   Blog
                 </Link>
               </li>
@@ -54,21 +56,38 @@ export function Footer() {
 
           {/* Social */}
           <div>
-            <h3 className="font-semibold mb-3">Connect</h3>
+            <h3 className="font-semibold mb-3 text-white">Connect</h3>
             <div className="flex space-x-4">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"
-                className="text-gray-600 hover:text-primary">
-                <Twitter className="h-5 w-5" />
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-400 transition-colors hover:text-primary"
+                aria-label="Follow us on Instagram"
+              >
+                <InstagramIcon className="h-5 w-5" />
               </a>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer"
-                className="text-gray-600 hover:text-primary">
-                <Github className="h-5 w-5" />
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-400 transition-colors hover:text-primary"
+                aria-label="Follow us on X"
+              >
+                <XIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="mailto:contact@keezmo.com"
+                className="text-neutral-400 transition-colors hover:text-primary"
+                aria-label="Contact us via email"
+              >
+                <Mail className="h-5 w-5" />
               </a>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-neutral-800">
+        <div className="border-t border-neutral-800 px-4 py-8">
           <p className="text-sm text-neutral-400 text-center">
             © {new Date().getFullYear()} Keezmo. All rights reserved.
           </p>

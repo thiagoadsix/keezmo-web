@@ -43,9 +43,9 @@ const plans = [
 
 export function PlansSection() {
   return (
-    <section id="plans" className="min-h-screen flex items-center bg-background">
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+    <section className="flex min-h-screen items-center bg-background px-4">
+      <div className="w-full">
+        <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Simple, transparent pricing
           </h2>
@@ -54,9 +54,9 @@ export function PlansSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
           {plans.map((plan) => (
-            <Card key={plan.name} className="bg-background/50 border-neutral-800 hover:border-primary/50 transition-colors">
+            <Card key={plan.name} className="flex flex-col border-neutral-800 bg-background/50 transition-colors hover:border-primary/50">
               <CardHeader>
                 <CardTitle className="text-white">{plan.name}</CardTitle>
                 <CardDescription className="text-neutral-400">{plan.description}</CardDescription>
@@ -65,8 +65,8 @@ export function PlansSection() {
                   <span className="text-neutral-400">/month</span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
+              <CardContent className="flex flex-col flex-1">
+                <ul className="space-y-3 flex-1">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-primary" />
