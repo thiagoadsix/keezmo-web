@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { isStudyRoute } from "@/src/lib/utils";
+import { isFullscreenRoute } from "@/src/lib/utils";
 import Sidebar from "@/src/components/sidebar";
 import { SignedIn } from "@clerk/nextjs";
+import { cn } from "@/src/lib/utils";
 
 export default function ClientLayout({
   children,
@@ -11,14 +12,23 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideNavigation = isStudyRoute(pathname) || pathname === '/decks/create';
+  const hideNavigation = isFullscreenRoute(pathname) ||
+    pathname === '/decks/create' ||
+    pathname === '/';
+
+  if (pathname === '/') {
+    return children;
+  }
 
   return (
     <div className="flex h-screen">
       <SignedIn>
         {!hideNavigation && <Sidebar />}
       </SignedIn>
-      <main className={`flex-1 overflow-y-auto ${hideNavigation ? 'px-0 py-0' : 'px-8 py-4'}`}>
+      <main className={cn(
+        "flex-1 overflow-y-auto",
+        !hideNavigation && "container py-4"
+      )}>
         {children}
       </main>
     </div>

@@ -226,7 +226,7 @@ export default function StudyPage() {
   const currentQuestionData = questions[currentQuestion];
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto p-4">
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto px-8 py-4">
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/decks" className="flex items-center gap-2">

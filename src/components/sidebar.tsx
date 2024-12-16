@@ -16,12 +16,18 @@ import {
 import { cn } from "@/src/lib/utils";
 import { Button } from "./ui/button";
 import { useMobileSidebar } from "../contexts/mobile-sidebar";
+import { isPublicRoute } from "@/src/lib/utils";
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const { isMobileOpen, setIsMobileOpen } = useMobileSidebar();
+
+  // Don't render sidebar on public routes
+  if (isPublicRoute(pathname)) {
+    return null;
+  }
 
   // Handle screen resize
   useEffect(() => {

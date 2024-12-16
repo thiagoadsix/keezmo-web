@@ -23,7 +23,7 @@ export default async function StudySessionsPage() {
   const { studySessions } = await studySessionsResponse.json();
 
   return (
-    <div>
+    <div className="px-8 py-4">
       <Header title="Sessões de estudo" mobileTitle="Sessões de estudo" />
 
       <DataTable columns={columns} data={studySessions} />
