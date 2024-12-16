@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/nextjs/dist/types/client-boundary/hooks";
+import { useAuth } from "@clerk/clerk-react";
 import { NextResponse, NextRequest } from "next/server";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
 

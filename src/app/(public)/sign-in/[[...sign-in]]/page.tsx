@@ -1,9 +1,14 @@
-import { SignIn } from "@clerk/nextjs";
+'use client';
 
-export default function Page() {
+import * as Clerk from '@clerk/elements/common';
+import * as SignIn from '@clerk/elements/sign-in';
+
+export default function SignInPage() {
   return (
-    <div className="flex justify-center py-24">
-      <SignIn />
-    </div>
+    <SignIn.Root>
+      <SignIn.Step name="start">
+        <h1>Sign in to your account</h1>
+      </SignIn.Step>
+    </SignIn.Root>
   );
 }

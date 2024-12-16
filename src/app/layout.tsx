@@ -1,4 +1,4 @@
-import { ClerkProvider, SignedIn } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Metadata } from "next";
 import localFont from "next/font/local";
@@ -34,6 +34,7 @@ export default function RootLayout({
       appearance={{
         baseTheme: dark,
       }}
+      dynamic
     >
       <html
         lang="en"
