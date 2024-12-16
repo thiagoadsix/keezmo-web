@@ -24,10 +24,10 @@ export default function Home() {
           {/* Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
             <a href="#features" className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary">
-              Features
+              Funcionalidades
             </a>
             <a href="#plans" className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary">
-              Plans
+              Planos
             </a>
             <a href="#about" className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary">
               About
@@ -39,14 +39,14 @@ export default function Home() {
             <SignedIn>
               <Button asChild>
                 <Link href="/dashboard" className="flex items-center gap-2">
-                  Go to Dashboard
+                  Ir para o Dashboard
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </SignedIn>
             <SignedOut>
               <SignInButton>
-                <Button>Sign in</Button>
+                <Button>Entrar</Button>
               </SignInButton>
             </SignedOut>
           </div>

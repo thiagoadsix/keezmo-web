@@ -6,18 +6,18 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/src/components/u
 
 const features = [
   {
-    title: "PDF Processing",
-    description: "Upload your study materials and let our AI extract the key concepts",
+    title: "Processamento de PDF",
+    description: "Faça upload dos seus materiais de estudo e deixe nossa IA extrair os conceitos principais",
     icon: FileText
   },
   {
-    title: "AI Analysis",
-    description: "Advanced AI algorithms identify important information and create effective flashcards",
+    title: "Análise por IA",
+    description: "Algoritmos avançados identificam informações importantes e criam flashcards eficientes",
     icon: Brain
   },
   {
-    title: "Smart Learning",
-    description: "Adaptive learning system that focuses on your weak points",
+    title: "Aprendizado Inteligente",
+    description: "Sistema adaptativo que foca nos seus pontos fracos",
     icon: Sparkles
   }
 ];
@@ -28,10 +28,10 @@ export function FeaturesSection() {
       <div className="w-full">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Features that make learning easier
+            Recursos que facilitam o aprendizado
           </h2>
           <p className="mt-4 text-lg text-neutral-400">
-            Everything you need to transform your study materials into effective learning tools
+            Tudo que você precisa para transformar seus materiais de estudo em ferramentas eficientes
           </p>
         </div>
 

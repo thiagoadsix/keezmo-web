@@ -6,63 +6,63 @@ import { Check } from "lucide-react";
 
 const plans = [
   {
-    name: "Free",
+    name: "Básico",
     price: "0",
-    description: "Perfect for trying out Keezmo",
+    description: "Perfeito para experimentar o Keezmo",
     features: [
-      "5 PDF uploads per month",
-      "Basic flashcard generation",
-      "Standard support"
+      "30 créditos",
+      "Upload de 2 arquivos",
+      "Geração de flashcards com IA",
+      "Suporte padrão"
     ]
   },
   {
     name: "Pro",
     price: "19",
-    description: "For serious learners",
+    description: "Para estudantes dedicados",
     features: [
-      "Unlimited PDF uploads",
-      "Advanced AI analysis",
-      "Priority support",
-      "Custom study plans",
-      "Progress analytics"
+      "120 créditos",
+      "Upload de 5 arquivos",
+      "Suporte prioritário",
+      "Tudo do plano Básico"
     ]
   },
   {
-    name: "Team",
+    name: "Premium",
     price: "49",
-    description: "For study groups & institutions",
+    description: "Para grupos de estudo e instituições",
     features: [
-      "Everything in Pro",
-      "Team collaboration",
-      "Shared decks",
-      "Admin dashboard",
-      "API access"
+      "360 créditos",
+      "Upload de 15 arquivos",
+      "Tudo do plano Pro"
     ]
   }
 ];
 
 export function PlansSection() {
   return (
-    <section className="flex min-h-screen items-center bg-background px-4">
-      <div className="w-full">
+    <section className="flex min-h-screen items-center bg-background px-4 py-16">
+      <div className="w-full space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Simple, transparent pricing
+            Preços simples e transparentes
           </h2>
           <p className="mt-4 text-lg text-neutral-400">
-            Choose the plan that best fits your needs
+            Escolha o plano que melhor se adapta às suas necessidades
           </p>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {plans.map((plan) => (
             <Card key={plan.name} className="flex flex-col border-neutral-800 bg-background/50 transition-colors hover:border-primary/50">
               <CardHeader>
                 <CardTitle className="text-white">{plan.name}</CardTitle>
                 <CardDescription className="text-neutral-400">{plan.description}</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">${plan.price}</span>
-                  <span className="text-neutral-400">/month</span>
+                  <span className="text-4xl font-bold text-white">
+                    {plan.price === "0" ? "Grátis" : `R$${plan.price}`}
+                  </span>
+                  {plan.price !== "0" && <span className="text-neutral-400"></span>}
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col flex-1">
@@ -75,7 +75,7 @@ export function PlansSection() {
                   ))}
                 </ul>
                 <Button className="w-full mt-6">
-                  Get started
+                  Começar agora
                 </Button>
               </CardContent>
             </Card>

@@ -5,7 +5,7 @@ import { InstagramIcon } from "@/src/icons/instagram";
 
 export function Footer() {
   return (
-    <footer id="footer" className="mt-24 bg-neutral-900/50 border-t border-neutral-800">
+    <footer id="footer" className="bg-neutral-900/50 border-t border-neutral-800">
       <div className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 px-4 py-8">
           {/* Brand */}
@@ -16,22 +16,22 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-neutral-400">
-              AI-powered flashcards for effective learning
+              Flashcards potencializados por IA para um aprendizado eficiente
             </p>
           </div>
 
           {/* Product */}
           <div>
-            <h3 className="font-semibold mb-3 text-white">Product</h3>
+            <h3 className="font-semibold mb-3 text-white">Produto</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="#features" className="text-sm text-neutral-400 transition-colors hover:text-primary">
-                  Features
+                  Recursos
                 </Link>
               </li>
               <li>
                 <Link href="#plans" className="text-sm text-neutral-400 transition-colors hover:text-primary">
-                  Pricing
+                  Preços
                 </Link>
               </li>
             </ul>
@@ -39,11 +39,11 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold mb-3 text-white">Company</h3>
+            <h3 className="font-semibold mb-3 text-white">Empresa</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="#about" className="text-sm text-neutral-400 transition-colors hover:text-primary">
-                  About
+                  Sobre
                 </Link>
               </li>
               <li>
@@ -56,14 +56,14 @@ export function Footer() {
 
           {/* Social */}
           <div>
-            <h3 className="font-semibold mb-3 text-white">Connect</h3>
+            <h3 className="font-semibold mb-3 text-white">Contato</h3>
             <div className="flex space-x-4">
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-neutral-400 transition-colors hover:text-primary"
-                aria-label="Follow us on Instagram"
+                aria-label="Siga-nos no Instagram"
               >
                 <InstagramIcon className="h-5 w-5" />
               </a>
@@ -72,14 +72,14 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-neutral-400 transition-colors hover:text-primary"
-                aria-label="Follow us on X"
+                aria-label="Siga-nos no X"
               >
                 <XIcon className="h-5 w-5" />
               </a>
               <a
                 href="mailto:contact@keezmo.com"
                 className="text-neutral-400 transition-colors hover:text-primary"
-                aria-label="Contact us via email"
+                aria-label="Entre em contato por email"
               >
                 <Mail className="h-5 w-5" />
               </a>
@@ -89,7 +89,7 @@ export function Footer() {
 
         <div className="border-t border-neutral-800 px-4 py-8">
           <p className="text-sm text-neutral-400 text-center">
-            © {new Date().getFullYear()} Keezmo. All rights reserved.
+            © {new Date().getFullYear()} Keezmo. Todos os direitos reservados.
           </p>
         </div>
       </div>

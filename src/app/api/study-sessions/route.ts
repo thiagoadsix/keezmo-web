@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QueryCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../clients/dynamodb';
+import { auth } from '@clerk/nextjs/server';
 
 interface StudySession {
   id: string;
@@ -24,16 +25,17 @@ const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 export async function GET(req: NextRequest) {
   console.log('➡️ [GET /api/study-sessions] Request received');
 
-  const userId = req.headers.get('x-user-id');
-  console.log(`📍 [Auth] User ID from request: ${userId || 'none'}`);
-
-  if (!userId) {
-    console.warn('⚠️ [Auth] Unauthorized access attempt');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  console.log(`🔍 [DynamoDB] Querying table: ${TABLE_NAME} for user: ${userId}`);
   try {
+    const { userId } = await auth();
+    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+
+    if (!userId) {
+      console.warn('⚠️ [Auth] Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    console.log(`🔍 [DynamoDB] Querying table: ${TABLE_NAME} for user: ${userId}`);
+
     const command = new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
@@ -105,7 +107,6 @@ export async function GET(req: NextRequest) {
         name: error?.name,
         stack: error?.stack
       },
-      userId: userId,
       tableName: TABLE_NAME
     });
 
@@ -124,16 +125,18 @@ interface CreateStudySessionRequest {
 
 export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/study-sessions] Request received');
-
-  const userId = req.headers.get('x-user-id');
-  console.log(`📍 [Auth] User ID from request: ${userId || 'none'}`);
-
-  if (!userId) {
-    console.warn('⚠️ [Auth] Unauthorized access attempt');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  console.log('Request URL:', req.url);
+  console.log('Request headers:', Object.fromEntries(req.headers));
 
   try {
+    const { userId } = await auth();
+    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+
+    if (!userId) {
+      console.warn('⚠️ [Auth] Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body: CreateStudySessionRequest = await req.json();
     const sessionId = crypto.randomUUID();
     const timestamp = new Date().toISOString();
@@ -174,7 +177,6 @@ export async function POST(req: NextRequest) {
         name: error?.name,
         stack: error?.stack
       },
-      userId,
       tableName: TABLE_NAME
     });
 

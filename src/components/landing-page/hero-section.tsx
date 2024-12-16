@@ -10,22 +10,22 @@ export function HeroSection() {
     <section className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="text-center">
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-          AI-powered flashcards for
-          <span className="text-primary"> effective learning</span>
+          Flashcards potencializados por
+          <span className="text-primary"> IA</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-400">
-          Transform your PDFs into interactive flashcards using AI. Study smarter, not harder with Keezmo's intelligent learning system.
+          Transforme seus PDFs em flashcards interativos usando IA. Estude de forma mais inteligente com o sistema de aprendizado do Keezmo.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <SignedOut>
             <SignInButton>
               <Button size="lg" className="flex items-center gap-2">
-                Get Started <ArrowRight className="h-4 w-4" />
+                Começar agora <ArrowRight className="h-4 w-4" />
               </Button>
             </SignInButton>
           </SignedOut>
           <Button variant="outline" size="lg">
-            Learn more
+            Saiba mais
           </Button>
         </div>
       </div>

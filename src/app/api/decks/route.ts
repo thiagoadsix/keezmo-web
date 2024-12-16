@@ -1,31 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../clients/dynamodb';
-
-interface Deck {
-  deckId: string;
-  userId: string;
-  title: string;
-  description: string;
-  createdAt: string;
-  totalCards: number;
-}
+import { auth } from '@clerk/nextjs/server';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
 export async function GET(req: NextRequest) {
   console.log('➡️ [GET /api/decks] Request received');
 
-  const userId = req.headers.get('x-user-id');
-  console.log(`📍 [Auth] User ID from request: ${userId || 'none'}`);
-
-  if (!userId) {
-    console.warn('⚠️ [Auth] Unauthorized access attempt');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  console.log(`🔍 [DynamoDB] Querying table: ${TABLE_NAME} for user: ${userId}`);
   try {
+    const { userId } = await auth();
+    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+
+    if (!userId) {
+      console.warn('⚠️ [Auth] Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    console.log(`🔍 [DynamoDB] Querying table: ${TABLE_NAME} for user: ${userId}`);
+
     // First, get all decks
     const decksCommand = new QueryCommand({
       TableName: TABLE_NAME,
@@ -77,7 +70,6 @@ export async function GET(req: NextRequest) {
         name: error?.name,
         stack: error?.stack
       },
-      userId: userId,
       tableName: TABLE_NAME
     });
 
