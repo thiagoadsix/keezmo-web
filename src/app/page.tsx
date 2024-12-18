@@ -1,14 +1,19 @@
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+"use client";
+
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/src/components/ui/button";
 import { HeroSection } from "@/src/components/landing-page/hero-section";
 import { FeaturesSection } from "@/src/components/landing-page/features-section";
 import { PlansSection } from "@/src/components/landing-page/plans-section";
+import { FAQSection } from "@/src/components/landing-page/faq-section";
 import { Footer } from "@/src/components/landing-page/footer";
 
 export default function Home() {
+  const router = useRouter();
   return (
     <div className="relative flex min-h-screen flex-col">
       {/* Fixed Header */}
@@ -23,14 +28,23 @@ export default function Home() {
 
           {/* Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
-            <a href="#features" className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary">
+            <a
+              href="#features"
+              className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary"
+            >
               Funcionalidades
             </a>
-            <a href="#plans" className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary">
+            <a
+              href="#plans"
+              className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary"
+            >
               Planos
             </a>
-            <a href="#about" className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary">
-              About
+            <a
+              href="#about"
+              className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary"
+            >
+              Sobre
             </a>
           </nav>
 
@@ -45,9 +59,7 @@ export default function Home() {
               </Button>
             </SignedIn>
             <SignedOut>
-              <SignInButton>
-                <Button>Entrar</Button>
-              </SignInButton>
+              <Button onClick={() => router.push("/sign-in")}>Entrar</Button>
             </SignedOut>
           </div>
         </div>
@@ -58,6 +70,7 @@ export default function Home() {
         <HeroSection />
         <FeaturesSection />
         <PlansSection />
+        <FAQSection />
       </main>
 
       <Footer />

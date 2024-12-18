@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 
 const plans = [
   {
-    name: "Básico",
+    name: "Basic",
     price: "0",
     description: "Perfeito para experimentar o Keezmo",
     features: [
@@ -18,7 +18,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "19",
+    price: "24",
     description: "Para estudantes dedicados",
     features: [
       "120 créditos",

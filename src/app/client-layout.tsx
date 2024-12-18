@@ -27,7 +27,7 @@ export default function ClientLayout({
       </SignedIn>
       <main className={cn(
         "flex-1 overflow-y-auto",
-        !hideNavigation && "container py-4"
+        !hideNavigation && "py-4"
       )}>
         {children}
       </main>

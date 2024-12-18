@@ -1,12 +1,12 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import "./globals.css";
 import { Metadata } from "next";
 import localFont from "next/font/local";
-import { ThemeProvider } from "@/src/components/theme-provider";
 import { ptBR } from "@clerk/localizations";
 import { dark } from "@clerk/themes";
+import { ThemeProvider } from "@/src/components/theme-provider";
 import { MobileSidebarProvider } from "@/src/contexts/mobile-sidebar";
 import ClientLayout from "@/src/app/client-layout";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Keezmo",
