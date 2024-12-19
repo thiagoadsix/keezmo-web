@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from "react"
-import { useUser } from "@clerk/nextjs"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Plus, Loader2, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { apiClient } from "@/src/lib/api-client"
 import { CardModal } from "./card-modal"
 
 interface Card {
@@ -29,7 +27,6 @@ interface CreateDeckFormProps {
 }
 
 export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onError }: CreateDeckFormProps) {
-  const { user } = useUser()
   const [isLoading, setIsLoading] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -163,9 +160,9 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                 key={index}
                 className="border rounded-lg p-4 hover:border-primary transition-colors"
               >
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-center">
                   <div className="flex-1">
-                    <h4 className="font-medium mb-1">Card {index + 1}</h4>
+                    <h4 className="font-medium mb-1">Cartão {index + 1}</h4>
                     <p className="text-sm text-muted-foreground line-clamp-1">
                       {card.question}
                     </p>
