@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/src/components/ui/button"
 import { BookOpen } from "lucide-react"
 import Link from "next/link"
+import { formatDate } from "@/src/lib/date"
 
 export type Deck = {
   deckId: string
@@ -49,7 +50,7 @@ export const columns: ColumnDef<Deck>[] = [
     header: "DATA DE CRIAÇÃO",
     cell: ({ row }) => (
       <div className="hidden md:block">
-        {row.getValue("createdAt")}
+        {formatDate(row.getValue("createdAt"))}
       </div>
     ),
   },

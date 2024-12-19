@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Deck } from "../decks/columns";
 import { Badge } from "@/src/components/ui/badge";
+import { formatDate } from "@/src/lib/date";
 
 export type StudySession = {
   id: string;
@@ -56,7 +57,7 @@ export const columns: ColumnDef<StudySession>[] = [
     header: "DATA",
     cell: ({ row }) => {
       const date = row.getValue("createdAt") as string;
-      return <div className="hidden md:block">{date}</div>;
+      return <div className="hidden md:block">{formatDate(date)}</div>;
     },
     meta: {
       className: "hidden md:table-cell",
