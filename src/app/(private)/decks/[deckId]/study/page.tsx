@@ -145,7 +145,7 @@ export default function StudyPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="bg-[#10111F] rounded-md border border-neutral-800 p-8 flex flex-col gap-4">
-          <p className="text-red-500">{error || 'Nenhum card encontrado'}</p>
+          <p className="text-red-500">{error || 'Nenhum cartão encontrado'}</p>
           <Button variant="outline" asChild>
             <Link href="/decks" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../clients/dynamodb';
 import { auth } from '@clerk/nextjs/server';
 
@@ -74,5 +74,114 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+interface Card {
+  question: string;
+  correctAnswer: string;
+  options: string[];
+}
+
+interface CreateDeckRequest {
+  title: string;
+  description: string;
+  cards: Card[];
+}
+
+export async function POST(req: NextRequest) {
+  console.log('➡️ [POST /api/decks] Request received');
+
+  try {
+    const { userId } = await auth();
+    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+
+    if (!userId) {
+      console.warn('⚠️ [Auth] Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body: CreateDeckRequest = await req.json();
+    console.log('📝 [Request] Deck creation data:', body);
+
+    // Validate request
+    if (!body.title || !body.cards || body.cards.length === 0) {
+      return NextResponse.json(
+        { error: 'Title and at least one card are required' },
+        { status: 400 }
+      );
+    }
+
+    // Generate IDs and timestamp
+    const deckId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+
+    // Create deck
+    const createDeckCommand = new PutCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        pk: `USER#${userId}`,
+        sk: `DECK#${deckId}`,
+        userId,
+        title: body.title,
+        description: body.description || '',
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+    });
+
+    // Create cards
+    const cardCommands = body.cards.map((card, index) => {
+      const cardId = crypto.randomUUID();
+      return new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+          pk: `DECK#${deckId}`,
+          sk: `CARD#${cardId}`,
+          id: cardId,
+          deckId,
+          question: card.question,
+          options: [...card.options, card.correctAnswer].sort(() => Math.random() - 0.5), // Shuffle options including correct answer
+          correctAnswer: card.correctAnswer,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          order: index
+        }
+      });
+    });
+
+    // Execute all commands in parallel
+    await Promise.all([
+      dynamoDbClient.send(createDeckCommand),
+      ...cardCommands.map(command => dynamoDbClient.send(command))
+    ]);
+
+    console.log('✨ [DynamoDB] Successfully created deck and cards:', {
+      deckId,
+      totalCards: body.cards.length
+    });
+
+    return NextResponse.json({
+      deckId,
+      title: body.title,
+      description: body.description,
+      totalCards: body.cards.length,
+      createdAt: timestamp
+    }, { status: 201 });
+
+  } catch (error: any) {
+    console.error('❌ [Error] Failed to create deck:', {
+      error: {
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack
+      },
+      tableName: TABLE_NAME
+    });
+
+    return NextResponse.json(
+      { error: 'Failed to create deck' },
+      { status: 500 }
+    );
   }
 }

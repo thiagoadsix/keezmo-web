@@ -12,7 +12,8 @@ import { apiClient } from "@/src/lib/api-client"
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
   onProcessingStart: () => void;
-  onStepUpdate: (stepId: number, status: 'waiting' | 'processing' | 'completed') => void;
+  onStepUpdate: (stepId: number, status: 'waiting' | 'processing' | 'completed' | 'error') => void;
+  onError: (error: string) => void;
 }
 
 export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: CreateDeckFormProps) {
@@ -227,7 +228,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
 
       <div className="flex justify-between gap-4">
         <Button variant="destructive" asChild>
-          <Link href="/decks">Cancelar</Link>
+          <Link href="/decks/create">Cancelar</Link>
         </Button>
         <Button
           onClick={handleCreateDeck}

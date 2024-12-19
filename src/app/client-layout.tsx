@@ -12,9 +12,7 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideNavigation = isFullscreenRoute(pathname) ||
-    pathname === '/decks/create' ||
-    pathname === '/';
+  const hideNavigation = isFullscreenRoute(pathname)
 
   if (pathname === '/') {
     return children;

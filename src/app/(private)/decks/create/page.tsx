@@ -1,84 +1,92 @@
 'use client'
 
-import { FileText, Brain, Sparkles } from "lucide-react"
-import { useState } from "react"
+import { FileText, Sparkles, Loader2 } from "lucide-react"
+import Link from "next/link"
 import Header from "@/src/components/header"
-import { CreateDeckForm } from "@/src/components/create-deck/create-deck-form"
-import { ProcessingStatus } from "@/src/components/create-deck/processing-status"
-import { SuccessMessage } from "@/src/components/create-deck/success-message"
-
-type ProcessStep = {
-  id: number;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  status: 'waiting' | 'processing' | 'completed';
-};
-
-const initialSteps: ProcessStep[] = [
-  {
-    id: 1,
-    title: 'Enviando PDF',
-    description: 'Fazendo upload do arquivo para processamento',
-    icon: <FileText className="h-5 w-5" />,
-    status: 'waiting'
-  },
-  {
-    id: 2,
-    title: 'Analisando conteúdo',
-    description: 'Extraindo e processando o conteúdo do PDF',
-    icon: <Brain className="h-5 w-5" />,
-    status: 'waiting'
-  },
-  {
-    id: 3,
-    title: 'Gerando cards',
-    description: 'Criando cards de estudo com IA',
-    icon: <Sparkles className="h-5 w-5" />,
-    status: 'waiting'
-  }
-] as const;
+import { useCredits } from "@/src/hooks/use-credits"
+import { cn } from "@/src/lib/utils"
 
 export default function CreateDeckPage() {
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [isCompleted, setIsCompleted] = useState(false)
-  const [createdDeckId, setCreatedDeckId] = useState<string | null>(null)
-  const [steps, setSteps] = useState<ProcessStep[]>(initialSteps)
-
-  const updateStepStatus = (stepId: number, status: ProcessStep['status']) => {
-    setSteps(steps =>
-      steps.map(step =>
-        step.id === stepId ? { ...step, status } : step
-      )
-    )
-  }
-
-  if (isProcessing) {
-    return (
-      <ProcessingStatus steps={steps} />
-    )
-  }
-
-  if (isCompleted && createdDeckId) {
-    return <SuccessMessage deckId={createdDeckId} />
-  }
+  const { credits, isLoading } = useCredits()
+  const hasCredits = credits && credits > 0
 
   return (
-    <div className="flex flex-col gap-4 px-8 py-4">
-      <Header
-        title="Criar deck"
-        mobileTitle="Criar deck"
-      />
-      <main className="bg-[#10111F] w-full h-full rounded-3xl border">
-        <CreateDeckForm
-          onSuccess={(deckId) => {
-            setCreatedDeckId(deckId)
-            setIsCompleted(true)
-            setIsProcessing(false)
-          }}
-          onProcessingStart={() => setIsProcessing(true)}
-          onStepUpdate={updateStepStatus}
+    <div className="flex flex-col">
+      <div className="px-8 py-4">
+        <Header
+          title="Criar deck"
+          mobileTitle="Criar deck"
         />
+      </div>
+      <main className="flex-1 flex justify-center px-4 sm:px-8 py-4">
+        <div className="flex flex-col items-center gap-8 sm:gap-12 w-full max-w-4xl">
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Como você quer criar seu deck?
+            </h1>
+            <p className="text-base sm:text-lg text-muted-foreground">
+              Escolha entre criar seus próprios cards ou deixar nossa IA gerar automaticamente a partir de um PDF.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+            <Link
+              href="/decks/create/manually"
+              className="bg-[#10111F] rounded-lg sm:rounded-lg border border-neutral-800 p-4 sm:p-8 flex flex-col items-center gap-4 sm:gap-6 hover:border-primary transition-colors"
+            >
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-neutral-800/50 flex items-center justify-center">
+                <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
+              </div>
+              <div className="text-center">
+                <h2 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Criar manualmente</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Crie seus próprios cards de estudo manualmente, definindo perguntas e respostas.
+                </p>
+              </div>
+            </Link>
+
+            {isLoading ? (
+              <div className="bg-[#10111F] rounded-lg sm:rounded-lg border border-neutral-800 p-4 sm:p-8 flex flex-col items-center gap-4 sm:gap-6">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-neutral-800/50 flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin" />
+                </div>
+                <div className="text-center">
+                  <h2 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Criar com IA</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Carregando...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  "bg-[#10111F] rounded-lg sm:rounded-lg border p-4 sm:p-8 flex flex-col items-center gap-4 sm:gap-6 transition-colors",
+                  hasCredits
+                    ? "border-neutral-800 hover:border-primary cursor-pointer"
+                    : "opacity-60 cursor-not-allowed"
+                )}
+                onClick={() => {
+                  if (hasCredits) {
+                    window.location.href = '/decks/create/ai'
+                  }
+                }}
+              >
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-neutral-800/50 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 sm:h-8 sm:w-8" />
+                </div>
+                <div className="text-center">
+                  <h2 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Criar com IA</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    {hasCredits
+                      ? "Faça upload de um PDF e deixe nossa IA gerar cards de estudo automaticamente."
+                      : "Você precisa de créditos para usar esta funcionalidade."
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   )

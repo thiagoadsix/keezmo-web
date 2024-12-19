@@ -126,7 +126,6 @@ interface CreateStudySessionRequest {
 export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/study-sessions] Request received');
   console.log('Request URL:', req.url);
-  console.log('Request headers:', Object.fromEntries(req.headers));
 
   try {
     const { userId } = await auth();

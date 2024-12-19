@@ -5,7 +5,7 @@ type ProcessStep = {
   title: string;
   description: string;
   icon: React.ReactNode;
-  status: 'waiting' | 'processing' | 'completed';
+  status: 'waiting' | 'processing' | 'completed' | 'error';
 };
 
 interface ProcessingStatusProps {

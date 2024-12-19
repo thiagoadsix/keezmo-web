@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function isFullscreenRoute(pathname: string) {
-  return /^\/decks\/[^/]+\/study/.test(pathname) || pathname === '/decks/create';
+  return /^\/decks\/[^/]+\/study/.test(pathname) || pathname === '/';
 }
 
 export const isPublicRoute = (pathname: string) => {
