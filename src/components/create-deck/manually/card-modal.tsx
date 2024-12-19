@@ -74,7 +74,36 @@ export function CardModal({ isOpen, onClose, onSave, editingCard }: CardModalPro
       return
     }
 
-    // Verificar se a resposta correta não está nas opções incorretas
+    if (card.options.includes(card.correctAnswer)) {
+      setError('A resposta correta não pode estar nas opções incorretas')
+      return
+    }
+
+    onSave(card)
+
+    if (!editingCard) {
+      setCard({
+        question: '',
+        correctAnswer: '',
+        options: ['']
+      })
+      setError(null)
+    } else {
+      onClose()
+    }
+  }
+
+  const handleSaveAndClose = () => {
+    if (!card.question || !card.correctAnswer || card.options.some(option => !option)) {
+      setError('Por favor, preencha todos os campos')
+      return
+    }
+
+    if (card.options.length < 1) {
+      setError('Adicione pelo menos uma opção incorreta')
+      return
+    }
+
     if (card.options.includes(card.correctAnswer)) {
       setError('A resposta correta não pode estar nas opções incorretas')
       return
@@ -92,8 +121,9 @@ export function CardModal({ isOpen, onClose, onSave, editingCard }: CardModalPro
             {editingCard ? 'Editar cartão' : 'Novo cartão'}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Crie um cartão com uma pergunta, uma resposta correta e quantas opções incorretas desejar.
-            O sistema irá embaralhar automaticamente todas as opções durante o estudo.
+            {editingCard
+              ? 'Edite as informações do cartão.'
+              : 'Crie quantos cartões desejar. Após criar cada cartão, o formulário será limpo para o próximo.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -177,12 +207,26 @@ export function CardModal({ isOpen, onClose, onSave, editingCard }: CardModalPro
         </div>
 
         <DialogFooter className="flex justify-between">
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave}>
-            {editingCard ? 'Salvar' : 'Adicionar'}
-          </Button>
+          <div className="flex gap-2">
+            {editingCard && (
+              <Button variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {!editingCard && (
+              <Button
+                variant="outline"
+                onClick={handleSaveAndClose}
+              >
+                Salvar e concluir
+              </Button>
+            )}
+            <Button onClick={handleSave}>
+              {editingCard ? 'Salvar' : 'Adicionar e continuar'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
