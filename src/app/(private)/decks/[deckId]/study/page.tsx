@@ -4,10 +4,18 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
-import { ArrowLeft, Check, X, RotateCw, FolderOpen } from "lucide-react";
+import { ArrowLeft, Check, X, RotateCw, FolderOpen, Info, BarChart2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { calculateNextInterval, calculateNextReview } from "@/src/lib/spaced-repetition";
 import { QuestionMetadata } from "@/src/types/study";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/src/components/ui/dialog";
+import { formatDate } from "@/src/lib/date";
 
 type Question = {
   id: string;
@@ -307,9 +315,16 @@ export default function StudyPage() {
   }
 
   if (isCompleted) {
+    const sessionDuration = startTime && new Date().getTime() - new Date(startTime).getTime();
+    const durationInMinutes = sessionDuration ? Math.floor(sessionDuration / 1000 / 60) : 0;
+
+    const accuracy = (totalHits / (totalHits + totalMisses)) * 100;
+    const sortedQuestions = Array.from(questionsMetadata.values())
+      .sort((a, b) => b.errors - a.errors);
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-        <div className="bg-[#10111F] rounded-md border border-neutral-800 p-8 w-full max-w-xl flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="bg-[#10111F] rounded-md border border-neutral-800 p-4 sm:p-8 w-full max-w-xl flex flex-col items-center gap-6">
           <div className="relative w-24 h-24">
             <svg className="w-full h-full" viewBox="0 0 100 100">
               <circle
@@ -326,13 +341,13 @@ export default function StudyPage() {
                 dominantBaseline="middle"
                 textAnchor="middle"
               >
-                100%
+                {Math.round(accuracy)}%
               </text>
             </svg>
           </div>
 
-          <div className="text-center gap-4 flex flex-col items-center">
-            <h2 className="text-2xl font-bold mb-2">
+          <div className="text-center gap-4 flex flex-col items-center w-full">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">
               Parabéns! Deck estudado com sucesso.
             </h2>
             <div className="flex flex-col gap-2 w-full">
@@ -345,17 +360,72 @@ export default function StudyPage() {
                 <span>{totalMisses} erros</span>
               </div>
             </div>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="mt-2">
+                  <Info className="h-4 w-4 mr-2" />
+                  Ver detalhes da sessão
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[600px] p-4 sm:p-6 gap-4">
+                <DialogHeader className="pb-2 sm:pb-4">
+                  <DialogTitle className="text-lg">Detalhes da Sessão de Estudo</DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Estatísticas Gerais */}
+                  <div className="space-y-2">
+                    <h3 className="font-medium flex items-center gap-2 text-sm sm:text-base">
+                      <BarChart2 className="h-4 w-4" />
+                      Estatísticas Gerais
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                      <div>Duração: {durationInMinutes} minutos</div>
+                      <div>Total de questões: {questions.length}</div>
+                      <div>Taxa de acerto: {Math.round(accuracy)}%</div>
+                      <div>Questões revisadas: {wrongAnswers.length}</div>
+                      <div>Início: {formatDate(startTime || '')}</div>
+                      <div>Fim: {formatDate(new Date().toISOString())}</div>
+                    </div>
+                  </div>
+
+                  {/* Detalhes por Questão */}
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-sm sm:text-base">Desempenho por Questão</h3>
+                    <div className="space-y-2 max-h-[180px] sm:max-h-[200px] overflow-y-auto pr-2">
+                      {sortedQuestions.map((q) => (
+                        <div
+                          key={q.questionId}
+                          className="text-xs sm:text-sm p-2 rounded bg-neutral-800/30 flex flex-col sm:flex-row sm:items-center gap-2"
+                        >
+                          <div className="flex-1">
+                            <div className="font-medium">Questão {q.questionId.slice(-4)}</div>
+                            <div className="text-[10px] sm:text-xs text-muted-foreground">
+                              {q.attempts} tentativas • {q.errors} erros • {q.consecutiveHits} acertos consecutivos
+                            </div>
+                          </div>
+                          <div className="text-[10px] sm:text-xs text-muted-foreground">
+                            Próxima revisão: {formatDate(q.nextReview)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
-          <div className="flex gap-4 w-full">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full">
             <Button
               variant="outline"
               className="w-full"
               asChild
             >
-              <Link href="/decks" className="flex items-center gap-2">
+              <Link href="/decks" className="flex items-center justify-center gap-2">
                 <FolderOpen className="h-4 w-4" />
-                Estudar outro Deck
+                <span className="whitespace-nowrap">Estudar outro Deck</span>
               </Link>
             </Button>
             <Button
@@ -371,7 +441,7 @@ export default function StudyPage() {
               }}
             >
               <RotateCw className="h-4 w-4" />
-              Estudar novamente
+              <span className="whitespace-nowrap">Estudar novamente</span>
             </Button>
           </div>
         </div>
