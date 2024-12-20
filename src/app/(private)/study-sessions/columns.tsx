@@ -10,9 +10,16 @@ export type StudySession = {
   deckId: string;
   hits: number;
   misses: number;
+  totalQuestions: number;
   deck: Deck;
   createdAt: string;
+  questionsMetadata?: Array<{
+    questionId: string;
+    attempts: number;
+    errors: number;
+  }>;
 };
+
 
 export const columns: ColumnDef<StudySession>[] = [
   {

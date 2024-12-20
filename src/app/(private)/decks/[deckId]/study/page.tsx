@@ -1,18 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 import { ArrowLeft, Check, X, RotateCw, FolderOpen } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
+import { calculateNextInterval, calculateNextReview } from "@/src/lib/spaced-repetition";
+import { QuestionMetadata } from "@/src/types/study";
 
 type Question = {
   id: string;
   question: string;
   options: string[];
   correctAnswer: string;
+  attempts: number;
+  errors: number;
+  lastAttempt?: Date;
 };
+
+interface CardProgress {
+  cardId: string;
+  totalAttempts: number;
+  totalErrors: number;
+  consecutiveHits: number;
+  interval: number;
+  lastReviewed: string;
+  nextReview: string;
+}
+
+interface QuestionWithMetadata extends Question {
+  attempts: number;
+  errors: number;
+  consecutiveHits: number;
+  interval: number;
+  lastReviewed: string;
+  nextReview: string;
+}
 
 export default function StudyPage() {
   const { deckId } = useParams();
@@ -24,9 +48,14 @@ export default function StudyPage() {
   const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false);
   const [remainingQuestions, setRemainingQuestions] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [hits, setHits] = useState(0);
+  const [totalHits, setTotalHits] = useState(0);
+  const [totalMisses, setTotalMisses] = useState(0);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [questionsPool, setQuestionsPool] = useState<Question[]>([]);
+  const [wrongAnswers, setWrongAnswers] = useState<Question[]>([]);
+  const [isReviewMode, setIsReviewMode] = useState(false);
+  const [questionsMetadata, setQuestionsMetadata] = useState<Map<string, QuestionMetadata>>(new Map());
 
   useEffect(() => {
     if (!deckId || deckId === 'undefined') {
@@ -34,70 +63,200 @@ export default function StudyPage() {
       return;
     }
 
-    async function fetchCards() {
+    async function fetchCardsAndProgress() {
       try {
         const host = window.location.host;
         const protocol = window.location.protocol;
-        const url = `${protocol}//${host}/api/decks/${deckId}/cards`;
 
-        const response = await fetch(url, {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': user?.id || ''
-          },
-          cache: 'no-store'
-        });
+        // Buscar cards e progresso em paralelo
+        const [cardsResponse, progressResponse] = await Promise.all([
+          fetch(`${protocol}//${host}/api/decks/${deckId}/cards`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user?.id || ''
+            },
+            cache: 'no-store'
+          }),
+          fetch(`${protocol}//${host}/api/cards/progress?deckId=${deckId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user?.id || ''
+            },
+            cache: 'no-store'
+          })
+        ]);
 
-        if (!response.ok) throw new Error('Failed to fetch cards');
-        const data = await response.json();
+        if (!cardsResponse.ok) throw new Error('Failed to fetch cards');
+        const cardsData = await cardsResponse.json();
+        const progressData = await progressResponse.json();
 
-        if (!data.cards || data.cards.length === 0) {
+        if (!cardsData.cards || cardsData.cards.length === 0) {
           setError('Este deck não possui cards');
           return;
         }
 
-        setQuestions(data.cards);
+        // Criar Map com o progresso existente
+        const progressMap = new Map<string, CardProgress>(
+          progressData.progress?.map((p: CardProgress) => [p.cardId, p]) || []
+        );
+
+        // Combinar cards com seu progresso existente
+        const questionsWithMetadata = cardsData.cards.map((card: Question) => {
+          const progress = progressMap.get(card.id);
+          return {
+            ...card,
+            attempts: progress?.totalAttempts || 0,
+            errors: progress?.totalErrors || 0,
+            consecutiveHits: progress?.consecutiveHits || 0,
+            interval: progress?.interval || 0,
+            lastReviewed: progress?.lastReviewed || new Date().toISOString(),
+            nextReview: progress?.nextReview || new Date().toISOString()
+          } as QuestionWithMetadata;
+        });
+
+        // Ordenar cards por nextReview
+        questionsWithMetadata.sort((a: QuestionWithMetadata, b: QuestionWithMetadata) =>
+          new Date(a.nextReview).getTime() - new Date(b.nextReview).getTime()
+        );
+
+        setQuestions(questionsWithMetadata);
+        setQuestionsPool(questionsWithMetadata);
         setStartTime(new Date().toISOString());
-        setRemainingQuestions(data.cards.length);
+        setRemainingQuestions(questionsWithMetadata.length);
+
+        // Inicializar questionsMetadata
+        setQuestionsMetadata(new Map(
+          questionsWithMetadata.map((q: QuestionWithMetadata) => [q.id, {
+            questionId: q.id,
+            attempts: q.attempts,
+            errors: q.errors,
+            consecutiveHits: q.consecutiveHits,
+            interval: q.interval,
+            lastReviewed: q.lastReviewed,
+            nextReview: q.nextReview
+          }])
+        ));
+
       } catch (error) {
-        console.error('Failed to fetch cards:', error);
+        console.error('Failed to fetch cards and progress:', error);
         setError('Erro ao carregar os cards');
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchCards();
-  }, [deckId]);
+    fetchCardsAndProgress();
+  }, [deckId, user?.id]);
 
   const handleOptionClick = (option: string) => {
     if (isAnswerConfirmed) return;
     setSelectedOption(option);
   };
 
-  const handleConfirmAnswer = () => {
+  const handleConfirmAnswer = async () => {
     if (!selectedOption) return;
     setIsAnswerConfirmed(true);
-    setRemainingQuestions((prev) => prev - 1);
 
-    if (selectedOption === questions[currentQuestion].correctAnswer) {
-      setHits(prev => prev + 1);
+    const currentQ = questionsPool[currentQuestion];
+    const metadata = questionsMetadata.get(currentQ.id) || {
+      questionId: currentQ.id,
+      attempts: 0,
+      errors: 0,
+      consecutiveHits: 0,
+      interval: 0,
+      lastReviewed: new Date().toISOString(),
+      nextReview: new Date().toISOString()
+    };
+
+    metadata.attempts++;
+    const isCorrect = selectedOption === currentQ.correctAnswer;
+
+    if (!isCorrect) {
+      metadata.errors++;
+      metadata.consecutiveHits = 0;
+      setTotalMisses(prev => prev + 1);
+
+      if (!isReviewMode) {
+        setWrongAnswers(prev => [...prev, currentQ]);
+      }
+    } else {
+      metadata.consecutiveHits++;
+      setTotalHits(prev => prev + 1);
     }
+
+    metadata.interval = calculateNextInterval({
+      currentInterval: metadata.interval,
+      consecutiveHits: metadata.consecutiveHits,
+      errors: metadata.errors,
+      attempts: metadata.attempts
+    });
+
+    metadata.lastReviewed = new Date().toISOString();
+    metadata.nextReview = calculateNextReview(metadata.interval);
+
+    setQuestionsMetadata(new Map(questionsMetadata.set(currentQ.id, metadata)));
+
+    try {
+      const response = await fetch(`/api/cards/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || ''
+        },
+        body: JSON.stringify({
+          cardId: currentQ.id,
+          deckId,
+          lastReviewed: metadata.lastReviewed,
+          nextReview: metadata.nextReview,
+          interval: metadata.interval,
+          consecutiveHits: metadata.consecutiveHits,
+          totalAttempts: metadata.attempts,
+          totalErrors: metadata.errors
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update card progress');
+    } catch (error) {
+      console.error('Failed to update card progress:', error);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentQuestion === questionsPool.length - 1) {
+      if (isReviewMode && wrongAnswers.length > 0) {
+        setQuestionsPool(wrongAnswers);
+        setWrongAnswers([]);
+        setCurrentQuestion(0);
+        setSelectedOption(null);
+        setIsAnswerConfirmed(false);
+        setRemainingQuestions(wrongAnswers.length);
+      } else if (wrongAnswers.length > 0 && !isReviewMode) {
+        setIsReviewMode(true);
+        setQuestionsPool(wrongAnswers);
+        setWrongAnswers([]);
+        setCurrentQuestion(0);
+        setSelectedOption(null);
+        setIsAnswerConfirmed(false);
+        setRemainingQuestions(wrongAnswers.length);
+      } else {
+        handleStudyComplete();
+      }
+      return;
+    }
+
+    setSelectedOption(null);
+    setIsAnswerConfirmed(false);
+    setCurrentQuestion(prev => prev + 1);
   };
 
   const handleStudyComplete = async () => {
     try {
-      const host = window.location.host;
-      const protocol = window.location.protocol;
-      const url = `${protocol}//${host}/api/study-sessions`;
-
-      if (!startTime) {
-        throw new Error('Start time not set');
-      }
-
       const endTime = new Date().toISOString();
 
-      const response = await fetch(url, {
+      const metadataArray = Array.from(questionsMetadata.values())
+        .sort((a, b) => b.errors - a.errors);
+
+      const response = await fetch(`/api/study-sessions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,11 +264,12 @@ export default function StudyPage() {
         },
         body: JSON.stringify({
           deckId,
-          hits,
-          misses: questions.length - hits,
+          hits: totalHits,
+          misses: totalMisses,
           totalQuestions: questions.length,
           startTime,
-          endTime
+          endTime,
+          questionsMetadata: metadataArray
         })
       });
 
@@ -118,17 +278,6 @@ export default function StudyPage() {
     } catch (error) {
       console.error('Failed to save study session:', error);
     }
-  };
-
-  const handleNext = () => {
-    if (currentQuestion === questions.length - 1) {
-      handleStudyComplete();
-      return;
-    }
-
-    setSelectedOption(null);
-    setIsAnswerConfirmed(false);
-    setCurrentQuestion((prev) => prev + 1);
   };
 
   if (isLoading) {
@@ -186,9 +335,15 @@ export default function StudyPage() {
             <h2 className="text-2xl font-bold mb-2">
               Parabéns! Deck estudado com sucesso.
             </h2>
-            <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full">
-              <Check className="h-4 w-4" />
-              <span>Você acertou {hits} questões de {questions.length}</span>
+            <div className="flex flex-col gap-2 w-full">
+              <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full">
+                <Check className="h-4 w-4" />
+                <span>{totalHits} acertos</span>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-500 px-4 py-2 rounded-full">
+                <X className="h-4 w-4" />
+                <span>{totalMisses} erros</span>
+              </div>
             </div>
           </div>
 
@@ -211,7 +366,8 @@ export default function StudyPage() {
                 setIsAnswerConfirmed(false);
                 setIsCompleted(false);
                 setRemainingQuestions(questions.length);
-                setHits(0);
+                setTotalHits(0);
+                setTotalMisses(0);
               }}
             >
               <RotateCw className="h-4 w-4" />
@@ -275,10 +431,21 @@ export default function StudyPage() {
       </div>
 
       <div className="bg-[#10111F] border border-neutral-800 rounded-md p-8 flex flex-col gap-6">
+        {isReviewMode && (
+          <div className="bg-yellow-500/10 text-yellow-500 px-4 py-2 rounded-md text-sm">
+            Modo de revisão: Responda novamente as questões que errou
+          </div>
+        )}
+
         <div className="flex flex-col gap-2">
           <h2 className="text-xl font-medium">
             {currentQuestionData.question}
           </h2>
+          {currentQuestionData.attempts > 1 && (
+            <p className="text-sm text-red-500">
+              Você errou esta questão {currentQuestionData.errors} {currentQuestionData.errors === 1 ? 'vez' : 'vezes'}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">
             Selecione uma das opções abaixo.
           </p>

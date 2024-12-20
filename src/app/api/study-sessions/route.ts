@@ -18,6 +18,7 @@ interface StudySession {
     description: string;
     totalCards: number;
   };
+  questionsMetadata: QuestionMetadata[];
 }
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
@@ -88,6 +89,7 @@ export async function GET(req: NextRequest) {
         startTime: String(item.startTime),
         endTime: String(item.endTime),
         createdAt: String(item.createdAt),
+        questionsMetadata: item.questionsMetadata,
         deck: deckResponse.Item ? {
           title: String(deckResponse.Item.title),
           description: String(deckResponse.Item.description),
@@ -114,6 +116,12 @@ export async function GET(req: NextRequest) {
   }
 }
 
+interface QuestionMetadata {
+  questionId: string;
+  attempts: number;
+  errors: number;
+}
+
 interface CreateStudySessionRequest {
   deckId: string;
   hits: number;
@@ -121,6 +129,7 @@ interface CreateStudySessionRequest {
   totalQuestions: number;
   startTime: string;
   endTime: string;
+  questionsMetadata: QuestionMetadata[];
 }
 
 export async function POST(req: NextRequest) {
@@ -155,7 +164,8 @@ export async function POST(req: NextRequest) {
         totalQuestions: body.totalQuestions,
         startTime: body.startTime,
         endTime: body.endTime,
-        createdAt: timestamp
+        createdAt: timestamp,
+        questionsMetadata: body.questionsMetadata,
       }
     });
 

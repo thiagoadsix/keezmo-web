@@ -29,6 +29,11 @@ type StudySession = {
     description: string;
     totalCards: number;
   };
+  questionsMetadata?: Array<{
+    questionId: string;
+    attempts: number;
+    errors: number;
+  }>;
 };
 
 type RecentActivityState = {
