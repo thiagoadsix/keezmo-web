@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/src/components/theme-provider";
 import { MobileSidebarProvider } from "@/src/contexts/mobile-sidebar";
 import ClientLayout from "@/src/app/client-layout";
 import "./globals.css";
+import { Toaster } from "@/src/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "Keezmo",
@@ -52,6 +53,7 @@ export default function RootLayout({
               </ClientLayout>
             </MobileSidebarProvider>
           </ThemeProvider>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>

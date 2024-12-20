@@ -8,12 +8,19 @@ import { PdfIcon } from "@/src/icons/pdf"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { apiClient } from "@/src/lib/api-client"
+import { useToast } from "@/src/hooks/use-toast"
+import { PDFDocument } from 'pdf-lib'
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
   onProcessingStart: () => void;
   onStepUpdate: (stepId: number, status: 'waiting' | 'processing' | 'completed' | 'error') => void;
   onError: (error: string) => void;
+}
+
+interface PageRange {
+  start: number;
+  end: number;
 }
 
 export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: CreateDeckFormProps) {
@@ -25,24 +32,86 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [pageRange, setPageRange] = useState<PageRange>({ start: 1, end: 1 });
+  const [pageRangeError, setPageRangeError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
-      setSelectedFile(file)
-      setSelectedFileName(file.name)
-      setError(null)
+      try {
+        // Ler número de páginas do PDF
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const pageCount = pdfDoc.getPageCount();
+
+        setTotalPages(pageCount);
+        setPageRange({ start: 1, end: Math.min(pageCount, 30) });
+        setSelectedFile(file);
+        setSelectedFileName(file.name);
+        setError(null);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao ler PDF",
+          description: "Não foi possível ler o arquivo PDF. Tente novamente."
+        });
+        setSelectedFile(null);
+        setSelectedFileName(null);
+      }
     } else {
-      setError('Por favor, selecione um arquivo PDF válido')
-      setSelectedFile(null)
-      setSelectedFileName(null)
+      setError('Por favor, selecione um arquivo PDF válido');
+      setSelectedFile(null);
+      setSelectedFileName(null);
     }
   }
+
+  // Validação do intervalo de páginas
+  const validatePageRange = (range: PageRange): boolean => {
+    if (range.start < 1 || range.end > totalPages) {
+      setPageRangeError('Páginas fora do intervalo válido');
+      return false;
+    }
+    if (range.start > range.end) {
+      setPageRangeError('Página inicial deve ser menor que a final');
+      return false;
+    }
+    if (range.end - range.start + 1 > 30) {
+      setPageRangeError('Máximo de 30 páginas permitido');
+      return false;
+    }
+    setPageRangeError(null);
+    return true;
+  }
+
+  const handlePageRangeChange = (field: 'start' | 'end', value: string) => {
+    const numValue = value === '' ? '' : parseInt(value);
+
+    setPageRange(prev => {
+      const newRange = {
+        ...prev,
+        [field]: numValue
+      };
+
+      // Só valida se ambos os campos tiverem valores
+      if (typeof newRange.start === 'number' && typeof newRange.end === 'number') {
+        validatePageRange(newRange as PageRange);
+      }
+
+      return newRange;
+    });
+  };
 
   const handleCreateDeck = async () => {
     if (!title || !numCards || !selectedFile) {
       setError('Por favor, preencha todos os campos obrigatórios')
       return
+    }
+
+    // Validar intervalo de páginas antes de enviar
+    if (!validatePageRange(pageRange)) {
+      return;
     }
 
     setIsLoading(true)
@@ -75,6 +144,8 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
       formData.append('numCards', numCards)
       formData.append('title', title)
       formData.append('description', description)
+      formData.append('pageStart', pageRange.start.toString())
+      formData.append('pageEnd', pageRange.end.toString())
 
       await new Promise(resolve => setTimeout(resolve, 1500))
       onStepUpdate(1, 'completed')
@@ -224,6 +295,44 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
             </div>
           </label>
         </div>
+
+        {totalPages > 0 && (
+          <div className="mt-4 space-y-4">
+            <div className="text-sm text-neutral-400">
+              Total de páginas: {totalPages}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm">
+                Intervalo de páginas (máx. 30 páginas)
+              </label>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={pageRange.start}
+                    onChange={(e) => handlePageRangeChange('start', e.target.value)}
+                    className="w-20"
+                  />
+                  <span>até</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={pageRange.end}
+                    onChange={(e) => handlePageRangeChange('end', e.target.value)}
+                    className="w-20"
+                  />
+                </div>
+                {pageRangeError && (
+                  <p className="text-xs text-red-500">{pageRangeError}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-between gap-4">
