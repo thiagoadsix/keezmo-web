@@ -1,0 +1,12 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+*.ignore
+*.nvmrc
+components.json
+next-env.d.ts
+package-lock.json
+*.config.js
+README.md
+*.png
+*.svg
+
+*.ignore,*.nvmrc,components.json,next-env.d.ts,package-lock.json,*.config.js,README.md,*.png,*.svg

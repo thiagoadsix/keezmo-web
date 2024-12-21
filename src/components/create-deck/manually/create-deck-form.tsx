@@ -1,11 +1,22 @@
 'use client'
 
 import { useState } from "react"
+import { useUser } from "@clerk/nextjs"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
-import { Plus, Loader2, Pencil, Trash2 } from "lucide-react"
+import { Loader2, ChevronLeft, ChevronRight, Trash, Plus } from "lucide-react"
 import Link from "next/link"
-import { CardModal } from "./card-modal"
+import { apiClient } from "@/src/lib/api-client"
+import { useToast } from "@/src/hooks/use-toast"
+import { Textarea } from "@/src/components/ui/textarea"
+import { Alert, AlertDescription } from "@/src/components/ui/alert"
+
+interface CreateDeckFormProps {
+  onSuccess: (deckId: string) => void;
+  onProcessingStart: () => void;
+  onStepUpdate: (stepId: number, status: 'waiting' | 'processing' | 'completed' | 'error') => void;
+  onError: (error: string) => void;
+}
 
 interface Card {
   question: string;
@@ -13,63 +24,31 @@ interface Card {
   options: string[];
 }
 
-interface CreateDeckData {
-  title: string;
-  description: string;
-  cards: Card[];
-}
-
-interface CreateDeckFormProps {
-  onSuccess: (data: CreateDeckData) => void;
-  onProcessingStart: () => void;
-  onStepUpdate: (stepId: number, status: 'waiting' | 'processing' | 'completed' | 'error') => void;
-  onError: (message: string) => void;
-}
-
 export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onError }: CreateDeckFormProps) {
+  const { user } = useUser()
   const [isLoading, setIsLoading] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [cards, setCards] = useState<Card[]>([])
+  const [cards, setCards] = useState<Card[]>([{ question: '', correctAnswer: '', options: [''] }])
+  const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingCardIndex, setEditingCardIndex] = useState<number | null>(null)
+  const { toast } = useToast()
 
-  const handleAddCard = (newCard: Card) => {
-    if (editingCardIndex !== null) {
-      const newCards = [...cards]
-      newCards[editingCardIndex] = newCard
-      setCards(newCards)
-      setEditingCardIndex(null)
-    } else {
-      setCards([...cards, newCard])
+  const nextCard = () => {
+    if (currentCardIndex < cards.length - 1) {
+      setCurrentCardIndex(prev => prev + 1)
     }
   }
 
-  const handleEditCard = (index: number) => {
-    setEditingCardIndex(index)
-    setIsModalOpen(true)
-  }
-
-  const handleRemoveCard = (index: number) => {
-    setCards(cards.filter((_, i) => i !== index))
+  const previousCard = () => {
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(prev => prev - 1)
+    }
   }
 
   const handleCreateDeck = async () => {
     if (!title || cards.length === 0) {
-      setError('Por favor, preencha o título e adicione pelo menos um card')
-      return
-    }
-
-    // Validate cards
-    const invalidCards = cards.some(card =>
-      !card.question ||
-      !card.correctAnswer ||
-      card.options.some(option => !option)
-    )
-
-    if (invalidCards) {
-      setError('Por favor, preencha todos os campos dos cards')
+      setError('Por favor, preencha todos os campos obrigatórios')
       return
     }
 
@@ -78,125 +57,248 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
     onProcessingStart()
 
     try {
-      const deckData = {
-        title,
-        description,
-        cards: cards.map(card => ({
-          ...card,
-          correctAnswer: card.correctAnswer
-        }))
-      }
+      onStepUpdate(1, 'processing')
+      const response = await apiClient('/api/decks', {
+        method: 'POST',
+        headers: {
+          'x-user-id': user?.id || ''
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          cards
+        })
+      })
 
-      // Pass the deck data to parent component
-      onSuccess(deckData)
+      onStepUpdate(1, 'completed')
+      onStepUpdate(2, 'processing')
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      onStepUpdate(2, 'completed')
+      onStepUpdate(3, 'processing')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      onStepUpdate(3, 'completed')
 
+      onSuccess(response.deckId)
     } catch (error: any) {
       console.error('Failed to create deck:', error)
-      const errorMessage = error.message || 'Erro ao criar o deck. Por favor, tente novamente.'
-      onError(errorMessage)
+      onError(error.message || 'Erro ao criar o deck')
+      onStepUpdate(1, 'error')
+      onStepUpdate(2, 'waiting')
+      onStepUpdate(3, 'waiting')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex flex-col gap-6 px-8 py-6">
+    <div className="p-8 space-y-8">
       {error && (
-        <div className="bg-red-500/10 text-red-500 p-4 rounded-md">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex flex-col gap-2 w-full">
-          <div>
-            <label htmlFor="title">Título</label>
-            <span className="text-xs text-red-500">*</span>
-          </div>
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="title" className="text-sm font-medium">Título</label>
           <Input
-            type="text"
             id="title"
-            placeholder="Digite o título do deck"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2 w-full">
         <div>
-          <label htmlFor="description">Descrição</label>
+          <label htmlFor="description" className="text-sm font-medium">Descrição</label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
         </div>
-        <Input
-          type="text"
-          id="description"
-          placeholder="Digite a descrição do deck"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
       </div>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Cartões ({cards.length})</h3>
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            variant="outline"
-            size="lg"
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar Cartão
-          </Button>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Cartões</h3>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              {currentCardIndex + 1} de {cards.length}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setCards(prev => [...prev, { question: '', correctAnswer: '', options: [''] }])
+                setCurrentCardIndex(cards.length) // Move para o novo card
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo cartão
+            </Button>
+          </div>
         </div>
 
-        {cards.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Nenhum cartão adicionado. Clique no botão acima para começar.
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {cards.map((card, index) => (
+        <div className="relative border rounded-lg p-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={previousCard}
+              disabled={currentCardIndex === 0}
+              className="h-8 w-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="flex-1">
               <div
-                key={index}
-                className="border rounded-lg p-4 hover:border-primary transition-colors"
+                className="transition-all duration-300 ease-in-out"
+                style={{ minHeight: '250px' }}
               >
-                <div className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <h4 className="font-medium mb-1">Cartão {index + 1}</h4>
-                    <p className="text-sm text-muted-foreground line-clamp-1">
-                      {card.question}
-                    </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-base font-medium">
+                      Cartão {currentCardIndex + 1}
+                    </h4>
+                    {cards.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 hover:border-destructive/10"
+                        onClick={() => {
+                          const newCards = cards.filter((_, index) => index !== currentCardIndex)
+                          setCards(newCards)
+                          if (currentCardIndex === cards.length - 1) {
+                            setCurrentCardIndex(currentCardIndex - 1)
+                          }
+                        }}
+                      >
+                        <Trash className="h-4 w-4 mr-2" />
+                        Excluir cartão
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditCard(index)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveCard(index)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Pergunta</label>
+                      <Textarea
+                        value={cards[currentCardIndex].question}
+                        onChange={(e) => {
+                          const newCards = [...cards]
+                          newCards[currentCardIndex] = {
+                            ...cards[currentCardIndex],
+                            question: e.target.value
+                          }
+                          setCards(newCards)
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Resposta correta</label>
+                      <Textarea
+                        value={cards[currentCardIndex].correctAnswer}
+                        onChange={(e) => {
+                          const newCards = [...cards]
+                          const currentCard = newCards[currentCardIndex]
+                          const newAnswer = e.target.value
+
+                          // Encontrar se a resposta anterior estava nas opções
+                          const oldAnswerIndex = currentCard.options.indexOf(currentCard.correctAnswer)
+
+                          // Se encontrou, atualiza a opção também
+                          if (oldAnswerIndex !== -1) {
+                            currentCard.options[oldAnswerIndex] = newAnswer
+                          }
+
+                          currentCard.correctAnswer = newAnswer
+                          setCards(newCards)
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Opções incorretas</label>
+                      <div className="space-y-2">
+                        {cards[currentCardIndex].options.map((option, optionIndex) => (
+                          <div key={optionIndex} className="flex gap-2">
+                            <Input
+                              value={option}
+                              onChange={(e) => {
+                                const newCards = [...cards]
+                                const currentCard = newCards[currentCardIndex]
+                                const newValue = e.target.value
+
+                                if (option === currentCard.correctAnswer) {
+                                  currentCard.correctAnswer = newValue
+                                }
+
+                                const newOptions = [...currentCard.options]
+                                newOptions[optionIndex] = newValue
+                                currentCard.options = newOptions
+
+                                setCards(newCards)
+                              }}
+                              placeholder={`Opção ${optionIndex + 1}`}
+                            />
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 shrink-0"
+                              onClick={() => {
+                                const newCards = [...cards]
+                                const currentCard = newCards[currentCardIndex]
+                                const newOptions = currentCard.options.filter((_, i) => i !== optionIndex)
+                                currentCard.options = newOptions
+                                setCards(newCards)
+                              }}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-2"
+                          onClick={() => {
+                            const newCards = [...cards]
+                            const currentCard = newCards[currentCardIndex]
+                            currentCard.options = [...currentCard.options, '']
+                            setCards(newCards)
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar opção
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={nextCard}
+              disabled={currentCardIndex === cards.length - 1}
+              className="h-8 w-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
-        )}
+        </div>
       </div>
 
       <div className="flex justify-between gap-4">
         <Button variant="destructive" asChild>
-          <Link href="/decks/create">Cancelar</Link>
+          <Link href="/decks">Cancelar</Link>
         </Button>
         <Button
           onClick={handleCreateDeck}
-          disabled={isLoading || cards.length === 0}
+          disabled={isLoading}
         >
           {isLoading ? (
             <>
@@ -208,16 +310,6 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
           )}
         </Button>
       </div>
-
-      <CardModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setEditingCardIndex(null)
-        }}
-        onSave={handleAddCard}
-        editingCard={editingCardIndex !== null ? cards[editingCardIndex] : undefined}
-      />
     </div>
   )
 }
