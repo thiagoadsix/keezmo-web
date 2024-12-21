@@ -41,7 +41,7 @@ export default async function DecksPage() {
     const { decks } = await decksResponse.json();
 
     return (
-      <div className="gap-5 flex flex-col px-8 py-4">
+      <div className="gap-5 flex flex-col px-8">
         <DeckHeader />
         <DataTable columns={columns} data={decks} />
       </div>

@@ -12,7 +12,7 @@ export default function CreateDeckPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="px-8 py-4">
+      <div className="px-8">
         <Header
           title="Criar deck"
           mobileTitle="Criar deck"

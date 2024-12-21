@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     .replace(/^\w/, (c) => c.toUpperCase());
 
   return (
-    <div className="flex flex-col px-8 py-4">
+    <div className="flex flex-col px-8">
       <Header
         subtitle={`Hoje é ${today}`}
       />

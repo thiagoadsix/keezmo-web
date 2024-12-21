@@ -323,7 +323,7 @@ export default function StudyPage() {
       .sort((a, b) => b.errors - a.errors);
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="bg-[#10111F] rounded-md border border-neutral-800 p-4 sm:p-8 w-full max-w-xl flex flex-col items-center gap-6">
           <div className="relative w-24 h-24">
             <svg className="w-full h-full" viewBox="0 0 100 100">

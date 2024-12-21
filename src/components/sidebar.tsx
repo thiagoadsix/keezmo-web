@@ -114,7 +114,10 @@ export default function Sidebar() {
         </Button>
 
         <div className="flex h-full flex-col gap-4">
-          <div className="flex h-16 items-center border-b border-neutral-800 px-4">
+          <div className={cn(
+            "flex h-16 items-center border-b border-neutral-800 px-4",
+            !isMobile && isCollapsed ? "justify-center" : "justify-start"
+          )}>
             <h1 className={cn(
               "font-bold transition-all duration-300 text-2xl",
             )}>

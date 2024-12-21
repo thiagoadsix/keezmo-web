@@ -64,7 +64,7 @@ export default function EditDeckPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-8 py-4">
+    <div className="flex flex-col gap-4 px-8">
       <Header
         title="Editar deck"
         mobileTitle="Editar deck"

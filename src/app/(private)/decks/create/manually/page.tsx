@@ -64,7 +64,7 @@ export default function CreateDeckPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-8 py-4">
+    <div className="flex flex-col gap-4 px-8">
       <Header
         title="Criar deck"
         mobileTitle="Criar deck"
