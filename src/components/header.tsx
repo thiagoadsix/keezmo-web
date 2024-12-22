@@ -69,15 +69,15 @@ export default function Header({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className="sm:hidden flex items-center gap-1 border border-neutral-400 rounded-3xl p-2 bg-[#10111F]">
+                  <button className={`sm:hidden flex items-center gap-1 border rounded-3xl p-2 bg-[#10111F] ${credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : credits && credits > 0 ? (
                       <Coins className="h-4 w-4 text-primary" />
                     ) : (
-                      <Frown className="h-4 w-4 text-neutral-500" />
+                      <Frown className="h-4 w-4 text-yellow-500" />
                     )}
-                    <p className="text-xs font-medium">
+                    <p className={`text-xs font-medium ${credits && credits > 0 ? 'text-white' : 'text-yellow-500'}`}>
                       {isLoading ? "Carregando..." :
                        credits && credits > 0 ? `${credits} créditos` :
                        "Sem créditos"}
@@ -114,7 +114,7 @@ export default function Header({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="flex items-center gap-1 sm:gap-2 border border-neutral-400 rounded-3xl p-2 sm:p-3 bg-[#10111F]">
+                <button className={`flex items-center gap-1 sm:gap-2 border rounded-3xl p-2 sm:p-3 bg-[#10111F] ${credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : credits && credits > 0 ? (
