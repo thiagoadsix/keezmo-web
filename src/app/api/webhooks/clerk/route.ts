@@ -1,64 +1,76 @@
-import { Webhook } from 'svix'
-import { headers } from 'next/headers'
-import { WebhookEvent } from '@clerk/nextjs/server'
-import { PutCommand } from '@aws-sdk/lib-dynamodb'
-import { dynamoDbClient } from '../../clients/dynamodb'
+import { Webhook } from "svix";
+import { headers } from "next/headers";
+import { WebhookEvent } from "@clerk/nextjs/server";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { dynamoDbClient } from "../../clients/dynamodb";
+import VerificationCode from "@/src/components/emails/verification-code";
+import { resendClient } from "../../clients/resend";
 
 export async function POST(req: Request) {
-  const SIGNING_SECRET = process.env.SIGNING_SECRET
+  const SIGNING_SECRET = process.env.SIGNING_SECRET;
 
   if (!SIGNING_SECRET) {
-    throw new Error('Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local')
+    throw new Error(
+      "Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local"
+    );
   }
 
   // Create new Svix instance with secret
-  const wh = new Webhook(SIGNING_SECRET)
+  const wh = new Webhook(SIGNING_SECRET);
 
   // Get headers
-  const headerPayload = await headers()
-  const svix_id = headerPayload.get('svix-id')
-  const svix_timestamp = headerPayload.get('svix-timestamp')
-  const svix_signature = headerPayload.get('svix-signature')
+  const headerPayload = await headers();
+  const svix_id = headerPayload.get("svix-id");
+  const svix_timestamp = headerPayload.get("svix-timestamp");
+  const svix_signature = headerPayload.get("svix-signature");
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response('Error: Missing Svix headers', {
+    return new Response("Error: Missing Svix headers", {
       status: 400,
-    })
+    });
   }
 
   // Get body
-  const payload = await req.json()
-  const body = JSON.stringify(payload)
+  const payload = await req.json();
+  const body = JSON.stringify(payload);
 
-  let evt: WebhookEvent
+  let evt: WebhookEvent;
 
   // Verify payload with headers
   try {
     evt = wh.verify(body, {
-      'svix-id': svix_id,
-      'svix-timestamp': svix_timestamp,
-      'svix-signature': svix_signature,
-    }) as WebhookEvent
+      "svix-id": svix_id,
+      "svix-timestamp": svix_timestamp,
+      "svix-signature": svix_signature,
+    }) as WebhookEvent;
   } catch (err) {
-    console.error('Error: Could not verify webhook:', err)
-    return new Response('Error: Verification error', {
+    console.error("Error: Could not verify webhook:", err);
+    return new Response("Error: Verification error", {
       status: 400,
-    })
+    });
   }
 
   // Do something with payload
   // For this guide, log payload to console
-  const { id } = evt.data
-  const eventType = evt.type
-  console.log(`Received webhook with ID ${id} and event type of ${eventType}`)
-  console.log('Webhook payload:', body)
+  const { id } = evt.data;
+  const eventType = evt.type;
+  console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
+  console.log("Webhook payload:", body);
 
   // Handle the webhook event
-  if (eventType === 'user.created') {
-    const { id, email_addresses, first_name, last_name, created_at, updated_at, image_url } = evt.data
+  if (eventType === "user.created") {
+    const {
+      id,
+      email_addresses,
+      first_name,
+      last_name,
+      created_at,
+      updated_at,
+      image_url,
+    } = evt.data;
 
-    const user= {
+    const user = {
       pk: `USER#${id}`,
       sk: `USER#${id}`,
       id: id,
@@ -69,20 +81,56 @@ export async function POST(req: Request) {
       createdAt: created_at,
       updatedAt: updated_at,
       credits: 30,
-    }
+    };
 
     try {
       const command = new PutCommand({
         TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
         Item: user,
-      })
-      await dynamoDbClient.send(command)
-      console.log(`Created user ${id} in DynamoDB`)
+      });
+      await dynamoDbClient.send(command);
+      console.log(`Created user ${id} in DynamoDB`);
     } catch (error) {
-      console.error('Error creating user in DynamoDB:', error)
-      return new Response('Error creating user', { status: 500 })
+      console.error("Error creating user in DynamoDB:", error);
+      return new Response("Error creating user", { status: 500 });
     }
   }
 
-  return new Response('Webhook received', { status: 200 })
+  if (eventType === "email.created") {
+    const { to_email_address, slug, object, data, user_id } = evt.data;
+    const { app, otp_code } = data ?? {};
+    const { logo_image_url } = app ?? {};
+
+    console.log("metadata", {
+      toEmailAddress: to_email_address,
+      slug,
+      object,
+      userId: user_id,
+      otpCode: otp_code,
+      appName: app.name,
+      logoImageUrl: logo_image_url,
+    });
+
+    if (slug !== "verification_code") {
+      throw new Error("Slug is not verification_code");
+    }
+
+    if (object !== "email") {
+      throw new Error("Object is not email");
+    }
+
+    await resendClient.emails.send({
+      from: "Keezmo <official@keezmo.com>",
+      to: to_email_address!,
+      subject: `${otp_code} é o seu código de verificação do ${app.name}`,
+      react: VerificationCode({
+        otpCode: otp_code,
+        appName: app.name,
+        logoImageUrl: logo_image_url,
+        requestedAt: new Date().toISOString(),
+      }),
+    });
+  }
+
+  return new Response("Webhook received", { status: 200 });
 }

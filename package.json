@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack --port 4000",
     "build": "next build",
     "start": "next start --port 4000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "email": "email dev --port 5000 --dir src/components/emails"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.705.0",
@@ -42,6 +43,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.2",
     "react-syntax-highlighter": "^15.6.1",
+    "resend": "^4.0.1",
     "stripe": "^17.4.0",
     "svix": "^1.44.0",
     "tailwind-merge": "^2.5.5",
@@ -49,5 +51,9 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.3",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@react-email/components": "^0.0.31",
+    "react-email": "3.0.4"
   }
 }
