@@ -13,7 +13,6 @@ export default async function DecksPage() {
 
   console.log('Fetching decks from:', decksUrl);
 
-  try {
     const decksResponse = await fetch(decksUrl, {
       method: "GET",
       headers: {
@@ -46,8 +45,4 @@ export default async function DecksPage() {
         <DataTable columns={columns} data={decks} />
       </div>
     );
-  } catch (error) {
-    console.error('Error details:', error);
-    // ... error handling
-  }
 }

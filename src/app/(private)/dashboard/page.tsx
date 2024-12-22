@@ -17,46 +17,40 @@ export default async function DashboardPage() {
     .format(new Date())
     .replace(/^\w/, (c) => c.toUpperCase());
 
-
-    const { getToken } = await auth();
+  const { getToken } = await auth();
   const headersList = await headers();
-  const host = headersList.get('host') || 'localhost:3000';
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const host = headersList.get("host") || "localhost:3000";
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const dashboardUrl = `${protocol}://${host}/api/dashboard`;
 
-  try {
-    const dashboardData = await fetch(dashboardUrl, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${await getToken()}`,
-      },
-      method: 'GET',
-      cache: 'no-store'
-    });
+  const dashboardData = await fetch(dashboardUrl, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await getToken()}`,
+    },
+    method: "GET",
+    cache: "no-store",
+  });
 
-    if (!dashboardData.ok) {
-      throw new Error(`HTTP error! status: ${dashboardData.status}`);
-    }
-
-    const data = await dashboardData.json();
-
-    return (
-      <div className="flex flex-col px-8">
-        <Header
-          subtitle={`Today is ${today}`}
-        />
-        <main className="flex flex-col gap-10 py-6">
-          <StatsOverview />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <DecksNeedingAttention decksNeedingAttention={data.decksNeedingAttention} />
-            <ReviewCalendar reviewCalendar={data.reviewCalendar} />
-          </div>
-          <RecentActivity />
-        </main>
-      </div>
-    );
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error);
-    // Trate o erro adequadamente, exiba uma mensagem de erro amigável ao usuário
+  if (!dashboardData.ok) {
+    throw new Error(`HTTP error! status: ${dashboardData.status}`);
   }
+
+  const data = await dashboardData.json();
+
+  return (
+    <div className="flex flex-col px-8">
+      <Header subtitle={`Today is ${today}`} />
+      <main className="flex flex-col gap-10 py-6">
+        <StatsOverview />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DecksNeedingAttention
+            decksNeedingAttention={data.decksNeedingAttention}
+          />
+          <ReviewCalendar reviewCalendar={data.reviewCalendar} />
+        </div>
+        <RecentActivity />
+      </main>
+    </div>
+  );
 }
