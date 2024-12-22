@@ -69,18 +69,16 @@ export default function Header({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className={`sm:hidden flex items-center gap-1 border rounded-3xl p-2 bg-[#10111F] ${credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
+                  <button className={`sm:hidden flex items-center gap-1 border rounded-3xl p-1.5 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
                     {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                     ) : credits && credits > 0 ? (
-                      <Coins className="h-4 w-4 text-primary" />
+                      <Coins className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                     ) : (
-                      <Frown className="h-4 w-4 text-yellow-500" />
+                      <Frown className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
                     )}
-                    <p className={`text-xs font-medium ${credits && credits > 0 ? 'text-white' : 'text-yellow-500'}`}>
-                      {isLoading ? "Carregando..." :
-                       credits && credits > 0 ? `${credits} créditos` :
-                       "Sem créditos"}
+                    <p className={`text-[10px] sm:text-xs font-medium ${isLoading ? 'text-white' : credits && credits > 0 ? 'text-white' : 'text-yellow-500'}`}>
+                      {isLoading ? "..." : credits && credits > 0 ? `${credits} créditos` : "0"}
                     </p>
                   </button>
                 </TooltipTrigger>
@@ -114,7 +112,7 @@ export default function Header({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className={`flex items-center gap-1 sm:gap-2 border rounded-3xl p-2 sm:p-3 bg-[#10111F] ${credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
+                <button className={`flex items-center gap-1 sm:gap-2 border rounded-3xl p-2 sm:p-3 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : credits && credits > 0 ? (
