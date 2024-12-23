@@ -6,6 +6,8 @@ import { PutCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { findCheckoutSession } from "@/src/lib/stripe";
 import { dynamoDbClient } from "../../clients/dynamodb";
 import config from "@/config";
+import PurchaseConfirmation from "@/src/components/emails/purchase-confirmation";
+import { resendClient } from "../../clients/resend";
 
 const stripeSecretKey = String(process.env.STRIPE_SECRET_KEY);
 const stripeWebhookSecret = String(process.env.STRIPE_WEBHOOK_SECRET);
@@ -123,8 +125,8 @@ export async function POST(req: NextRequest) {
               credits: planInfo.credits,
               hasAccess: true,
               customerId: customerId,
-              updatedAt: Date.now().toString(),
-              createdAt: Date.now().toString(),
+              updatedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
               creditHistory: [creditHistoryEntry]
             }
           });
@@ -136,6 +138,22 @@ export async function POST(req: NextRequest) {
             credits: planInfo.credits,
             timestamp: Date.now()
           })
+
+          if (userEmail) {
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000';
+            await resendClient.emails.send({
+              from: "Keezmo <official@keezmo.com>",
+              to: userEmail,
+              subject: "Confirmação de Compra - Keezmo",
+              react: PurchaseConfirmation({
+                appName: "Keezmo",
+                logoImageUrl: "https://example.com/logo.png",
+                purchasedAt: new Date().toISOString(),
+                planName: planInfo.name,
+                signUpUrl: `${appUrl}/sign-up?email=${encodeURIComponent(userEmail)}`,
+              }),
+            });
+          }
 
         } catch (error) {
           console.error('Error creating or updating user in DynamoDB:', {

@@ -1,6 +1,12 @@
+"use client";
+
 import { SignUp } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 
 export default function SignUpPage() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+
   return (
     <div className="flex h-full items-center justify-center">
       <SignUp
@@ -31,6 +37,7 @@ export default function SignUpPage() {
           },
         }}
         signInUrl="/sign-in"
+        afterSignUpUrl={email ? `/dashboard?email=${encodeURIComponent(email)}` : "/dashboard"}
       />
     </div>
   );
