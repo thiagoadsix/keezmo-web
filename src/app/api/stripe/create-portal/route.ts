@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const entity = await dynamoDbClient.send(new GetCommand({
-      TableName: process.env.DYNAMODB_TABLE_NAME!,
+      TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
       Key: {
         pk: `USER#${userId}`,
         sk: `USER#${userId}`

@@ -58,7 +58,7 @@ export const createCheckout = async ({
       extraParams.tax_id_collection = { enabled: true };
     }
 
-    const stripeSession = await stripe.checkout.sessions.create({
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode,
       allow_promotion_codes: true,
       client_reference_id: clientReferenceId,
@@ -77,8 +77,18 @@ export const createCheckout = async ({
         : [],
       success_url: successUrl,
       cancel_url: cancelUrl,
+      metadata: {
+        userId: clientReferenceId!,
+      },
+      subscription_data: {
+        metadata: {
+          userId: clientReferenceId!,
+        }
+      },
       ...extraParams,
-    });
+    }
+
+    const stripeSession = await stripe.checkout.sessions.create(sessionParams);
 
     return stripeSession.url!;
   } catch (e) {

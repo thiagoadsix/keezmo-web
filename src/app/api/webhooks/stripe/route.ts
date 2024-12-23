@@ -1,10 +1,11 @@
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 
 import { findCheckoutSession } from "@/src/lib/stripe";
 import { dynamoDbClient } from "../../clients/dynamodb";
+import config from "@/config";
 
 const stripeSecretKey = String(process.env.STRIPE_SECRET_KEY);
 const stripeWebhookSecret = String(process.env.STRIPE_WEBHOOK_SECRET);
@@ -20,17 +21,17 @@ interface StripePlanInfo {
 }
 
 const STRIPE_PLANS: { [key: string]: StripePlanInfo } = {
-  "price_1Pz883FZzZzZzZzZzZzZzZzZ": {
-    name: "pro",
-    credits: 500
+  [config.stripe.plans[0].priceId]: {
+    name: config.stripe.plans[0].name,
+    credits: config.stripe.plans[0].credits
   },
-  "price_2Pz883FZzZzZzZzZzZzZzZzZ": {
-    name: "pro",
-    credits: 500
+  [config.stripe.plans[1].priceId]: {
+    name: config.stripe.plans[1].name,
+    credits: config.stripe.plans[1].credits
   },
-  "price_3Pz883FZzZzZzZzZzZzZzZzZ": {
-    name: "pro",
-    credits: 500
+  [config.stripe.plans[2].priceId]: {
+    name: config.stripe.plans[2].name,
+    credits: config.stripe.plans[2].credits
   }
 };
 
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
         console.log('Checkout session found:', {
           sessionId: stripeObject.id,
           customerId: session?.customer,
-          userId: session?.metadata?.userId
+          userId: session?.client_reference_id
         })
 
         const customerId = session?.customer;
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
             throw new Error("No email found for customer");
           }
 
-          if (!session || !session.metadata?.userId) {
+          if (!session || !session.client_reference_id) {
             console.error('Invalid session or missing userId:', {
               session: session?.id,
               metadata: session?.metadata
@@ -106,59 +107,38 @@ export async function POST(req: NextRequest) {
             source: 'stripe_purchase'
           };
 
-          const userId = session.metadata.userId;
-          console.log('Updating user credits:', {
+          const userId = session.client_reference_id;
+          console.log('Creating or updating user:', {
             userId,
             credits: planInfo.credits,
             planName: planInfo.name
           })
 
-          const result = await dynamoDbClient.send(new UpdateCommand({
-            TableName: process.env.DYNAMODB_TABLE_NAME!,
-            Key: {
+          const putCommand = new PutCommand({
+            TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
+            Item: {
               pk: `USER#${userId}`,
-              sk: `USER#${userId}`
-            },
-            UpdateExpression:
-              'SET credits = credits + :credits, ' +
-              'hasAccess = :hasAccess, ' +
-              'customerId = :customerId, ' +
-              'updatedAt = :updatedAt, ' +
-              'creditHistory = list_append(if_not_exists(creditHistory, :empty_list), :creditHistory)',
-            ExpressionAttributeValues: {
-              ':credits': planInfo.credits,
-              ':hasAccess': true,
-              ':customerId': customerId,
-              ':updatedAt': Date.now(),
-              ':creditHistory': [creditHistoryEntry],
-              ':empty_list': []
-            },
-            ReturnValues: 'ALL_NEW'
-          }));
+              sk: `USER#${userId}`,
+              email: userEmail,
+              credits: planInfo.credits,
+              hasAccess: true,
+              customerId: customerId,
+              updatedAt: Date.now().toString(),
+              createdAt: Date.now().toString(),
+              creditHistory: [creditHistoryEntry]
+            }
+          });
 
-          console.log('User credits updated successfully:', {
+          await dynamoDbClient.send(putCommand);
+
+          console.log('User created or updated successfully:', {
             userId,
-            newCredits: planInfo.credits,
+            credits: planInfo.credits,
             timestamp: Date.now()
           })
 
-          await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/users/credits`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-user-id': userId
-            },
-            body: JSON.stringify({
-              amount: planInfo.credits,
-              type: 'add',
-              source: 'stripe_purchase'
-            })
-          });
-
-          console.log('Credits updated successfully for user:', userId);
-
         } catch (error) {
-          console.error('Error updating user in DynamoDB:', {
+          console.error('Error creating or updating user in DynamoDB:', {
             error,
             customerId,
             sessionId: session?.id
@@ -180,7 +160,7 @@ export async function POST(req: NextRequest) {
         if (!customerId || !userId) break;
 
         await dynamoDbClient.send(new UpdateCommand({
-          TableName: process.env.DYNAMODB_TABLE_NAME!,
+          TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
           Key: {
             pk: `USER#${userId}`,
             sk: `USER#${userId}`
@@ -207,7 +187,7 @@ export async function POST(req: NextRequest) {
         if (!customerId || !userId) break;
 
         await dynamoDbClient.send(new UpdateCommand({
-          TableName: process.env.DYNAMODB_TABLE_NAME!,
+          TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
           Key: {
             pk: `USER#${userId}`,
             sk: `USER#${userId}`

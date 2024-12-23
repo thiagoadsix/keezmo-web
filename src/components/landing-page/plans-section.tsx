@@ -1,43 +1,60 @@
 'use client';
 
+import { useState } from "react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
+import config from "@/config";
+import { apiClient } from "@/src/lib/api-client";
 
-const plans = [
-  {
-    name: "Basic",
-    price: "0",
-    description: "Perfeito para experimentar o Keezmo",
-    features: [
-      "30 créditos",
-      "Upload de 2 arquivos",
-      "Geração de flashcards com IA",
-      "Suporte padrão"
-    ]
-  },
-  {
-    name: "Pro",
-    price: "24",
-    description: "Para estudantes dedicados",
-    features: [
-      "120 créditos",
-      "Upload de 5 arquivos",
-      "Suporte prioritário",
-      "Tudo do plano Básico"
-    ]
-  },
-  {
-    name: "Premium",
-    price: "49",
-    description: "Para grupos de estudo e instituições",
-    features: [
-      "360 créditos",
-      "Upload de 15 arquivos",
-      "Tudo do plano Pro"
-    ]
-  }
-];
+const ButtonCheckout = ({
+  priceId,
+  mode = "payment",
+}: {
+  priceId: string;
+  mode?: "payment" | "subscription";
+}) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handlePayment = async () => {
+    setIsLoading(true);
+
+    try {
+      const response = await apiClient(
+        "/api/stripe/create-checkout",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            priceId,
+            successUrl: window.location.href,
+            cancelUrl: window.location.href,
+            mode,
+          }),
+        }
+      );
+      console.log("url", response.url);
+
+      window.location.href = response.url;
+    } catch (e) {
+      console.error(e);
+    }
+
+    setIsLoading(false);
+  };
+
+  return (
+    <Button
+      className="w-full mt-6"
+      onClick={() => handlePayment()}
+    >
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <span>Começar agora</span>
+      )}
+    </Button>
+  );
+};
 
 export function PlansSection() {
   return (
@@ -53,30 +70,28 @@ export function PlansSection() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {plans.map((plan) => (
-            <Card key={plan.name} className="flex flex-col border-neutral-800 bg-background/50 transition-colors hover:border-primary/50">
+          {config.stripe.plans.map((plan) => (
+            <Card key={plan.name} className={`flex flex-col border-neutral-800 bg-background/50 transition-colors hover:border-primary/50 ${plan.isFeatured ? 'border-primary/50' : ''}`}>
               <CardHeader>
                 <CardTitle className="text-white">{plan.name}</CardTitle>
                 <CardDescription className="text-neutral-400">{plan.description}</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-white">
-                    {plan.price === "0" ? "Grátis" : `R$${plan.price}`}
+                    R${plan.price.toFixed(2).replace('.', ',')}
                   </span>
-                  {plan.price !== "0" && <span className="text-neutral-400"></span>}
+                  <span className="text-neutral-400">/mês</span>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col flex-1">
                 <ul className="space-y-3 flex-1">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2">
+                    <li key={feature.name} className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-primary" />
-                      <span className="text-sm text-neutral-400">{feature}</span>
+                      <span className="text-sm text-neutral-400">{feature.name}</span>
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full mt-6">
-                  Começar agora
-                </Button>
+                <ButtonCheckout priceId={plan.priceId} mode="subscription" />
               </CardContent>
             </Card>
           ))}

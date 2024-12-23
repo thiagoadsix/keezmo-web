@@ -1,15 +1,8 @@
-
 import { NextRequest, NextResponse } from "next/server";
-import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import { useAuth } from "@clerk/clerk-react";
 import { createCheckout } from "@/src/lib/stripe";
-import { dynamoDbClient } from "../../clients/dynamodb";
+import { randomUUID } from "crypto";
 
-// This function is used to create a Stripe Checkout Session (one-time payment or subscription)
-// It's called by the <ButtonCheckout /> component
-// Users must be authenticated. It will prefill the Checkout data with their email and/or credit card (if any)
 export async function POST(req: NextRequest) {
-  const { userId } = useAuth();
   const body = await req.json();
 
   if (!body.priceId) {
@@ -33,29 +26,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const entity = await dynamoDbClient.send(new GetCommand({
-      TableName: process.env.DYNAMODB_TABLE_NAME!,
-      Key: {
-        pk: `USER#${userId}`,
-        sk: `USER#${userId}`
-      }
-    }));
-    const user = entity.Item
-
     const { priceId, mode, successUrl, cancelUrl } = body;
 
+    const userId = randomUUID();
+    console.log("userId", userId);
+
+    // Criar sessão no Stripe
     const stripeSessionURL = await createCheckout({
       priceId,
       mode,
       successUrl,
       cancelUrl,
-      // If user is logged in, it will pass the user ID to the Stripe Session so it can be retrieved in the webhook later
-      clientReferenceId: user?.id,
-      user: {
-        email: user?.email,
-      },
-      // If you send coupons from the frontend, you can pass it here
-      // couponId: body.couponId,
+      clientReferenceId: userId,
     });
 
     return NextResponse.json({ url: stripeSessionURL });

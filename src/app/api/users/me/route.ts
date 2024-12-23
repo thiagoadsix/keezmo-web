@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../../clients/dynamodb';
 
 export async function GET(req: NextRequest) {
-  const userId = req.headers.get('x-user-id');
+  const email = req.headers.get('x-user-email');
 
-  if (!userId) {
+  if (!email) {
     console.warn('⚠️ [Auth] Unauthorized access attempt');
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const command = new GetCommand({
+  const command = new QueryCommand({
     TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
-    Key: {
-      pk: `USER#${userId}`,
-      sk: `USER#${userId}`
+    IndexName: 'EmailIndex',
+    KeyConditionExpression: 'email = :email',
+    ExpressionAttributeValues: {
+      ':email': email
     }
   });
 
   const response = await dynamoDbClient.send(command);
-  const user = response.Item;
+  const user = response.Items?.[0];
 
   return NextResponse.json({ user }, { status: 200 });
 }

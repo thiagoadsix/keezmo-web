@@ -17,7 +17,7 @@ export function useCredits() {
       try {
         const response = await apiClient('/api/users/me', {
           headers: {
-            'x-user-id': user.id
+            'x-user-email': user.emailAddresses[0].emailAddress
           }
         })
 
