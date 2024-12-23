@@ -245,11 +245,10 @@ export async function POST(req: NextRequest) {
         console.log('Stripe object:', JSON.stringify(stripeObject, null, 2));
         const paymentIntent = await stripe.paymentIntents.retrieve(stripeObject.id);
         console.log('Payment intent retrieved:', JSON.stringify(paymentIntent, null, 2));
-        const customerId = paymentIntent.customer;
         const userEmail = paymentIntent.metadata.email;
         const priceId = paymentIntent.metadata.priceId;
 
-        if (!customerId || !userEmail || !priceId) break;
+        if (!userEmail || !priceId) break;
 
         // Find the additional plan based on the priceId
         const additionalPlan = config.stripe.additionalPlans.find(plan => plan.priceId === priceId);
