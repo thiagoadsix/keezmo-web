@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { PutCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, UpdateCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 import { findCheckoutSession } from "@/src/lib/stripe";
 import { dynamoDbClient } from "../../clients/dynamodb";
@@ -71,12 +71,16 @@ export async function POST(req: NextRequest) {
         console.log('Checkout session found:', {
           sessionId: stripeObject.id,
           customerId: session?.customer,
-          userId: session?.client_reference_id
         })
 
         const customerId = session?.customer;
         const priceId = session?.line_items?.data[0]?.price?.id!;
         const planInfo = STRIPE_PLANS[priceId];
+
+        if (session?.mode === "payment") {
+          console.error('Payment mode detected, skipping')
+          break;
+        }
 
         const customer = (await stripe.customers.retrieve(
           customerId as string
@@ -94,24 +98,23 @@ export async function POST(req: NextRequest) {
             throw new Error("No email found for customer");
           }
 
-          if (!session || !session.client_reference_id) {
-            console.error('Invalid session or missing userId:', {
+          if (!session || !userEmail) {
+            console.error('Invalid session or missing user email:', {
               session: session?.id,
               metadata: session?.metadata
             })
-            throw new Error("Invalid session or missing userId");
+            throw new Error("Invalid session or missing user email");
           }
 
           const creditHistoryEntry = {
             amount: planInfo.credits,
             type: 'add',
-            timestamp: Date.now(),
+            timestamp: new Date().toISOString(),
             source: 'stripe_purchase'
           };
 
-          const userId = session.client_reference_id;
           console.log('Creating or updating user:', {
-            userId,
+            userEmail,
             credits: planInfo.credits,
             planName: planInfo.name
           })
@@ -119,8 +122,8 @@ export async function POST(req: NextRequest) {
           const putCommand = new PutCommand({
             TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
             Item: {
-              pk: `USER#${userId}`,
-              sk: `USER#${userId}`,
+              pk: `USER#${userEmail}`,
+              sk: `USER#${userEmail}`,
               email: userEmail,
               credits: planInfo.credits,
               hasAccess: true,
@@ -132,12 +135,6 @@ export async function POST(req: NextRequest) {
           });
 
           await dynamoDbClient.send(putCommand);
-
-          console.log('User created or updated successfully:', {
-            userId,
-            credits: planInfo.credits,
-            timestamp: Date.now()
-          })
 
           if (userEmail) {
             const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:4000';
@@ -166,32 +163,51 @@ export async function POST(req: NextRequest) {
         break;
 
       case "customer.subscription.deleted": {
-        console.log('Processing subscription deletion')
-        const stripeObject: Stripe.CustomerSubscriptionDeletedEvent = event.data.object as Stripe.CustomerSubscriptionDeletedEvent;
-        const subscription = await stripe.subscriptions.retrieve(
-          stripeObject.id
-        );
+        console.log('Processing subscription deletion');
+        const stripeObject: Stripe.Subscription = event.data.object as Stripe.Subscription;
+        const customerId = stripeObject.customer as string;
 
-        const customerId = subscription.customer;
-        const userId = subscription.metadata.userId;
+        if (!customerId) {
+          console.error('No customerId found in the event');
+          break;
+        }
 
-        if (!customerId || !userId) break;
+        // Query the GSI to find the user by customerId
+        const queryCommand = new QueryCommand({
+          TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
+          IndexName: "CustomerIDIndex",
+          KeyConditionExpression: "customerId = :customerId",
+          ExpressionAttributeValues: {
+            ":customerId": customerId,
+          },
+        });
 
+        const queryResponse = await dynamoDbClient.send(queryCommand);
+        const user = queryResponse.Items?.[0];
+
+        if (!user) {
+          console.error('User not found for customerId:', customerId);
+          break;
+        }
+
+        const userEmail = user.email;
+
+        // Update the user record
         await dynamoDbClient.send(new UpdateCommand({
           TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
           Key: {
-            pk: `USER#${userId}`,
-            sk: `USER#${userId}`
+            pk: `USER#${userEmail}`,
+            sk: `USER#${userEmail}`,
           },
           UpdateExpression: 'SET hasAccess = :hasAccess, updatedAt = :updatedAt',
           ExpressionAttributeValues: {
             ':hasAccess': false,
-            ':updatedAt': Date.now()
+            ':updatedAt': new Date().toISOString(),
           },
-          ReturnValues: 'ALL_NEW'
+          ReturnValues: 'ALL_NEW',
         }));
 
-        console.log('Subscription cancelled for user:', userId)
+        console.log('Subscription cancelled for user:', userEmail);
         break;
       }
 
@@ -200,25 +216,89 @@ export async function POST(req: NextRequest) {
         const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
         const invoice = await stripe.invoices.retrieve(stripeObject.id);
         const customerId = invoice.customer;
-        const userId = invoice.metadata?.userId;
+        const userEmail = invoice.customer_email;
 
-        if (!customerId || !userId) break;
+        if (!customerId || !userEmail) break;
 
         await dynamoDbClient.send(new UpdateCommand({
           TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
           Key: {
-            pk: `USER#${userId}`,
-            sk: `USER#${userId}`
+            pk: `USER#${userEmail}`,
+            sk: `USER#${userEmail}`
           },
           UpdateExpression: 'SET hasAccess = :hasAccess, updatedAt = :updatedAt',
           ExpressionAttributeValues: {
             ':hasAccess': true,
-            ':updatedAt': Date.now()
+            ':updatedAt': new Date().toISOString()
           },
           ReturnValues: 'ALL_NEW'
         }));
 
-        console.log('Invoice processed for user:', userId)
+        console.log('Invoice processed for user:', userEmail)
+
+        break;
+      }
+
+      case "payment_intent.succeeded": {
+        console.log('Processing payment intent succeeded');
+        const stripeObject: Stripe.PaymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('Stripe object:', JSON.stringify(stripeObject, null, 2));
+        const paymentIntent = await stripe.paymentIntents.retrieve(stripeObject.id);
+        console.log('Payment intent retrieved:', JSON.stringify(paymentIntent, null, 2));
+        const customerId = paymentIntent.customer;
+        const userEmail = paymentIntent.metadata.email;
+        const priceId = paymentIntent.metadata.priceId;
+
+        if (!customerId || !userEmail || !priceId) break;
+
+        // Find the additional plan based on the priceId
+        const additionalPlan = config.stripe.additionalPlans.find(plan => plan.priceId === priceId);
+
+        if (!additionalPlan) {
+          console.error('No matching additional plan found for priceId:', priceId);
+          break;
+        }
+
+        // Fetch the current user data
+        const getUserCommand = new GetCommand({
+          TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
+          Key: { pk: `USER#${userEmail}`, sk: `USER#${userEmail}` }
+        });
+
+        const userResponse = await dynamoDbClient.send(getUserCommand);
+        const user = userResponse.Item;
+
+        if (!user) {
+          console.error('User not found:', userEmail);
+          break;
+        }
+
+        const currentCredits = user.credits || 0;
+        const newCredits = currentCredits + additionalPlan.credits;
+
+        // Create a new credit history entry
+        const creditHistoryEntry = {
+          amount: additionalPlan.credits,
+          type: 'add',
+          timestamp: new Date().toISOString(),
+          source: 'one_off_purchase'
+        };
+
+        // Update the user's credits and credit history
+        await dynamoDbClient.send(new UpdateCommand({
+          TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
+          Key: { pk: `USER#${userEmail}`, sk: `USER#${userEmail}` },
+          UpdateExpression: 'SET credits = :credits, creditHistory = list_append(if_not_exists(creditHistory, :empty_list), :history), updatedAt = :updatedAt',
+          ExpressionAttributeValues: {
+            ':credits': newCredits,
+            ':history': [creditHistoryEntry],
+            ':empty_list': [],
+            ':updatedAt': new Date().toISOString()
+          },
+          ReturnValues: 'ALL_NEW'
+        }));
+
+        console.log('Credits updated for user:', userEmail);
         break;
       }
 

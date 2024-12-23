@@ -18,6 +18,14 @@ export type ConfigProps = {
         name: string;
       }[];
     }[];
+    additionalPlans: {
+      priceId: string;
+      name: string;
+      description?: string;
+      price: number;
+      priceAnchor?: number | null;
+      credits: number;
+    }[];
   };
   aws: {
     bucket: string;

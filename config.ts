@@ -67,6 +67,16 @@ const config = {
         credits: 450,
       },
     ],
+    additionalPlans: [
+      {
+        priceId: process.env.NODE_ENV === "development" ? "price_1QZEr5D6NUyMtMNHIbsUj42j" : "price_prod",
+        name: "150 de crédito",
+        description: "Preciso de um pouco mais de crédito",
+        price: 12.45,
+        priceAnchor: null,
+        credits: 150,
+      },
+    ],
   },
   aws: {
     // If you use AWS S3/Cloudfront, put values in here

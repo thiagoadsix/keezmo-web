@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCheckout } from "@/src/lib/stripe";
-import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -26,10 +25,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { priceId, mode, successUrl, cancelUrl } = body;
-
-    const userId = randomUUID();
-    console.log("userId", userId);
+    const { priceId, mode, successUrl, cancelUrl, email } = body;
 
     // Criar sessão no Stripe
     const stripeSessionURL = await createCheckout({
@@ -37,7 +33,9 @@ export async function POST(req: NextRequest) {
       mode,
       successUrl,
       cancelUrl,
-      clientReferenceId: userId,
+      user: {
+        email
+      },
     });
 
     return NextResponse.json({ url: stripeSessionURL });

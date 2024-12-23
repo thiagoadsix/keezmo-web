@@ -6,7 +6,6 @@ interface CreateCheckoutParams {
   successUrl: string;
   cancelUrl: string;
   couponId?: string | null;
-  clientReferenceId?: string;
   user?: {
     customerId?: string;
     email?: string;
@@ -18,11 +17,15 @@ interface CreateCustomerPortalParams {
   returnUrl: string;
 }
 
+interface CreatePaymentLinkParams {
+  priceId: string;
+  email: string;
+}
+
 // This is used to create a Stripe Checkout for one-time payments. It's usually triggered with the <ButtonCheckout /> component. Webhooks are used to update the user's state in the database.
 export const createCheckout = async ({
   user,
   mode,
-  clientReferenceId,
   successUrl,
   cancelUrl,
   priceId,
@@ -61,7 +64,6 @@ export const createCheckout = async ({
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode,
       allow_promotion_codes: true,
-      client_reference_id: clientReferenceId,
       line_items: [
         {
           price: priceId,
@@ -78,15 +80,15 @@ export const createCheckout = async ({
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
-        userId: clientReferenceId!,
+        email: user?.email!,
       },
       subscription_data: {
         metadata: {
-          userId: clientReferenceId!,
-        }
+          email: user?.email!,
+        },
       },
       ...extraParams,
-    }
+    };
 
     const stripeSession = await stripe.checkout.sessions.create(sessionParams);
 
@@ -131,5 +133,42 @@ export const findCheckoutSession = async (sessionId: string) => {
   } catch (e) {
     console.error(e);
     return null;
+  }
+};
+
+export const createPaymentLink = async ({
+  priceId,
+  email
+}: CreatePaymentLinkParams): Promise<string> => {
+  try {
+    const stripe = new Stripe(String(process.env.STRIPE_SECRET_KEY), {
+      apiVersion: "2024-11-20.acacia",
+      typescript: true,
+    });
+
+    const paymentLink = await stripe.paymentLinks.create({
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      allow_promotion_codes: true,
+      metadata: {
+        priceId,
+        email
+      },
+      payment_intent_data: {
+        metadata: {
+          priceId,
+          email
+        }
+      }
+    });
+
+    return paymentLink.url;
+  } catch (e) {
+    console.error("Error creating payment link:", e);
+    throw e;
   }
 };

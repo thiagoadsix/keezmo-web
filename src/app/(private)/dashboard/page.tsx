@@ -8,7 +8,7 @@ import { ReviewCalendar } from "@/src/components/dashboard/review-calendar";
 import { auth } from "@clerk/nextjs/server";
 
 export default async function DashboardPage() {
-  const today = new Intl.DateTimeFormat("en-US", {
+  const today = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col px-8">
-      <Header subtitle={`Today is ${today}`} />
+      <Header subtitle={`Hoje é ${today}`} />
       <main className="flex flex-col gap-10 py-6">
         <StatsOverview />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

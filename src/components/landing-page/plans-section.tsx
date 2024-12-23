@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { Check, Loader2 } from "lucide-react";
 import config from "@/config";
 import { apiClient } from "@/src/lib/api-client";
+import { useUser } from "@clerk/nextjs";
 
 const ButtonCheckout = ({
   priceId,
@@ -15,6 +16,7 @@ const ButtonCheckout = ({
   mode?: "payment" | "subscription";
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { user } = useUser();
 
   const handlePayment = async () => {
     setIsLoading(true);
@@ -29,10 +31,10 @@ const ButtonCheckout = ({
             successUrl: window.location.href,
             cancelUrl: window.location.href,
             mode,
+            email: user?.emailAddresses[0].emailAddress,
           }),
         }
       );
-      console.log("url", response.url);
 
       window.location.href = response.url;
     } catch (e) {

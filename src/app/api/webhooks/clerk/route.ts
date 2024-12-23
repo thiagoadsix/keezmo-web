@@ -1,7 +1,7 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { dynamoDbClient } from "../../clients/dynamodb";
 import VerificationCode from "@/src/components/emails/verification-code";
 import { resendClient } from "../../clients/resend";
@@ -15,29 +15,23 @@ export async function POST(req: Request) {
     );
   }
 
-  // Create new Svix instance with secret
   const wh = new Webhook(SIGNING_SECRET);
-
-  // Get headers
   const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
 
-  // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
     return new Response("Error: Missing Svix headers", {
       status: 400,
     });
   }
 
-  // Get body
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
   let evt: WebhookEvent;
 
-  // Verify payload with headers
   try {
     evt = wh.verify(body, {
       "svix-id": svix_id,
@@ -51,53 +45,55 @@ export async function POST(req: Request) {
     });
   }
 
-  // Do something with payload
-  // For this guide, log payload to console
   const { id } = evt.data;
   const eventType = evt.type;
   console.log(`Received webhook with ID ${id} and event type of ${eventType}`);
   console.log("Webhook payload:", body);
 
-  // Handle the webhook event
   if (eventType === "user.created") {
     const {
       id,
       email_addresses,
       first_name,
       last_name,
-      created_at,
-      updated_at,
       image_url,
     } = evt.data;
 
     const user = {
-      pk: `USER#${id}`,
-      sk: `USER#${id}`,
-      id: id,
-      email: email_addresses[0].email_address,
+      clerkId: id,
       firstName: first_name || undefined,
       lastName: last_name || undefined,
       imageUrl: image_url || undefined,
-      createdAt: created_at,
-      updatedAt: updated_at,
-      credits: 30,
+      updatedAt: new Date().toISOString(),
     };
 
     try {
-      const command = new PutCommand({
+      const command = new UpdateCommand({
         TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
-        Item: user,
+        Key: {
+          pk: `USER#${email_addresses[0].email_address}`,
+          sk: `USER#${email_addresses[0].email_address}`,
+        },
+        UpdateExpression: "SET clerkId = :clerkId, firstName = :firstName, lastName = :lastName, imageUrl = :imageUrl, updatedAt = :updatedAt",
+        ExpressionAttributeValues: {
+          ":clerkId": user.clerkId,
+          ":firstName": user.firstName,
+          ":lastName": user.lastName,
+          ":imageUrl": user.imageUrl,
+          ":updatedAt": user.updatedAt,
+        },
+        ReturnValues: "ALL_NEW",
       });
       await dynamoDbClient.send(command);
-      console.log(`Created user ${id} in DynamoDB`);
+      console.log(`Updated user ${id} in DynamoDB`);
     } catch (error) {
-      console.error("Error creating user in DynamoDB:", error);
-      return new Response("Error creating user", { status: 500 });
+      console.error("Error updating user in DynamoDB:", error);
+      return new Response("Error updating user", { status: 500 });
     }
   }
 
   if (eventType === "email.created") {
-    const { to_email_address, slug, object, data, user_id } = evt.data;
+    const { to_email_address, slug, object, data } = evt.data;
     const { app, otp_code } = data ?? {};
     const { logo_image_url } = app ?? {};
 
@@ -105,7 +101,6 @@ export async function POST(req: Request) {
       toEmailAddress: to_email_address,
       slug,
       object,
-      userId: user_id,
       otpCode: otp_code,
       appName: app.name,
       logoImageUrl: logo_image_url,

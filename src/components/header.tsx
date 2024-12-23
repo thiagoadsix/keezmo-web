@@ -12,6 +12,8 @@ import {
 } from "@/src/components/ui/tooltip";
 import { useCredits } from "@/src/hooks/use-credits"
 import { apiClient } from "@/src/lib/api-client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/components/ui/dialog";
+import PaymentButton from "@/src/components/payment-button";
 
 interface HeaderProps {
   // Title and subtitle for both mobile and desktop
@@ -59,6 +61,7 @@ export default function Header({
   const { setIsMobileOpen } = useMobileSidebar();
   const { credits, isLoading } = useCredits();
   const { user } = useUser();
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const handleCancelPlan = async () => {
     try {
@@ -90,7 +93,10 @@ export default function Header({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className={`sm:hidden flex items-center gap-1 border rounded-3xl p-1.5 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
+                  <button
+                    className={`sm:hidden flex items-center gap-1 border rounded-3xl p-1.5 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}
+                    onClick={() => setDialogOpen(true)}
+                  >
                     {isLoading ? (
                       <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                     ) : credits && credits > 0 ? (
@@ -133,7 +139,10 @@ export default function Header({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className={`flex items-center gap-1 sm:gap-2 border rounded-3xl p-2 sm:p-3 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}>
+                <button
+                  className={`flex items-center gap-1 sm:gap-2 border rounded-3xl p-2 sm:p-3 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}
+                  onClick={() => setDialogOpen(true)}
+                >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : credits && credits > 0 ? (
@@ -162,16 +171,26 @@ export default function Header({
         )}
         {showUserButton && (
           <UserButton {...userButtonProps}>
-          <UserButton.MenuItems>
-            <UserButton.Action
-              labelIcon={<X className="h-4 w-4" />}
-              label="Cancelar plano"
-              onClick={memoizedHandleCancelPlan}
-            />
-          </UserButton.MenuItems>
-        </UserButton>
+            <UserButton.MenuItems>
+              <UserButton.Action
+                labelIcon={<X className="h-4 w-4" />}
+                label="Cancelar plano"
+                onClick={memoizedHandleCancelPlan}
+              />
+            </UserButton.MenuItems>
+          </UserButton>
         )}
       </div>
+
+      {/* Dialog for purchasing credits */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Comprar Créditos</DialogTitle>
+          </DialogHeader>
+          <PaymentButton />
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
