@@ -7,7 +7,9 @@ import { ThemeProvider } from "@/src/components/theme-provider";
 import { MobileSidebarProvider } from "@/src/contexts/mobile-sidebar";
 import ClientLayout from "@/src/app/client-layout";
 import "./globals.css";
-import { Toaster } from "@/src/components/ui/toaster"
+import { Toaster } from "@/src/components/ui/toaster";
+import { AccessCheck } from '@/src/components/access-check';
+import { isPublicRoute } from "@/src/lib/utils";
 
 export const metadata: Metadata = {
   title: "Keezmo",
@@ -29,6 +31,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+  const isPublic = isPublicRoute(currentPath);
+
   return (
     <ClerkProvider
       localization={ptBR}
@@ -48,9 +53,11 @@ export default function RootLayout({
             enableSystem={true}
           >
             <MobileSidebarProvider>
-              <ClientLayout>
-                {children}
-              </ClientLayout>
+              <AccessCheck>
+                <ClientLayout>
+                  {children}
+                </ClientLayout>
+              </AccessCheck>
             </MobileSidebarProvider>
           </ThemeProvider>
           <Toaster />

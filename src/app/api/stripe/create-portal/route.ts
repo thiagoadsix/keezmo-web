@@ -1,27 +1,29 @@
 import { useAuth } from "@clerk/clerk-react";
 import { NextResponse, NextRequest } from "next/server";
-import { GetCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 import { createCustomerPortal } from "@/src/lib/stripe";
 import { dynamoDbClient } from "../../clients/dynamodb";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = useAuth();
+    const email = req.headers.get('x-user-email');
 
     const body = await req.json();
 
-    const entity = await dynamoDbClient.send(new GetCommand({
+    const entity = await dynamoDbClient.send(new QueryCommand({
       TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
-      Key: {
-        pk: `USER#${userId}`,
-        sk: `USER#${userId}`
+      IndexName: "EmailIndex",
+      KeyConditionExpression: "email = :email",
+      ExpressionAttributeValues: {
+        ":email": email
       }
     }));
-    const user = entity.Item
+    const user = entity.Items?.[0]
+    console.log("body", body);
+    console.log("user", user);
 
-    // User who are not logged in can't make a purchase
-    if (!userId) {
+    if (!email) {
       return NextResponse.json(
         { error: "You must be logged in to view billing information." },
         { status: 401 }

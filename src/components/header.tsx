@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { UserButton } from "@clerk/nextjs";
-import { Coins, Frown, Loader2 } from "lucide-react";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { Coins, Frown, Loader2, X } from "lucide-react";
 import { useMobileSidebar } from "../contexts/mobile-sidebar";
 import {
   Tooltip,
@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/src/components/ui/tooltip";
 import { useCredits } from "@/src/hooks/use-credits"
+import { apiClient } from "@/src/lib/api-client";
 
 interface HeaderProps {
   // Title and subtitle for both mobile and desktop
@@ -57,6 +58,26 @@ export default function Header({
 }: HeaderProps) {
   const { setIsMobileOpen } = useMobileSidebar();
   const { credits, isLoading } = useCredits();
+  const { user } = useUser();
+
+  const handleCancelPlan = async () => {
+    try {
+      const response = await apiClient('/api/stripe/create-portal', {
+        method: 'POST',
+        body: JSON.stringify({
+          returnUrl: window.location.href,
+        }),
+        headers: {
+          'x-user-email': user?.emailAddresses[0].emailAddress || '',
+        },
+      });
+      window.location.href = response.url;
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+    }
+  };
+
+  const memoizedHandleCancelPlan = React.useCallback(handleCancelPlan, [user]);
 
   return (
     <header className="flex items-center justify-between w-full h-16 gap-4">
@@ -139,7 +160,17 @@ export default function Header({
             </Tooltip>
           </TooltipProvider>
         )}
-        {showUserButton && <UserButton {...userButtonProps} />}
+        {showUserButton && (
+          <UserButton {...userButtonProps}>
+          <UserButton.MenuItems>
+            <UserButton.Action
+              labelIcon={<X className="h-4 w-4" />}
+              label="Cancelar plano"
+              onClick={memoizedHandleCancelPlan}
+            />
+          </UserButton.MenuItems>
+        </UserButton>
+        )}
       </div>
     </header>
   );
