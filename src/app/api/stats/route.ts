@@ -13,10 +13,10 @@ const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 export async function GET(req: NextRequest) {
   console.log('➡️ [GET /api/stats] Request received');
 
-  const userId = req.headers.get('x-user-id');
-  console.log(`📍 [Auth] User ID from request: ${userId || 'none'}`);
+  const userEmail = req.headers.get('x-user-email');
+  console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
-  if (!userId) {
+  if (!userEmail) {
     console.warn('⚠️ [Auth] Unauthorized access attempt');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
       ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
+        ':pk': `USER#${userEmail}`,
         ':sk': 'DECK#'
       }
     });
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
       ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
+        ':pk': `USER#${userEmail}`,
         ':sk': 'STUDY_SESSION#'
       }
     });
@@ -84,7 +84,6 @@ export async function GET(req: NextRequest) {
         name: error?.name,
         stack: error?.stack
       },
-      userId: userId,
       tableName: TABLE_NAME
     });
 
