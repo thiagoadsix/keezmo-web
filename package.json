@@ -55,6 +55,8 @@
   },
   "devDependencies": {
     "@react-email/components": "^0.0.31",
+    "eslint": "9.17.0",
+    "eslint-config-next": "15.1.2",
     "react-email": "3.0.4"
   }
 }
