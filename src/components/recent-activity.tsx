@@ -64,14 +64,14 @@ export default function RecentActivity() {
           fetch(`${protocol}//${host}/api/decks`, {
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': user.id
+              'x-user-email': user.emailAddresses[0].emailAddress!
             },
             cache: 'no-store'
           }),
           fetch(`${protocol}//${host}/api/study-sessions`, {
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': user.id
+              'x-user-email': user.emailAddresses[0].emailAddress!
             },
             cache: 'no-store'
           })

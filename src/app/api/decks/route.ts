@@ -9,22 +9,22 @@ export async function GET(req: NextRequest) {
   console.log('➡️ [GET /api/decks] Request received');
 
   try {
-    const { userId } = await auth();
-    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+    const userEmail = req.headers.get('x-user-email');
+    console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
-    if (!userId) {
+    if (!userEmail) {
       console.warn('⚠️ [Auth] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log(`🔍 [DynamoDB] Querying table: ${TABLE_NAME} for user: ${userId}`);
+    console.log(`🔍 [DynamoDB] Querying table: ${TABLE_NAME} for user: ${userEmail}`);
 
     // First, get all decks
     const decksCommand = new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
       ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
+        ':pk': `USER#${userEmail}`,
         ':sk': 'DECK#'
       }
     });
@@ -51,7 +51,6 @@ export async function GET(req: NextRequest) {
 
       return {
         deckId,
-        userId,
         title: String(item.title || ''),
         description: String(item.description || ''),
         createdAt: String(item.createdAt || ''),
