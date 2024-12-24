@@ -64,16 +64,8 @@ export async function PUT(
 ) {
   console.log('➡️ [PUT /api/decks/:deckId/cards] Request received');
 
-  const userId = req.headers.get('x-user-id');
   const { deckId } = params;
-
-  console.log(`📍 [Auth] User ID from request: ${userId || 'none'}`);
   console.log(`📍 [Params] Deck ID: ${deckId}`);
-
-  if (!userId) {
-    console.warn('⚠️ [Auth] Unauthorized access attempt');
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   try {
     const { cards } = await req.json();
@@ -127,7 +119,6 @@ export async function PUT(
         name: error?.name,
         stack: error?.stack
       },
-      userId,
       deckId,
       tableName: TABLE_NAME
     });

@@ -52,15 +52,11 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
       try {
         const deckResponse = await apiClient(`/api/decks/${deckId}`, {
           headers: {
-            'x-user-id': user?.id || ''
+            'x-user-email': user?.emailAddresses[0].emailAddress!
           }
         });
 
-        const cardsResponse = await apiClient(`/api/decks/${deckId}/cards`, {
-          headers: {
-            'x-user-id': user?.id || ''
-          }
-        });
+        const cardsResponse = await apiClient(`/api/decks/${deckId}/cards`);
 
         const cardsWithIds = (cardsResponse.cards || []).map((card: CardResponse, index: number) => ({
           ...card,
@@ -98,7 +94,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
       // Primeiro, buscar o deck atual para preservar campos existentes
       const currentDeck = await apiClient(`/api/decks/${deckId}`, {
         headers: {
-          'x-user-id': user?.id || ''
+          'x-user-email': user?.emailAddresses[0].emailAddress!
         }
       });
 
@@ -107,7 +103,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
       await apiClient(`/api/decks/${deckId}`, {
         method: 'PUT',
         headers: {
-          'x-user-id': user?.id || ''
+          'x-user-email': user?.emailAddresses[0].emailAddress!
         },
         body: JSON.stringify({
           ...currentDeck,
@@ -122,9 +118,6 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
       onStepUpdate(2, 'processing');
       await apiClient(`/api/decks/${deckId}/cards`, {
         method: 'PUT',
-        headers: {
-          'x-user-id': user?.id || ''
-        },
         body: JSON.stringify({
           cards: deck.cards
         })

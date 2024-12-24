@@ -8,9 +8,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { deckId: string } }
 ) {
-  const userId = req.headers.get('x-user-id');
+  const userEmail = req.headers.get('x-user-email');
 
-  if (!userId) {
+  if (!userEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -18,7 +18,7 @@ export async function GET(
     const command = new GetCommand({
       TableName: TABLE_NAME,
       Key: {
-        pk: `USER#${userId}`,
+        pk: `USER#${userEmail}`,
         sk: `DECK#${params.deckId}`
       }
     });
@@ -43,9 +43,9 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { deckId: string } }
 ) {
-  const userId = req.headers.get('x-user-id');
+  const userEmail = req.headers.get('x-user-email');
 
-  if (!userId) {
+  if (!userEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -57,7 +57,7 @@ export async function PUT(
     const getCommand = new GetCommand({
       TableName: TABLE_NAME,
       Key: {
-        pk: `USER#${userId}`,
+        pk: `USER#${userEmail}`,
         sk: `DECK#${params.deckId}`
       }
     });
@@ -68,7 +68,7 @@ export async function PUT(
     const updatedItem = {
       ...existingItem.Item, // Preserva todos os campos existentes
       ...body, // Aplica as atualizações
-      pk: `USER#${userId}`, // Garante que pk e sk não sejam alterados
+      pk: `USER#${userEmail}`, // Garante que pk e sk não sejam alterados
       sk: `DECK#${params.deckId}`,
       updatedAt: timestamp
     };
