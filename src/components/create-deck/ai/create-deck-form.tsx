@@ -124,7 +124,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
       const updateCreditsResponse = await apiClient('/api/users/credits', {
         method: 'POST',
         headers: {
-          'x-user-id': user?.id || ''
+          'x-user-email': user?.emailAddresses[0].emailAddress! || ''
         },
         body: JSON.stringify({
           amount: creditsNeeded,
@@ -158,7 +158,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
       const response = await fetch(`${protocol}//${host}/api/rag-pdf`, {
         method: 'POST',
         headers: {
-          'x-user-id': user?.id || ''
+          'x-user-email': user?.emailAddresses[0].emailAddress!
         },
         body: formData
       })

@@ -32,9 +32,9 @@ interface UpdateCreditsRequest {
 }
 
 export async function POST(req: NextRequest) {
-  const userId = req.headers.get('x-user-id');
+  const userEmail = req.headers.get('x-user-email');
 
-  if (!userId) {
+  if (!userEmail) {
     console.warn('⚠️ [Auth] Unauthorized access attempt');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
     const getUserCommand = new GetCommand({
       TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
       Key: {
-        pk: `USER#${userId}`,
-        sk: `USER#${userId}`
+        pk: `USER#${userEmail}`,
+        sk: `USER#${userEmail}`
       }
     });
 
@@ -85,8 +85,8 @@ export async function POST(req: NextRequest) {
     const updateCommand = new UpdateCommand({
       TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
       Key: {
-        pk: `USER#${userId}`,
-        sk: `USER#${userId}`
+        pk: `USER#${userEmail}`,
+        sk: `USER#${userEmail}`
       },
       UpdateExpression: 'SET credits = :credits, creditHistory = list_append(if_not_exists(creditHistory, :empty_list), :history)',
       ExpressionAttributeValues: {

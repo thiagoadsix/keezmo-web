@@ -6,10 +6,10 @@ import { PDFDocument } from 'pdf-lib';
 export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/rag-pdf] Request received');
 
-  const userId = req.headers.get('x-user-id');
-  console.log(`📍 [Auth] User ID from request: ${userId || 'none'}`);
+  const userEmail = req.headers.get('x-user-email');
+  console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
-  if (!userId) {
+  if (!userEmail) {
     console.warn('⚠️ [Auth] Unauthorized access attempt');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = {
-      userId,
+      userEmail,
       numCards: parseInt(numCards),
       pdfBytes: pdfBase64,
       title,
@@ -88,7 +88,6 @@ export async function POST(req: NextRequest) {
         name: error?.name,
         stack: error?.stack
       },
-      userId
     });
 
     return NextResponse.json(
