@@ -61,7 +61,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
       const response = await apiClient('/api/decks', {
         method: 'POST',
         headers: {
-          'x-user-id': user?.id || ''
+          'x-user-email': user?.emailAddresses[0].emailAddress!
         },
         body: JSON.stringify({
           title,

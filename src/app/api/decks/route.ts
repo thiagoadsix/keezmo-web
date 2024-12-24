@@ -92,10 +92,10 @@ export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/decks] Request received');
 
   try {
-    const { userId } = await auth();
-    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+    const userEmail = req.headers.get('x-user-email');
+    console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
-    if (!userId) {
+    if (!userEmail) {
       console.warn('⚠️ [Auth] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -119,9 +119,8 @@ export async function POST(req: NextRequest) {
     const createDeckCommand = new PutCommand({
       TableName: TABLE_NAME,
       Item: {
-        pk: `USER#${userId}`,
+        pk: `USER#${userEmail}`,
         sk: `DECK#${deckId}`,
-        userId,
         title: body.title,
         description: body.description || '',
         createdAt: timestamp,
