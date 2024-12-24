@@ -76,6 +76,22 @@ const config = {
         priceAnchor: null,
         credits: 150,
       },
+      {
+        priceId: process.env.NODE_ENV === "development" ? "price_1QZEr5D6NUyMtMNHIbsUj42j" : "price_prod",
+        name: "300 de crédito",
+        description: "Para estudantes dedicados",
+        price: 24.90,
+        priceAnchor: null,
+        credits: 300,
+      },
+      {
+        priceId: process.env.NODE_ENV === "development" ? "price_1QZEr5D6NUyMtMNHIbsUj42j" : "price_prod",
+        name: "450 de crédito",
+        description: "Para estudantes que querem mais",
+        price: 37.35,
+        priceAnchor: null,
+        credits: 450,
+      },
     ],
   },
   aws: {

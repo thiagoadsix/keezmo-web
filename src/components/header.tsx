@@ -13,7 +13,7 @@ import {
 import { useCredits } from "@/src/hooks/use-credits"
 import { apiClient } from "@/src/lib/api-client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/components/ui/dialog";
-import PaymentButton from "@/src/components/payment-button";
+import { OneTimePurchasePlans } from "@/src/components/one-time-purchase-plans";
 
 interface HeaderProps {
   // Title and subtitle for both mobile and desktop
@@ -183,12 +183,12 @@ export default function Header({
       </div>
 
       {/* Dialog for purchasing credits */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      <Dialog  open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-max">
           <DialogHeader>
             <DialogTitle>Comprar Créditos</DialogTitle>
           </DialogHeader>
-          <PaymentButton />
+          <OneTimePurchasePlans />
         </DialogContent>
       </Dialog>
     </header>
