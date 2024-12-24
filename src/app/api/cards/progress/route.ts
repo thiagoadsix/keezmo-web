@@ -8,10 +8,10 @@ export async function GET(req: NextRequest) {
   console.log('➡️ [GET /api/cards/progress] Request received');
 
   try {
-    const { userId } = await auth();
-    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+    const userEmail = req.headers.get('x-user-email');
+    console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
-    if (!userId) {
+    if (!userEmail) {
       console.warn('⚠️ [Auth] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -23,13 +23,13 @@ export async function GET(req: NextRequest) {
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
       ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
+        ':pk': `USER#${userEmail}`,
         ':sk': 'CARD_PROGRESS#'
       },
       ...(deckId && {
         FilterExpression: 'deckId = :deckId',
         ExpressionAttributeValues: {
-          ':pk': `USER#${userId}`,
+          ':pk': `USER#${userEmail}`,
           ':sk': 'CARD_PROGRESS#',
           ':deckId': deckId
         }
@@ -62,10 +62,10 @@ export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/cards/progress] Request received');
 
   try {
-    const { userId } = await auth();
-    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+    const userEmail = req.headers.get('x-user-email');
+    console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
-    if (!userId) {
+    if (!userEmail) {
       console.warn('⚠️ [Auth] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -78,9 +78,8 @@ export async function POST(req: NextRequest) {
     const command = new PutCommand({
       TableName: TABLE_NAME,
       Item: {
-        pk: `USER#${userId}`,
+        pk: `USER#${userEmail}`,
         sk: `CARD_PROGRESS#${body.cardId}`,
-        userId,
         cardId: body.cardId,
         deckId: body.deckId,
         lastReviewed: body.lastReviewed,

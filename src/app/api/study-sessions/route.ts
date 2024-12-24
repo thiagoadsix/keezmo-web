@@ -137,10 +137,10 @@ export async function POST(req: NextRequest) {
   console.log('Request URL:', req.url);
 
   try {
-    const { userId } = await auth();
-    console.log(`📍 [Auth] User ID from Clerk: ${userId || 'none'}`);
+    const userEmail = req.headers.get('x-user-email');
+    console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
-    if (!userId) {
+    if (!userEmail) {
       console.warn('⚠️ [Auth] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -154,10 +154,9 @@ export async function POST(req: NextRequest) {
     const command = new PutCommand({
       TableName: TABLE_NAME,
       Item: {
-        pk: `USER#${userId}`,
+        pk: `USER#${userEmail}`,
         sk: `STUDY_SESSION#${sessionId}`,
         id: sessionId,
-        userId: userId,
         deckId: body.deckId,
         hits: body.hits,
         misses: body.misses,
@@ -175,7 +174,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       id: sessionId,
       ...body,
-      userId,
       createdAt: timestamp
     }, { status: 201 });
 

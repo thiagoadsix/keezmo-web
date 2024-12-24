@@ -81,14 +81,13 @@ export default function StudyPage() {
           fetch(`${protocol}//${host}/api/decks/${deckId}/cards`, {
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': user?.id || ''
             },
             cache: 'no-store'
           }),
           fetch(`${protocol}//${host}/api/cards/progress?deckId=${deckId}`, {
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': user?.id || ''
+              'x-user-email': user?.emailAddresses[0].emailAddress!
             },
             cache: 'no-store'
           })
@@ -209,7 +208,7 @@ export default function StudyPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || ''
+          'x-user-email': user?.emailAddresses[0].emailAddress!
         },
         body: JSON.stringify({
           cardId: currentQ.id,
@@ -268,7 +267,7 @@ export default function StudyPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user?.id || ''
+          'x-user-email': user?.emailAddresses[0].emailAddress!
         },
         body: JSON.stringify({
           deckId,
