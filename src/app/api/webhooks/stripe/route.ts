@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
 
           if (userEmail) {
             const appUrl =
-              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:4000";
+              process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
             await resendClient.emails.send({
               from: "Keezmo <official@keezmo.com>",
               to: userEmail,

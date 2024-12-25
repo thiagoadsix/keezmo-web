@@ -1,6 +1,7 @@
 import { QueryCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { NextRequest, NextResponse } from 'next/server';
 import { dynamoDbClient } from '../clients/dynamodb';
+import { Dashboard } from '@/types/dashboard';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
@@ -103,7 +104,7 @@ export async function GET(req: NextRequest) {
       reviewCalendar: generateReviewCalendar(response.Items || [])
     };
 
-    return NextResponse.json(dashboardData);
+    return NextResponse.json<Dashboard>(dashboardData);
   } catch (error) {
     console.error('Failed to fetch dashboard data:', error);
     return NextResponse.json(

@@ -2,15 +2,10 @@ import React from 'react';
 import { Button } from '@/src/components/ui/button';
 import Link from 'next/link';
 import { Info } from 'lucide-react';
+import { Dashboard } from '@/types/dashboard';
 
 interface DecksNeedingAttentionProps {
-  decksNeedingAttention: {
-    deckId: string;
-    errorRate: number;
-    totalAttempts: number;
-    title: string;
-    description: string;
-  }[];
+  decksNeedingAttention: Dashboard['decksNeedingAttention']
 }
 
 export function DecksNeedingAttention({ decksNeedingAttention }: DecksNeedingAttentionProps) {

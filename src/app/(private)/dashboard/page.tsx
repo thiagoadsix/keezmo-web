@@ -1,15 +1,16 @@
-import { headers } from "next/headers";
-
 import StatsOverview from "@/src/components/stats-overview";
 import RecentActivity from "@/src/components/recent-activity";
 import Header from "@/src/components/header";
 import { DecksNeedingAttention } from "@/src/components/dashboard/decks-needing-attention";
 import { ReviewCalendar } from "@/src/components/dashboard/review-calendar";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { apiClient } from "@/src/lib/api-client";
+import { Dashboard } from "@/types/dashboard";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
   const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
+  const { getToken } = await auth();
   const today = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "numeric",
@@ -19,19 +20,12 @@ export default async function DashboardPage() {
     .format(new Date())
     .replace(/^\w/, (c) => c.toUpperCase());
 
-  const { getToken } = await auth();
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const dashboardUrl = `${protocol}://${host}/api/dashboard`;
-
-  const dashboardData = await fetch(dashboardUrl, {
+  const dashboardData = await apiClient<Dashboard>("api/dashboard", {
+    method: "GET",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${await getToken()}`,
       "x-user-email": userEmail,
     },
-    method: "GET",
     cache: "no-store",
   });
 

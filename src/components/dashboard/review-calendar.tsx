@@ -3,13 +3,10 @@ import Link from 'next/link';
 import { format, isValid, parse } from 'date-fns';
 import { cn } from '@/src/lib/utils';
 import { ptBR } from 'date-fns/locale';
+import { Dashboard } from '@/types/dashboard';
 
 interface ReviewCalendarProps {
-  reviewCalendar: {
-    date: string;
-    reviewCount: number;
-    deckId: string;
-  }[];
+  reviewCalendar: Dashboard['reviewCalendar']
 }
 
 export function ReviewCalendar({ reviewCalendar }: ReviewCalendarProps) {
