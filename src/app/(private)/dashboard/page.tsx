@@ -6,19 +6,13 @@ import { ReviewCalendar } from "@/src/components/dashboard/review-calendar";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { apiClient } from "@/src/lib/api-client";
 import { Dashboard } from "@/types/dashboard";
+import { getFormattedToday } from "@/src/lib/date";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
   const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
   const { getToken } = await auth();
-  const today = new Intl.DateTimeFormat("pt-BR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
-    .format(new Date())
-    .replace(/^\w/, (c) => c.toUpperCase());
+  const today = getFormattedToday();
 
   const dashboardData = await apiClient<Dashboard>("api/dashboard", {
     method: "GET",

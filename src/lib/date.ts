@@ -7,3 +7,14 @@ export function formatDate(date: string | Date) {
     minute: '2-digit'
   }).format(new Date(date))
 }
+
+export function getFormattedToday() {
+  return new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+    .format(new Date())
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
