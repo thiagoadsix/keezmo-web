@@ -1,22 +1,16 @@
 import Header from "@/src/components/header";
-import { columns } from "./columns";
+import { columns, StudySession } from "./columns";
 import { DataTable } from "./data-table";
-import { headers } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
+import { apiClient } from "@/src/lib/api-client";
 
-async function getStudySessions() {
+export default async function StudySessionsPage() {
   const { getToken, userId } = await auth();
   const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
-  const headersList = await headers();
-  const host = headersList.get('host') || 'localhost:3000';
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const studySessionsUrl = `${protocol}://${host}/api/study-sessions`;
-
-  const studySessionsResponse = await fetch(studySessionsUrl, {
+  const studySessionsResponse = await apiClient<StudySession[]>('api/study-sessions', {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
       'Authorization': `Bearer ${await getToken()}`,
       'x-user-email': userEmail,
     },
@@ -27,12 +21,7 @@ async function getStudySessions() {
     throw new Error(`HTTP error! status: ${studySessionsResponse.status}`);
   }
 
-  const { studySessions } = await studySessionsResponse.json();
-  return studySessions;
-}
-
-export default async function StudySessionsPage() {
-  const studySessions = await getStudySessions();
+  const studySessions  = await studySessionsResponse.json();
 
   return (
     <div className="px-8">

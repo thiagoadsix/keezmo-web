@@ -1,24 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QueryCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../clients/dynamodb';
-
-interface StudySession {
-  id: string;
-  userId: string;
-  deckId: string;
-  hits: number;
-  misses: number;
-  totalQuestions: number;
-  startTime: string;
-  endTime: string;
-  createdAt: string;
-  deck?: {
-    title: string;
-    description: string;
-    totalCards: number;
-  };
-  questionsMetadata: QuestionMetadata[];
-}
+import { StudySession } from '@/types/study';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
@@ -48,11 +31,9 @@ export async function GET(req: NextRequest) {
     const response = await dynamoDbClient.send(command);
     console.log(`📦 [DynamoDB] Retrieved ${response.Items?.length || 0} study sessions`);
 
-    // Get study sessions with their associated decks
-    const studySessions = await Promise.all((response.Items || []).map(async (item): Promise<StudySession> => {
+    const studySessions: StudySession[] = await Promise.all((response.Items || []).map(async (item): Promise<StudySession> => {
       const deckId = String(item.deckId);
 
-      // Get deck information
       const deckCommand = new GetCommand({
         TableName: TABLE_NAME,
         Key: {
@@ -61,7 +42,6 @@ export async function GET(req: NextRequest) {
         }
       });
 
-      // Get deck's cards count
       const cardsCommand = new QueryCommand({
         TableName: TABLE_NAME,
         KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
@@ -80,7 +60,6 @@ export async function GET(req: NextRequest) {
 
       return {
         id: String(item.id),
-        userId: String(item.userId),
         deckId: deckId,
         hits: Number(item.hits),
         misses: Number(item.misses),
@@ -99,7 +78,7 @@ export async function GET(req: NextRequest) {
 
     console.log('✨ [Transform] Successfully mapped DynamoDB items to StudySession objects with deck info');
     console.log('✅ [Response] Sending successful response');
-    return NextResponse.json({ studySessions }, { status: 200 });
+    return NextResponse.json(studySessions, { status: 200 });
 
   } catch (error: any) {
     console.error('❌ [Error] Failed to fetch study sessions:', {
