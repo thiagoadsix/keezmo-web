@@ -27,6 +27,15 @@ interface CardModalProps {
   editingCard?: Card;
 }
 
+/**
+ * @deprecated
+ * CardModal is a modal that allows the user to create or edit a card.
+ * @param isOpen - Whether the modal is open.
+ * @param onClose - Function to close the modal.
+ * @param onSave - Function to save the card.
+ * @param editingCard - The card to edit.
+ * @returns A modal with a form to create or edit a card.
+ */
 export function CardModal({ isOpen, onClose, onSave, editingCard }: CardModalProps) {
   const [card, setCard] = useState<Card>({
     question: '',

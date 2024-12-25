@@ -8,6 +8,7 @@ import { CreateDeckForm } from "@/src/components/create-deck/manually/create-dec
 import { ProcessingStatus } from "@/src/components/create-deck/manually/processing-status"
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
 import { ProcessStep } from "@/types/process-step"
+
 const initialSteps: ProcessStep[] = [
   {
     id: 1,
