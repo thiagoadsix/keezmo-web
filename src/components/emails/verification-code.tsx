@@ -24,9 +24,9 @@ export default function VerificationCode({
     <Html>
       <Head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" />
-        <title>{`${otpCode} é o seu código de verificação do ${appName}`}</title>
+        <title>Código de verificação do {appName}</title>
       </Head>
-      <Preview>Código de verificação do {appName}</Preview>
+      <Preview>{`${otpCode} é o seu código de verificação`}</Preview>
       <Section style={{ backgroundColor: "#ffffff", padding: "48px 32px" }}>
         <Section style={{ padding: "16px 32px" }}>
           {logoImageUrl && (
