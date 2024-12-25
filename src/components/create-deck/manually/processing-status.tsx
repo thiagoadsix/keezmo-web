@@ -1,12 +1,6 @@
+import { ProcessStep } from "@/types/process-step";
 import { Check, Loader2, X } from "lucide-react"
 
-type ProcessStep = {
-  id: number;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  status: 'waiting' | 'processing' | 'completed' | 'error';
-};
 
 interface ProcessingStatusProps {
   steps: ProcessStep[];

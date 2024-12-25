@@ -9,12 +9,13 @@ import Link from "next/link"
 import { apiClient } from "@/src/lib/api-client"
 import { useToast } from "@/src/hooks/use-toast"
 import { Textarea } from "@/src/components/ui/textarea"
+import { ProcessStepStatus } from "@/types/process-step"
 
 interface EditDeckFormProps {
   deckId: string;
   onSuccess: () => void;
   onProcessingStart: () => void;
-  onStepUpdate: (stepId: number, status: 'waiting' | 'processing' | 'completed' | 'error') => void;
+  onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
   onError: (error: string) => void;
 }
 

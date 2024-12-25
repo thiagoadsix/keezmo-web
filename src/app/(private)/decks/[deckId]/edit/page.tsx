@@ -7,14 +7,7 @@ import { ProcessingStatus } from "@/src/components/create-deck/ai/processing-sta
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
 import { useParams } from "next/navigation"
 import { EditDeckForm } from "@/src/components/edit-deck/edit-deck-form"
-
-type ProcessStep = {
-  id: number;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  status: 'waiting' | 'processing' | 'completed' | 'error';
-};
+import { ProcessStep } from "@/types/process-step"
 
 const initialSteps: ProcessStep[] = [
   {

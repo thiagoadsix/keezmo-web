@@ -7,15 +7,7 @@ import Header from "@/src/components/header"
 import { CreateDeckForm } from "@/src/components/create-deck/manually/create-deck-form"
 import { ProcessingStatus } from "@/src/components/create-deck/manually/processing-status"
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
-
-type ProcessStep = {
-  id: number;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  status: 'waiting' | 'processing' | 'completed' | 'error';
-};
-
+import { ProcessStep } from "@/types/process-step"
 const initialSteps: ProcessStep[] = [
   {
     id: 1,

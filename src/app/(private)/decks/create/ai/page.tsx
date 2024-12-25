@@ -6,14 +6,7 @@ import Header from "@/src/components/header"
 import { CreateDeckForm } from "@/src/components/create-deck/ai/create-deck-form"
 import { ProcessingStatus } from "@/src/components/create-deck/ai/processing-status"
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
-
-type ProcessStep = {
-  id: number;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  status: 'waiting' | 'processing' | 'completed' | 'error';
-};
+import { ProcessStep } from "@/types/process-step"
 
 const initialSteps: ProcessStep[] = [
   {
@@ -37,7 +30,7 @@ const initialSteps: ProcessStep[] = [
     icon: <Sparkles className="h-5 w-5" />,
     status: 'waiting'
   }
-] as const;
+]
 
 export default function CreateDeckPage() {
   const [isProcessing, setIsProcessing] = useState(false)

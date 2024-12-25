@@ -10,11 +10,12 @@ import { apiClient } from "@/src/lib/api-client"
 import { useToast } from "@/src/hooks/use-toast"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Alert, AlertDescription } from "@/src/components/ui/alert"
+import { ProcessStepStatus } from "@/types/process-step"
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
   onProcessingStart: () => void;
-  onStepUpdate: (stepId: number, status: 'waiting' | 'processing' | 'completed' | 'error') => void;
+  onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
   onError: (error: string) => void;
 }
 
