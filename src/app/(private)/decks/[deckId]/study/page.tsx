@@ -10,12 +10,13 @@ import {
   calculateNextInterval,
   calculateNextReview,
 } from "@/src/lib/spaced-repetition";
-import { QuestionMetadata } from "@/src/types/study";
+import { QuestionMetadata } from "@/types/study";
 import { StudySessionSummary } from "@/src/components/study-session-summary";
 import { StudyProgress } from "@/src/components/study-progress";
 import { QuestionOption } from "@/src/components/question-option";
+import { CardProgress } from "@/types/card-progress";
 
-type Question = {
+export type Question = {
   id: string;
   question: string;
   options: string[];
@@ -25,19 +26,7 @@ type Question = {
   lastAttempt?: Date;
 };
 
-interface CardProgress {
-  cardId: string;
-  totalAttempts: number;
-  totalErrors: number;
-  consecutiveHits: number;
-  interval: number;
-  lastReviewed: string;
-  nextReview: string;
-}
-
 interface QuestionWithMetadata extends Question {
-  attempts: number;
-  errors: number;
   consecutiveHits: number;
   interval: number;
   lastReviewed: string;

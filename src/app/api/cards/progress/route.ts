@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../../clients/dynamodb';
+import { CardProgress } from '@/types/card-progress';
+
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
 export async function GET(req: NextRequest) {
@@ -46,17 +48,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-interface CardProgressRequest {
-  cardId: string;
-  deckId: string;
-  lastReviewed: string;
-  nextReview: string;
-  interval: number;
-  consecutiveHits: number;
-  totalAttempts: number;
-  totalErrors: number;
-}
-
 export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/cards/progress] Request received');
 
@@ -69,7 +60,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body: CardProgressRequest = await req.json();
+    const body: CardProgress = await req.json();
     console.log('📝 [Request] Card progress data:', body);
 
     const timestamp = new Date().toISOString();
@@ -95,9 +86,7 @@ export async function POST(req: NextRequest) {
     await dynamoDbClient.send(command);
     console.log('✨ [DynamoDB] Successfully updated card progress');
 
-    return NextResponse.json({
-      message: 'Card progress updated successfully'
-    }, { status: 200 });
+    return NextResponse.json({}, { status: 200 });
 
   } catch (error: any) {
     console.error('❌ [Error] Failed to update card progress:', error);

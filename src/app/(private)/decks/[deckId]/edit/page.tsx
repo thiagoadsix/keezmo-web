@@ -1,7 +1,7 @@
 'use client'
 
 import { FileText, Brain, Sparkles } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Header from "@/src/components/header"
 import { ProcessingStatus } from "@/src/components/create-deck/ai/processing-status"
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
