@@ -6,7 +6,7 @@ import { auth } from '@clerk/nextjs/server';
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
 // Função para encontrar decks que precisam de atenção
-async function findDecksNeedingAttention(items: any[], userId: string) {
+async function findDecksNeedingAttention(items: any[], userEmail: string) {
   const deckStats = new Map<string, { errors: number; total: number }>();
 
   items.forEach(item => {
@@ -32,7 +32,7 @@ async function findDecksNeedingAttention(items: any[], userId: string) {
       const deckCommand = new GetCommand({
         TableName: TABLE_NAME,
         Key: {
-          pk: `USER#${userId}`,
+          pk: `USER#${userEmail}`,
           sk: `DECK#${deck.deckId}`
         }
       });
@@ -81,9 +81,9 @@ function generateReviewCalendar(items: any[]) {
 }
 
 export async function GET(req: NextRequest) {
-  const { userId } = await auth();
+  const userEmail = req.headers.get('x-user-email');
 
-  if (!userId) {
+  if (!userEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
       ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
+        ':pk': `USER#${userEmail}`,
         ':sk': 'CARD_PROGRESS#'
       }
     });
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
     const response = await dynamoDbClient.send(command);
 
     const dashboardData = {
-      decksNeedingAttention: await findDecksNeedingAttention(response.Items || [], userId),
+      decksNeedingAttention: await findDecksNeedingAttention(response.Items || [], userEmail),
       reviewCalendar: generateReviewCalendar(response.Items || [])
     };
 

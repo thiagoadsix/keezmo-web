@@ -5,9 +5,11 @@ import RecentActivity from "@/src/components/recent-activity";
 import Header from "@/src/components/header";
 import { DecksNeedingAttention } from "@/src/components/dashboard/decks-needing-attention";
 import { ReviewCalendar } from "@/src/components/dashboard/review-calendar";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 
 export default async function DashboardPage() {
+  const { userId } = await auth();
+  const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
   const today = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "numeric",
@@ -27,6 +29,7 @@ export default async function DashboardPage() {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${await getToken()}`,
+      "x-user-email": userEmail,
     },
     method: "GET",
     cache: "no-store",
