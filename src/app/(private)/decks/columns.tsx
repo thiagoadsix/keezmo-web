@@ -11,14 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
-
-export type Deck = {
-  deckId: string
-  title: string
-  description: string
-  totalCards: number
-  createdAt: string
-}
+import { Deck } from "@/types/deck"
 
 export const columns: ColumnDef<Deck>[] = [
   {
@@ -34,7 +27,7 @@ export const columns: ColumnDef<Deck>[] = [
             size="sm"
             className="hover:text-white hover:bg-white/60 bg-white text-black transition-colors"
           >
-            <Link href={`/decks/${deck.deckId}/study`} className="flex items-center">
+            <Link href={`/decks/${deck.id}/study`} className="flex items-center">
               <BookOpen className="h-4 w-4 mr-2" />
               Estudar
             </Link>
@@ -50,7 +43,7 @@ export const columns: ColumnDef<Deck>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
                 <Link
-                  href={`/decks/${deck.deckId}/edit`}
+                  href={`/decks/${deck.id}/edit`}
                   className="flex items-center cursor-pointer"
                 >
                   <Pencil className="mr-2 h-4 w-4" />
@@ -72,7 +65,7 @@ export const columns: ColumnDef<Deck>[] = [
         <div className="flex items-center gap-2">
           <span className="font-medium">{deck.title}</span>
           <Link
-            href={`/decks/${deck.deckId}/edit`}
+            href={`/decks/${deck.id}/edit`}
             className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />

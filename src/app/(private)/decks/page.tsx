@@ -1,51 +1,34 @@
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
-import { headers } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { DeckHeader } from "@/src/components/decks/deck-header";
 import { clerkClient } from "@clerk/nextjs/server";
+import { apiClient } from "@/src/lib/api-client";
+import { Deck } from "@/types/deck";
 
 export default async function DecksPage() {
   const { getToken, userId } = await auth();
   const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const decksUrl = `${protocol}://${host}/api/decks`;
 
-  console.log('Fetching decks from:', decksUrl);
+  const response = await apiClient<Deck[]>("api/decks", {
+    method: "GET",
+    headers: {
+      "x-user-email": userEmail,
+      Authorization: `Bearer ${await getToken()}`,
+    },
+    cache: "no-store",
+  });
 
-    const decksResponse = await fetch(decksUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-email": userEmail,
-        Authorization: `Bearer ${await getToken()}`,
-      },
-      cache: "no-store",
-    });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 
-    if (!decksResponse.ok) {
-      console.error('Error fetching decks:', {
-        status: decksResponse.status,
-        statusText: decksResponse.statusText,
-        headers: Object.fromEntries(decksResponse.headers),
-        url: decksResponse.url
-      });
+  const decks = await response.json();
 
-      // Try to read the response body for more details
-      const text = await decksResponse.text();
-      console.error('Response body:', text);
-
-      throw new Error(`HTTP error! status: ${decksResponse.status}`);
-    }
-
-    const { decks } = await decksResponse.json();
-
-    return (
-      <div className="gap-5 flex flex-col px-8">
-        <DeckHeader />
-        <DataTable columns={columns} data={decks} />
-      </div>
-    );
+  return (
+    <div className="gap-5 flex flex-col px-8">
+      <DeckHeader />
+      <DataTable columns={columns} data={decks} />
+    </div>
+  );
 }

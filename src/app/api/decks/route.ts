@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../clients/dynamodb';
+import { Deck } from '@/types/deck';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
@@ -33,33 +34,35 @@ export async function GET(req: NextRequest) {
 
     // Then, for each deck, get its cards count
     const decksWithCards = await Promise.all((decksResponse.Items || []).map(async (item) => {
-      const deckId = String(item.sk).replace('DECK#', '');
+      const id = String(item.sk).replace('DECK#', '');
 
       // Query cards for this deck
       const cardsCommand = new QueryCommand({
         TableName: TABLE_NAME,
         KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
         ExpressionAttributeValues: {
-          ':pk': `DECK#${deckId}`,
+          ':pk': `DECK#${id}`,
           ':sk': 'CARD#'
         }
       });
 
       const cardsResponse = await dynamoDbClient.send(cardsCommand);
-      console.log(`📑 [DynamoDB] Retrieved ${cardsResponse.Items?.length || 0} cards for deck ${deckId}`);
+      console.log(`📑 [DynamoDB] Retrieved ${cardsResponse.Items?.length || 0} cards for deck ${id}`);
 
-      return {
-        deckId,
+      const deck: Deck = {
+        id,
         title: String(item.title || ''),
         description: String(item.description || ''),
         createdAt: String(item.createdAt || ''),
         totalCards: cardsResponse.Items?.length || 0
       };
+
+      return deck;
     }));
 
     console.log('✨ [Transform] Successfully mapped DynamoDB items to Deck objects with card counts');
     console.log('✅ [Response] Sending successful response');
-    return NextResponse.json({ decks: decksWithCards }, { status: 200 });
+    return NextResponse.json(decksWithCards, { status: 200 });
 
   } catch (error: any) {
     console.error('❌ [Error] Failed to fetch decks:', {
