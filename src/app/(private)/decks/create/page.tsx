@@ -8,7 +8,8 @@ import { cn } from "@/src/lib/utils"
 
 export default function CreateDeckPage() {
   const { credits, isLoading } = useCredits()
-  const hasCredits = credits && credits > 0
+  const totalCredits = (credits?.plan || 0) + (credits?.additional || 0);
+  const hasCredits = totalCredits > 0;
 
   return (
     <div className="flex flex-col">

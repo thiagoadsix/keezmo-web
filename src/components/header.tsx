@@ -82,6 +82,9 @@ export default function Header({
 
   const memoizedHandleCancelPlan = React.useCallback(handleCancelPlan, [user]);
 
+  const planCredits = credits?.plan || 0;
+  const additionalCredits = credits?.additional || 0;
+
   return (
     <header className="flex items-center justify-between w-full h-16 gap-4">
       {/* Small screens */}
@@ -94,18 +97,18 @@ export default function Header({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    className={`sm:hidden flex items-center gap-1 border rounded-3xl p-1.5 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}
+                    className={`sm:hidden flex items-center gap-1 border rounded-3xl p-1.5 bg-[#10111F] ${isLoading ? 'border-neutral-400' : planCredits + additionalCredits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}
                     onClick={() => setDialogOpen(true)}
                   >
                     {isLoading ? (
                       <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    ) : credits && credits > 0 ? (
+                    ) : planCredits + additionalCredits > 0 ? (
                       <Coins className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                     ) : (
                       <Frown className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
                     )}
-                    <p className={`text-[10px] sm:text-xs font-medium ${isLoading ? 'text-white' : credits && credits > 0 ? 'text-white' : 'text-yellow-500'}`}>
-                      {isLoading ? "..." : credits && credits > 0 ? `${credits} créditos` : "0"}
+                    <p className={`text-[10px] sm:text-xs font-medium ${isLoading ? 'text-white' : planCredits + additionalCredits > 0 ? 'text-white' : 'text-yellow-500'}`}>
+                      {isLoading ? "..." : planCredits + additionalCredits > 0 ? `${planCredits} (Plano) + ${additionalCredits} (Adicionais)` : "0"}
                     </p>
                   </button>
                 </TooltipTrigger>
@@ -140,21 +143,21 @@ export default function Header({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className={`flex items-center gap-1 sm:gap-2 border rounded-3xl p-2 sm:p-3 bg-[#10111F] ${isLoading ? 'border-neutral-400' : credits && credits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}
+                  className={`flex items-center gap-1 sm:gap-2 border rounded-3xl p-2 sm:p-3 bg-[#10111F] ${isLoading ? 'border-neutral-400' : planCredits + additionalCredits > 0 ? 'border-neutral-400' : 'border-yellow-500'}`}
                   onClick={() => setDialogOpen(true)}
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : credits && credits > 0 ? (
+                  ) : planCredits + additionalCredits > 0 ? (
                     <Coins className="h-4 w-4 text-primary" />
                   ) : (
                     <Frown className="h-4 w-4 text-yellow-500" />
                   )}
                   {isLoading ? (
                     <p className="text-xs sm:text-sm font-medium">Carregando...</p>
-                  ) : credits && credits > 0 ? (
+                  ) : planCredits + additionalCredits > 0 ? (
                     <p className="text-xs sm:text-sm font-medium">
-                      {credits} créditos
+                      {planCredits} (Plano) + {additionalCredits} (Adicionais)
                     </p>
                   ) : (
                     <p className="text-xs sm:text-sm font-medium text-yellow-500">
@@ -183,7 +186,7 @@ export default function Header({
       </div>
 
       {/* Dialog for purchasing credits */}
-      <Dialog  open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-max">
           <DialogHeader>
             <DialogTitle>Comprar Créditos</DialogTitle>

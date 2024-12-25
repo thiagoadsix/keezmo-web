@@ -3,9 +3,11 @@ import { columns } from "./columns";
 import { headers } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { DeckHeader } from "@/src/components/decks/deck-header";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export default async function DecksPage() {
-  const { getToken } = await auth();
+  const { getToken, userId } = await auth();
+  const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
   const headersList = await headers();
   const host = headersList.get("host") || "localhost:3000";
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
@@ -17,6 +19,7 @@ export default async function DecksPage() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "x-user-email": userEmail,
         Authorization: `Bearer ${await getToken()}`,
       },
       cache: "no-store",

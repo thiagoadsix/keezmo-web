@@ -21,12 +21,15 @@ const OneTimePurchaseButton = ({
 
     try {
       const response = await apiClient(
-        "/api/stripe/create-payment-link",
+        "/api/stripe/create-checkout",
         {
           method: "POST",
           body: JSON.stringify({
             priceId,
             email: user?.emailAddresses[0].emailAddress,
+            mode: "payment",
+            successUrl: window.location.href,
+            cancelUrl: window.location.href,
           }),
         }
       );

@@ -42,8 +42,16 @@ export const createCheckout = async ({
       customer_creation?: "always";
       customer_email?: string;
       invoice_creation?: { enabled: boolean };
-      payment_intent_data?: { setup_future_usage: "on_session" };
+      payment_intent_data?: {
+        setup_future_usage: "on_session";
+        metadata: { email: string; priceId: string };
+      };
       tax_id_collection?: { enabled: boolean };
+      subscription_data?: {
+        metadata: {
+          email: string;
+        };
+      };
     } = {};
 
     if (user?.customerId) {
@@ -53,12 +61,24 @@ export const createCheckout = async ({
         extraParams.customer_creation = "always";
         // The option below costs 0.4% (up to $2) per invoice. Alternatively, you can use https://zenvoice.io/ to create unlimited invoices automatically.
         // extraParams.invoice_creation = { enabled: true };
-        extraParams.payment_intent_data = { setup_future_usage: "on_session" };
+        extraParams.payment_intent_data = {
+          setup_future_usage: "on_session",
+          metadata: { email: user?.email!, priceId },
+        };
       }
       if (user?.email) {
         extraParams.customer_email = user.email;
       }
       extraParams.tax_id_collection = { enabled: true };
+    }
+
+    // Only add subscription_data for subscription mode
+    if (mode === "subscription" && user?.email) {
+      extraParams.subscription_data = {
+        metadata: {
+          email: user.email,
+        },
+      };
     }
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -81,11 +101,6 @@ export const createCheckout = async ({
       cancel_url: cancelUrl,
       metadata: {
         email: user?.email!,
-      },
-      subscription_data: {
-        metadata: {
-          email: user?.email!,
-        },
       },
       ...extraParams,
     };
@@ -138,7 +153,7 @@ export const findCheckoutSession = async (sessionId: string) => {
 
 export const createPaymentLink = async ({
   priceId,
-  email
+  email,
 }: CreatePaymentLinkParams): Promise<string> => {
   try {
     const stripe = new Stripe(String(process.env.STRIPE_SECRET_KEY), {
@@ -156,14 +171,14 @@ export const createPaymentLink = async ({
       allow_promotion_codes: true,
       metadata: {
         priceId,
-        email
+        email,
       },
       payment_intent_data: {
         metadata: {
           priceId,
-          email
-        }
-      }
+          email,
+        },
+      },
     });
 
     return paymentLink.url;

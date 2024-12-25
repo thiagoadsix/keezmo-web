@@ -6,7 +6,7 @@ import { apiClient } from "@/src/lib/api-client"
 
 export function useCredits() {
   const { user } = useUser()
-  const [credits, setCredits] = useState<number | null>(null)
+  const [credits, setCredits] = useState<{ plan: number; additional: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 

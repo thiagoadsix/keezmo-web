@@ -3,9 +3,11 @@ import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import { headers } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 
 async function getStudySessions() {
-  const { getToken } = await auth();
+  const { getToken, userId } = await auth();
+  const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
@@ -16,6 +18,7 @@ async function getStudySessions() {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${await getToken()}`,
+      'x-user-email': userEmail,
     },
     cache: 'no-store'
   });

@@ -16,7 +16,10 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
-  credits: number;
+  credits: {
+    plan: number;
+    additional: number;
+  };
   hasAccess: boolean;
   customerId?: string;
   creditHistory: CreditHistory[];
@@ -59,18 +62,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Calculate new credits
-    const currentCredits = user.credits || 0;
-    const newCredits = body.type === 'add'
-      ? currentCredits + body.amount
-      : currentCredits - body.amount;
+    let { plan, additional } = user.credits;
 
-    // Don't allow negative credits
-    if (newCredits < 0) {
-      return NextResponse.json({
-        error: 'Insufficient credits',
-        currentCredits
-      }, { status: 400 });
+    // Calculate credit usage prioritizing plan credits first
+    if (body.type === 'use') {
+      let remainingAmount = body.amount;
+
+      if (plan >= remainingAmount) {
+        plan -= remainingAmount;
+        remainingAmount = 0;
+      } else {
+        remainingAmount -= plan;
+        plan = 0;
+        additional -= remainingAmount;
+      }
+
+      if (additional < 0) {
+        return NextResponse.json({
+          error: 'Insufficient credits',
+          currentCredits: user.credits
+        }, { status: 400 });
+      }
+    } else if (body.type === 'add') {
+      if (body.source === 'subscription_credit') {
+        plan += body.amount;
+      } else if (body.source === 'additional_credit') {
+        additional += body.amount;
+      }
     }
 
     // Create new credit history entry
@@ -88,11 +106,12 @@ export async function POST(req: NextRequest) {
         pk: `USER#${userEmail}`,
         sk: `USER#${userEmail}`
       },
-      UpdateExpression: 'SET credits = :credits, creditHistory = list_append(if_not_exists(creditHistory, :empty_list), :history)',
+      UpdateExpression: 'SET credits = :credits, creditHistory = list_append(if_not_exists(creditHistory, :empty_list), :history), updatedAt = :updatedAt',
       ExpressionAttributeValues: {
-        ':credits': newCredits,
+        ':credits': { plan, additional },
         ':history': [creditHistoryEntry],
-        ':empty_list': []
+        ':empty_list': [],
+        ':updatedAt': new Date().toISOString()
       },
       ReturnValues: 'ALL_NEW'
     });
