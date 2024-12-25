@@ -1,7 +1,6 @@
 import { QueryCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { NextRequest, NextResponse } from 'next/server';
 import { dynamoDbClient } from '../clients/dynamodb';
-import { auth } from '@clerk/nextjs/server';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
