@@ -11,6 +11,7 @@ import { apiClient } from "@/src/lib/api-client"
 import { useToast } from "@/src/hooks/use-toast"
 import { PDFDocument } from 'pdf-lib'
 import { ProcessStepStatus } from "@/types/process-step"
+import { User } from "@/types/user"
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
@@ -122,7 +123,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
     try {
       // Deduct credits first
       const creditsNeeded = parseInt(numCards);
-      const updateCreditsResponse = await apiClient('/api/users/credits', {
+      const updateCreditsResponse = await apiClient<User>('/api/users/credits', {
         method: 'POST',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress! || ''
@@ -134,8 +135,8 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
         })
       });
 
-      if (!updateCreditsResponse.credits && updateCreditsResponse.error) {
-        throw new Error(updateCreditsResponse.error);
+      if (!updateCreditsResponse.ok) {
+        throw new Error('Failed to update credits');
       }
 
       // Step 1: Upload PDF

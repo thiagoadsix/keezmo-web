@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
 
       return {
         id: String(item.id),
-        deckId: deckId,
+        deckId,
         hits: Number(item.hits),
         misses: Number(item.misses),
         totalQuestions: Number(item.totalQuestions),
@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
         createdAt: String(item.createdAt),
         questionsMetadata: item.questionsMetadata,
         deck: deckResponse.Item ? {
+          id: String(deckResponse.Item.id),
           title: String(deckResponse.Item.title),
           description: String(deckResponse.Item.description),
           totalCards: cardsResponse.Items?.length || 0

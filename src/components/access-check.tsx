@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/src/components/ui/button';
 import { apiClient } from '@/src/lib/api-client';
 import { isPublicRoute } from '@/src/lib/utils';
+import { User } from '@/types/user';
 
 export function AccessCheck({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
@@ -26,14 +27,20 @@ export function AccessCheck({ children }: { children: React.ReactNode }) {
       if (!user) return;
 
       try {
-        const response = await apiClient('/api/users/me', {
+        const response = await apiClient<User>('api/users/me', {
           headers: {
             'x-user-email': user.emailAddresses[0].emailAddress,
           },
         });
 
-        setHasAccess(response.user.hasAccess);
-        if (!response.user.hasAccess) {
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data')
+        }
+
+        const data = await response.json()
+
+        setHasAccess(data.hasAccess);
+        if (!data.hasAccess) {
           setOpen(true);
         } else {
           setOpen(false);
@@ -48,7 +55,7 @@ export function AccessCheck({ children }: { children: React.ReactNode }) {
 
   const handleReactivate = async () => {
     try {
-      const response = await apiClient('/api/stripe/create-portal', {
+      const response = await apiClient('api/stripe/create-portal', {
         method: 'POST',
         body: JSON.stringify({
           returnUrl: window.location.href,

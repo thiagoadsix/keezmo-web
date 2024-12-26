@@ -7,34 +7,9 @@ import { Button } from "./ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useUser } from "@clerk/nextjs";
-
-type Deck = {
-  deckId: string;
-  title: string;
-  description: string;
-  createdAt: string;
-  totalCards: number;
-};
-
-type StudySession = {
-  id: string;
-  deckId: string;
-  hits: number;
-  misses: number;
-  startTime: string;
-  endTime: string;
-  createdAt: string;
-  deck?: {
-    title: string;
-    description: string;
-    totalCards: number;
-  };
-  questionsMetadata?: Array<{
-    questionId: string;
-    attempts: number;
-    errors: number;
-  }>;
-};
+import { apiClient } from "../lib/api-client";
+import { StudySession } from "@/types/study";
+import { Deck } from "@/types/deck";
 
 type RecentActivityState = {
   decks: Deck[];
@@ -42,51 +17,48 @@ type RecentActivityState = {
   isLoading: boolean;
 };
 
-const initialState: RecentActivityState = {
-  decks: [],
-  studySessions: [],
-  isLoading: true,
-};
-
 export default function RecentActivity() {
   const { user } = useUser();
-  const [state, setState] = useState<RecentActivityState>(initialState);
+  const [state, setState] = useState<RecentActivityState>({
+    decks: [],
+    studySessions: [],
+    isLoading: true,
+  });
 
   useEffect(() => {
     async function fetchRecentActivity() {
       if (!user) return;
 
       try {
-        const host = window.location.host;
-        const protocol = window.location.protocol;
-
         const [decksResponse, studySessionsResponse] = await Promise.all([
-          fetch(`${protocol}//${host}/api/decks`, {
+          apiClient<Deck[]>(`api/decks`, {
             headers: {
-              'Content-Type': 'application/json',
               'x-user-email': user.emailAddresses[0].emailAddress!
             },
             cache: 'no-store'
           }),
-          fetch(`${protocol}//${host}/api/study-sessions`, {
+          apiClient<StudySession[]>(`api/study-sessions`, {
             headers: {
-              'Content-Type': 'application/json',
               'x-user-email': user.emailAddresses[0].emailAddress!
             },
             cache: 'no-store'
           })
         ]);
 
+        if (!decksResponse.ok || !studySessionsResponse.ok) {
+          throw new Error('Failed to fetch recent activity');
+        }
+
         const [decksData, studySessionsData] = await Promise.all([
           decksResponse.json(),
           studySessionsResponse.json()
         ]);
 
-        const recentDecks = decksData.decks
+        const recentDecks = decksData
           .sort((a: Deck, b: Deck) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 2);
 
-        const recentStudySessions = studySessionsData.studySessions
+        const recentStudySessions = studySessionsData
           .sort((a: StudySession, b: StudySession) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 2);
 
@@ -124,7 +96,7 @@ export default function RecentActivity() {
               <>
                 <div className="flex flex-col gap-4">
                   {state.decks.map((deck, index) => (
-                    <React.Fragment key={deck.deckId}>
+                    <React.Fragment key={deck.id}>
                       <div>
                         <h3 className="text-base sm:text-lg font-bold text-primary">{deck.title}</h3>
                         <p className="text-xs sm:text-sm text-neutral-400">Possui {deck.totalCards} cards</p>

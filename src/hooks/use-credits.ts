@@ -3,6 +3,7 @@
 import { useUser } from "@clerk/nextjs"
 import { useEffect, useState } from "react"
 import { apiClient } from "@/src/lib/api-client"
+import { User } from "@/types/user"
 
 export function useCredits() {
   const { user } = useUser()
@@ -15,13 +16,19 @@ export function useCredits() {
       if (!user) return
 
       try {
-        const response = await apiClient('/api/users/me', {
+        const response = await apiClient<User>('api/users/me', {
           headers: {
             'x-user-email': user.emailAddresses[0].emailAddress
           }
         })
 
-        setCredits(response.user.credits)
+        if (!response.ok) {
+          throw new Error('Failed to fetch credits')
+        }
+
+        const data = await response.json()
+
+        setCredits(data.credits)
       } catch (err) {
         console.error('Error fetching credits:', err)
         setError(err instanceof Error ? err : new Error('Failed to fetch credits'))

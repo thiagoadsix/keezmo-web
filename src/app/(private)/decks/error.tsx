@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Header from "@/src/components/header";
 import { Button } from "@/src/components/ui/button";
 import Image from "next/image";
 import { DeckHeader } from "@/src/components/decks/deck-header";

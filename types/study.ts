@@ -25,6 +25,7 @@ export type StudySession = {
    * @argument {number} totalCards - The total number of cards in the deck.
    */
   deck?: {
+    id: string;
     title: string;
     description: string;
     totalCards: number;

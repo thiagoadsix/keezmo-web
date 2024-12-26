@@ -22,5 +22,5 @@ export async function GET(req: NextRequest) {
   const response = await dynamoDbClient.send(command);
   const user = response.Items?.[0];
 
-  return NextResponse.json({ user }, { status: 200 });
+  return NextResponse.json(user, { status: 200 });
 }
