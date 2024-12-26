@@ -77,7 +77,7 @@ const config = {
         credits: 150,
       },
       {
-        priceId: process.env.NODE_ENV === "development" ? "price_1QZEr5D6NUyMtMNHIbsUj42j" : "price_prod",
+        priceId: process.env.NODE_ENV === "development" ? "price_1QaLnMD6NUyMtMNHnXJAwpGk" : "price_prod",
         name: "300 de crédito",
         description: "Para estudantes dedicados",
         price: 24.90,
@@ -85,7 +85,7 @@ const config = {
         credits: 300,
       },
       {
-        priceId: process.env.NODE_ENV === "development" ? "price_1QZEr5D6NUyMtMNHIbsUj42j" : "price_prod",
+        priceId: process.env.NODE_ENV === "development" ? "price_1QaLlVD6NUyMtMNH5mQoFEnm" : "price_prod",
         name: "450 de crédito",
         description: "Para estudantes que querem mais",
         price: 37.35,
