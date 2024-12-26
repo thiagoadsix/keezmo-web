@@ -2,7 +2,7 @@
 
 import { FileText, Brain, Sparkles } from "lucide-react"
 import { useState } from "react"
-import Header from "@/src/components/header"
+import {Header} from "@/src/components/header"
 import { ProcessingStatus } from "@/src/components/create-deck/ai/processing-status"
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
 import { useParams } from "next/navigation"

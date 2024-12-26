@@ -3,7 +3,7 @@
 import { FileText, Brain, Sparkles } from "lucide-react"
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/src/components/ui/alert"
-import Header from "@/src/components/header"
+import {Header} from "@/src/components/header"
 import { CreateDeckForm } from "@/src/components/create-deck/manually/create-deck-form"
 import { ProcessingStatus } from "@/src/components/create-deck/manually/processing-status"
 import { SuccessMessage } from "@/src/components/create-deck/success-message"

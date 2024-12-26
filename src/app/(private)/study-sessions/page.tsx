@@ -1,4 +1,4 @@
-import Header from "@/src/components/header";
+import {Header} from "@/src/components/header";
 import { columns, StudySession } from "./columns";
 import { DataTable } from "./data-table";
 import { auth } from "@clerk/nextjs/server";

@@ -2,12 +2,9 @@
 
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import Header from "@/src/components/header"
-import { useCredits } from "@/src/hooks/use-credits"
+import {Header} from "@/src/components/header"
 
 export function DeckHeader() {
-  const { credits, isLoading } = useCredits()
-
   return (
     <Header
       title="Decks"

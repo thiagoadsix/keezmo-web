@@ -2,7 +2,7 @@
 
 import { FileText, Sparkles, Loader2 } from "lucide-react"
 import Link from "next/link"
-import Header from "@/src/components/header"
+import {Header} from "@/src/components/header"
 import { useCredits } from "@/src/hooks/use-credits"
 import { cn } from "@/src/lib/utils"
 

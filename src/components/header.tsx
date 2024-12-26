@@ -41,7 +41,7 @@ interface HeaderProps {
   };
 }
 
-export default function Header({
+export function Header({
   mobileTitle = "Keezmo",
   title = "Olá, seja bem-vindo(a)!",
   subtitle,
