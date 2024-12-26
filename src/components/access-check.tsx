@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
 import { Button } from '@/src/components/ui/button';
-import { apiClient } from '@/src/lib/api-client';
+import { apiClient, fetchFromClient } from '@/src/lib/api-client';
 import { isPublicRoute } from '@/src/lib/utils';
 import { User } from '@/types/user';
 
@@ -55,7 +55,7 @@ export function AccessCheck({ children }: { children: React.ReactNode }) {
 
   const handleReactivate = async () => {
     try {
-      const response = await apiClient('api/stripe/create-portal', {
+      const response = await fetchFromClient('api/stripe/create-portal', {
         method: 'POST',
         body: JSON.stringify({
           returnUrl: window.location.href,
