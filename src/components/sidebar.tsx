@@ -18,7 +18,7 @@ import { Button } from "./ui/button";
 import { useMobileSidebar } from "../contexts/mobile-sidebar";
 import { isPublicRoute } from "@/src/lib/utils";
 
-export default function Sidebar() {
+export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();

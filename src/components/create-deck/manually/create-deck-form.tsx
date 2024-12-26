@@ -11,6 +11,7 @@ import { useToast } from "@/src/hooks/use-toast"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Alert, AlertDescription } from "@/src/components/ui/alert"
 import { ProcessStepStatus } from "@/types/process-step"
+import { Deck } from "@/types/deck"
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
@@ -59,7 +60,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
     try {
       onStepUpdate(1, 'processing')
-      const response = await apiClient('/api/decks', {
+      const response = await apiClient<Deck>('/api/decks', {
         method: 'POST',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress!
@@ -70,6 +71,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
           cards
         })
       })
+      const data = await response.json()
 
       onStepUpdate(1, 'completed')
       onStepUpdate(2, 'processing')
@@ -79,7 +81,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
       await new Promise(resolve => setTimeout(resolve, 500))
       onStepUpdate(3, 'completed')
 
-      onSuccess(response.deckId)
+      onSuccess(data.id)
     } catch (error: any) {
       console.error('Failed to create deck:', error)
       onError(error.message || 'Erro ao criar o deck')

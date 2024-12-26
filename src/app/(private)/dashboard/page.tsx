@@ -1,5 +1,5 @@
-import StatsOverview from "@/src/components/stats-overview";
-import RecentActivity from "@/src/components/recent-activity";
+import {StatsOverview} from "@/src/components/stats-overview";
+import {RecentActivity} from "@/src/components/recent-activity";
 import {Header} from "@/src/components/header";
 import { DecksNeedingAttention } from "@/src/components/dashboard/decks-needing-attention";
 import { ReviewCalendar } from "@/src/components/dashboard/review-calendar";

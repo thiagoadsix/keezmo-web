@@ -17,7 +17,7 @@ const initialStats: Stats = {
   totalStudySessions: 0,
 };
 
-export default function StatsOverview() {
+export function StatsOverview() {
   const { user } = useUser();
   const [stats, setStats] = useState<Stats>(initialStats);
   const [isLoading, setIsLoading] = useState(true);

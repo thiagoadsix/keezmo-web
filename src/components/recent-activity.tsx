@@ -17,7 +17,7 @@ type RecentActivityState = {
   isLoading: boolean;
 };
 
-export default function RecentActivity() {
+export function RecentActivity() {
   const { user } = useUser();
   const [state, setState] = useState<RecentActivityState>({
     decks: [],

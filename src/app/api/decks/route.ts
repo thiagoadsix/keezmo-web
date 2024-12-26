@@ -161,8 +161,8 @@ export async function POST(req: NextRequest) {
       totalCards: body.cards.length
     });
 
-    return NextResponse.json({
-      deckId,
+    return NextResponse.json<Deck>({
+      id: deckId,
       title: body.title,
       description: body.description,
       totalCards: body.cards.length,

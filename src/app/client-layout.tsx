@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { isFullscreenRoute } from "@/src/lib/utils";
-import Sidebar from "@/src/components/sidebar";
+import {Sidebar} from "@/src/components/sidebar";
 import { SignedIn } from "@clerk/nextjs";
 import { cn } from "@/src/lib/utils";
 
