@@ -5,7 +5,7 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Check, Loader2 } from "lucide-react";
 import config from "@/config";
-import { apiClient } from "@/src/lib/api-client";
+import { fetchFromClient } from "@/src/lib/api-client";
 import { useUser } from "@clerk/nextjs";
 
 const ButtonCheckout = ({
@@ -22,8 +22,8 @@ const ButtonCheckout = ({
     setIsLoading(true);
 
     try {
-      const response = await apiClient(
-        "/api/stripe/create-checkout",
+      const response = await fetchFromClient(
+        "api/stripe/create-checkout",
         {
           method: "POST",
           body: JSON.stringify({
@@ -33,6 +33,7 @@ const ButtonCheckout = ({
             mode,
             email: user?.emailAddresses[0].emailAddress,
           }),
+          cache: "no-store",
         }
       );
 

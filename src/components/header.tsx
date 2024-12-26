@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { Coins, Frown, Loader2, X } from "lucide-react";
+import { Coins, Frown, Loader2, CreditCard } from "lucide-react";
 import { useMobileSidebar } from "../contexts/mobile-sidebar";
 import {
   Tooltip,
@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@/src/components/ui/tooltip";
 import { useCredits } from "@/src/hooks/use-credits"
-import { apiClient } from "@/src/lib/api-client";
+import { fetchFromClient } from "@/src/lib/api-client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/components/ui/dialog";
 import { OneTimePurchasePlans } from "@/src/components/one-time-purchase-plans";
 
@@ -63,9 +63,9 @@ export default function Header({
   const { user } = useUser();
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
-  const handleCancelPlan = async () => {
+  const handleManagePlan = async () => {
     try {
-      const response = await apiClient('/api/stripe/create-portal', {
+      const response = await fetchFromClient('api/stripe/create-portal', {
         method: 'POST',
         body: JSON.stringify({
           returnUrl: window.location.href,
@@ -80,7 +80,7 @@ export default function Header({
     }
   };
 
-  const memoizedHandleCancelPlan = React.useCallback(handleCancelPlan, [user]);
+  const memoizedHandleManagePlan = React.useCallback(handleManagePlan, [user]);
 
   const planCredits = credits?.plan || 0;
   const additionalCredits = credits?.additional || 0;
@@ -176,9 +176,9 @@ export default function Header({
           <UserButton {...userButtonProps}>
             <UserButton.MenuItems>
               <UserButton.Action
-                labelIcon={<X className="h-4 w-4" />}
-                label="Cancelar plano"
-                onClick={memoizedHandleCancelPlan}
+                labelIcon={<CreditCard className="h-4 w-4" />}
+                label="Gerenciar plano"
+                onClick={memoizedHandleManagePlan}
               />
             </UserButton.MenuItems>
           </UserButton>

@@ -15,6 +15,8 @@ import { StudySessionSummary } from "@/src/components/study-session-summary";
 import { StudyProgress } from "@/src/components/study-progress";
 import { QuestionOption } from "@/src/components/question-option";
 import { CardProgress } from "@/types/card-progress";
+import { Card } from "@/types/card";
+import { apiClient } from "@/src/lib/api-client";
 
 export type Question = {
   id: string;
@@ -65,13 +67,13 @@ export default function StudyPage() {
 
         // Buscar cards e progresso em paralelo
         const [cardsResponse, progressResponse] = await Promise.all([
-          fetch(`${protocol}//${host}/api/decks/${deckId}/cards`, {
+          apiClient<Card[]>(`api/decks/${deckId}/cards`, {
             headers: {
               "Content-Type": "application/json",
             },
             cache: "no-store",
           }),
-          fetch(`${protocol}//${host}/api/cards/progress?deckId=${deckId}`, {
+          apiClient<CardProgress[]>(`api/cards/progress?deckId=${deckId}`, {
             headers: {
               "Content-Type": "application/json",
               "x-user-email": user?.emailAddresses[0].emailAddress!,
@@ -84,18 +86,18 @@ export default function StudyPage() {
         const cardsData = await cardsResponse.json();
         const progressData = await progressResponse.json();
 
-        if (!cardsData.cards || cardsData.cards.length === 0) {
+        if (!cardsData || cardsData.length === 0) {
           setError("Este deck não possui cards");
           return;
         }
 
         // Criar Map com o progresso existente
         const progressMap = new Map<string, CardProgress>(
-          progressData.progress?.map((p: CardProgress) => [p.cardId, p]) || []
+          (progressData ?? []).map((p: CardProgress) => [p.cardId, p])
         );
 
         // Combinar cards com seu progresso existente
-        const questionsWithMetadata = cardsData.cards.map((card: Question) => {
+        const questionsWithMetadata = cardsData.map((card) => {
           const progress = progressMap.get(card.id);
           return {
             ...card,
@@ -195,11 +197,11 @@ export default function StudyPage() {
     setQuestionsMetadata((prev) => new Map(prev).set(questionId, metadata));
 
     try {
-      const response = await fetch(`/api/cards/progress`, {
-        method: 'POST',
+      const response = await apiClient(`api/cards/progress`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': user?.emailAddresses[0].emailAddress!
+          "Content-Type": "application/json",
+          "x-user-email": user?.emailAddresses[0].emailAddress!,
         },
         body: JSON.stringify({
           cardId: questionId,
@@ -209,13 +211,13 @@ export default function StudyPage() {
           interval: metadata.interval,
           consecutiveHits: metadata.consecutiveHits,
           totalAttempts: metadata.attempts,
-          totalErrors: metadata.errors
-        })
+          totalErrors: metadata.errors,
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to update card progress');
+      if (!response.ok) throw new Error("Failed to update card progress");
     } catch (error) {
-      console.error('Failed to update card progress:', error);
+      console.error("Failed to update card progress:", error);
     }
   };
 
@@ -245,7 +247,7 @@ export default function StudyPage() {
         (a, b) => b.errors - a.errors
       );
 
-      const response = await fetch(`/api/study-sessions`, {
+      const response = await apiClient(`api/study-sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

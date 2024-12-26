@@ -39,8 +39,9 @@ export async function GET(req: NextRequest) {
 
     const response = await dynamoDbClient.send(command);
     console.log(`📦 [DynamoDB] Retrieved ${response.Items?.length || 0} card progress records`);
+    const responseItems: CardProgress[] = (response.Items || []).map((item) => item as CardProgress);
 
-    return NextResponse.json({ progress: response.Items }, { status: 200 });
+    return NextResponse.json(responseItems, { status: 200 });
 
   } catch (error: any) {
     console.error('❌ [Error] Failed to fetch card progress:', error);

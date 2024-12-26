@@ -41,3 +41,27 @@ export const apiClient = ky.create({
     statusCodes: [408, 500, 502, 503, 504],
   },
 });
+
+export async function fetchFromClient(path: string, options: RequestInit = {}) {
+  if (typeof window === "undefined") {
+    throw new Error("fetchFromClient só pode ser usado no ambiente do navegador.");
+  }
+
+  const host = window.location.host;
+  const protocol = window.location.protocol;
+  const url = `${protocol}//${host}/${path}`;
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}

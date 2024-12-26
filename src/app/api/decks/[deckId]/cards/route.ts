@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QueryCommand, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../../../clients/dynamodb';
-
-interface Card {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: string;
-}
+import { Card } from '@/types/card';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
@@ -32,7 +26,7 @@ export async function GET(
     const response = await dynamoDbClient.send(command);
     console.log(`📦 [DynamoDB] Retrieved ${response.Items?.length || 0} cards`);
 
-    const cards = (response.Items || []).map((item): Card => ({
+    const cards: Card[] = (response.Items || []).map((item): Card => ({
       id: String(item.sk).replace('CARD#', ''),
       question: String(item.question),
       options: item.options as string[],
@@ -41,7 +35,7 @@ export async function GET(
 
     console.log('✨ [Transform] Successfully mapped DynamoDB items to Card objects');
     console.log('✅ [Response] Sending successful response');
-    return NextResponse.json({ cards }, { status: 200 });
+    return NextResponse.json(cards, { status: 200 });
 
   } catch (error: any) {
     console.error('❌ [Error] Failed to fetch cards:', {
