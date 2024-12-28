@@ -1,9 +1,9 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Deck } from "../decks/columns";
 import { Badge } from "@/src/components/ui/badge";
 import { formatDate } from "@/src/lib/date";
+import { Deck } from "@/types/deck";
 
 export type StudySession = {
   id: string;
