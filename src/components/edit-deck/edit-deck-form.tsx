@@ -10,6 +10,8 @@ import { apiClient } from "@/src/lib/api-client"
 import { useToast } from "@/src/hooks/use-toast"
 import { Textarea } from "@/src/components/ui/textarea"
 import { ProcessStepStatus } from "@/types/process-step"
+import { Deck } from "@/types/deck"
+import { Card } from "@/types/card"
 
 interface EditDeckFormProps {
   deckId: string;
@@ -17,27 +19,6 @@ interface EditDeckFormProps {
   onProcessingStart: () => void;
   onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
   onError: (error: string) => void;
-}
-
-interface Card {
-  id: string;
-  question: string;
-  correctAnswer: string;
-  options: string[];
-}
-
-interface Deck {
-  deckId: string;
-  title: string;
-  description: string;
-  cards: Card[];
-}
-
-interface CardResponse {
-  id: string;
-  question: string;
-  correctAnswer: string;
-  options: string[];
 }
 
 export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdate }: EditDeckFormProps) {
@@ -51,24 +32,37 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
   useEffect(() => {
     const fetchDeckAndCards = async () => {
       try {
-        const deckResponse = await apiClient(`/api/decks/${deckId}`, {
+        const deckResponse = await apiClient<Deck>(`api/decks/${deckId}`, {
           headers: {
             'x-user-email': user?.emailAddresses[0].emailAddress!
           }
         });
 
-        const cardsResponse = await apiClient(`/api/decks/${deckId}/cards`);
+        if (!deckResponse.ok) {
+          throw new Error('Failed to fetch deck');
+        }
 
-        const cardsWithIds = (cardsResponse.cards || []).map((card: CardResponse, index: number) => ({
+        const deck = await deckResponse.json();
+
+        const cardsResponse = await apiClient<Card[]>(`api/decks/${deckId}/cards`, {cache: 'no-store'});
+
+        if (!cardsResponse.ok) {
+          throw new Error('Failed to fetch cards');
+        }
+
+        const cards = await cardsResponse.json();
+
+        const cardsWithIds = cards.map((card: Card, index: number) => ({
           ...card,
           id: card.id
         }));
 
         setDeck({
-          deckId: deckResponse.deckId || deckId,
-          title: deckResponse.title || '',
-          description: deckResponse.description || '',
-          cards: cardsWithIds
+          id: deck.id,
+          title: deck.title,
+          description: deck.description,
+          cards: cardsWithIds,
+          createdAt: deck.createdAt
         });
       } catch (error) {
         toast({
@@ -93,7 +87,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
 
     try {
       // Primeiro, buscar o deck atual para preservar campos existentes
-      const currentDeck = await apiClient(`/api/decks/${deckId}`, {
+      const currentDeck = await apiClient(`api/decks/${deckId}`, {
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress!
         }
@@ -101,7 +95,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
 
       // Step 1: Update deck info (sem os cards)
       onStepUpdate(1, 'processing');
-      await apiClient(`/api/decks/${deckId}`, {
+      await apiClient(`api/decks/${deckId}`, {
         method: 'PUT',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress!
@@ -117,7 +111,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
 
       // Step 2: Update cards
       onStepUpdate(2, 'processing');
-      await apiClient(`/api/decks/${deckId}/cards`, {
+      await apiClient(`api/decks/${deckId}/cards`, {
         method: 'PUT',
         body: JSON.stringify({
           cards: deck.cards
@@ -143,7 +137,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
   };
 
   const nextCard = () => {
-    if (deck && currentCardIndex < deck.cards.length - 1) {
+    if (deck && deck.cards && currentCardIndex < (deck.cards.length || 0) - 1) {
       setCurrentCardIndex(prev => prev + 1)
     }
   }
@@ -201,7 +195,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
             </Button>
 
             <div className="flex-1 overflow-hidden">
-              {deck.cards?.length > 0 && (
+              {deck.cards && (deck.cards.length || 0) > 0 && (
                 <div
                   className="transition-all duration-300 ease-in-out"
                   style={{ minHeight: '250px' }}
@@ -219,10 +213,13 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
                         <Textarea
                           value={deck.cards[currentCardIndex].question}
                           onChange={(e) => {
-                            const newCards = [...deck.cards];
+                            const newCards = [...(deck.cards ?? [])];
                             newCards[currentCardIndex] = {
-                              ...deck.cards[currentCardIndex],
-                              question: e.target.value
+                              ...(deck.cards?.[currentCardIndex] ?? {}),
+                              id: deck.cards?.[currentCardIndex]?.id ?? crypto.randomUUID(),
+                              question: e.target.value,
+                              options: deck.cards?.[currentCardIndex]?.options ?? [],
+                              correctAnswer: deck.cards?.[currentCardIndex]?.correctAnswer ?? '',
                             };
                             setDeck(prev => prev ? {...prev, cards: newCards} : null);
                           }}
@@ -233,8 +230,8 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
                         <Textarea
                           value={deck.cards[currentCardIndex].correctAnswer}
                           onChange={(e) => {
-                            const newCards = [...deck.cards];
-                            const currentCard = newCards[currentCardIndex];
+                            const newCards = [...(deck.cards ?? [])];
+                            const currentCard = newCards[currentCardIndex] ?? {};
                             const newAnswer = e.target.value;
 
                             // Encontrar se a resposta anterior estava nas opções
@@ -258,8 +255,8 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
                               <Input
                                 value={option}
                                 onChange={(e) => {
-                                  const newCards = [...deck.cards];
-                                  const currentCard = newCards[currentCardIndex];
+                                  const newCards = [...(deck.cards ?? [])];
+                                  const currentCard = newCards[currentCardIndex] ?? {};
                                   const newValue = e.target.value;
 
                                   if (option === currentCard.correctAnswer) {
@@ -279,8 +276,8 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
                                 size="icon"
                                 className="h-10 w-10 shrink-0"
                                 onClick={() => {
-                                  const newCards = [...deck.cards];
-                                  const currentCard = newCards[currentCardIndex];
+                                  const newCards = [...(deck.cards ?? [])];
+                                  const currentCard = newCards[currentCardIndex] ?? {};
                                   const newOptions = currentCard.options.filter((_, i) => i !== optionIndex);
                                   currentCard.options = newOptions;
                                   setDeck(prev => prev ? {...prev, cards: newCards} : null);
@@ -296,8 +293,8 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
                             size="sm"
                             className="w-full mt-2"
                             onClick={() => {
-                              const newCards = [...deck.cards];
-                              const currentCard = newCards[currentCardIndex];
+                              const newCards = [...(deck.cards ?? [])];
+                              const currentCard = newCards[currentCardIndex] ?? {};
                               currentCard.options = [...currentCard.options, ''];
                               setDeck(prev => prev ? {...prev, cards: newCards} : null);
                             }}
