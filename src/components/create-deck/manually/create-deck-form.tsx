@@ -7,7 +7,6 @@ import { Input } from "@/src/components/ui/input"
 import { Loader2, ChevronLeft, ChevronRight, Trash, Plus } from "lucide-react"
 import Link from "next/link"
 import { apiClient } from "@/src/lib/api-client"
-import { useToast } from "@/src/hooks/use-toast"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Alert, AlertDescription } from "@/src/components/ui/alert"
 import { ProcessStepStatus } from "@/types/process-step"
@@ -34,7 +33,6 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   const [cards, setCards] = useState<Card[]>([{ question: '', correctAnswer: '', options: [''] }])
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const { toast } = useToast()
 
   const nextCard = () => {
     if (currentCardIndex < cards.length - 1) {

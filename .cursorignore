@@ -8,5 +8,3 @@ package-lock.json
 README.md
 *.png
 *.svg
-
-*.ignore,*.nvmrc,components.json,next-env.d.ts,package-lock.json,*.config.js,README.md,*.png,*.svg

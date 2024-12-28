@@ -11,7 +11,8 @@ import {
   FolderOpen,
   BookOpen,
   LogOut,
-  X
+  X,
+  MessageCircle
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { Button } from "./ui/button";
@@ -62,6 +63,11 @@ export function Sidebar() {
       title: "Sessões de Estudo",
       href: "/study-sessions",
       icon: BookOpen,
+    },
+    {
+      title: "Feedback",
+      href: "/feedback",
+      icon: MessageCircle,
     },
   ];
 
