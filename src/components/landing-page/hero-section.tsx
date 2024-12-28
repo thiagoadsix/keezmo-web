@@ -7,7 +7,7 @@ import { Button } from "@/src/components/ui/button";
 
 export function HeroSection() {
   return (
-    <section className="flex min-h-screen items-center justify-center bg-background px-4">
+    <section className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center">
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
           Flashcards potencializados por
@@ -16,6 +16,7 @@ export function HeroSection() {
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-400">
           Transforme seus PDFs em flashcards interativos usando IA. Estude de forma mais inteligente com o sistema de aprendizado do Keezmo.
         </p>
+        {/* TODO: add a button to go to the pricing page */}
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <SignedOut>
             <SignInButton>

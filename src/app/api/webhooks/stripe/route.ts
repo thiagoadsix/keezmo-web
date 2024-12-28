@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           const creditHistoryEntry = {
             amount: planInfo.credits,
             type: "add",
-            timestamp: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             source: "subscription_credit",
           };
 
@@ -300,7 +300,7 @@ export async function POST(req: NextRequest) {
         const creditHistoryEntry = {
           amount: additionalPlan.credits,
           type: "add",
-          timestamp: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           source: "additional_credit",
         };
 

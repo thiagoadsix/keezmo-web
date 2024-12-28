@@ -25,7 +25,7 @@ interface PageRange {
   end: number;
 }
 
-export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: CreateDeckFormProps) {
+export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onError }: CreateDeckFormProps) {
   const { user } = useUser()
   const [isLoading, setIsLoading] = useState(false)
   const [title, setTitle] = useState('')
@@ -123,7 +123,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
     try {
       // Deduct credits first
       const creditsNeeded = parseInt(numCards);
-      const updateCreditsResponse = await apiClient<User>('/api/users/credits', {
+      const updateCreditsResponse = await apiClient<User>('api/users/credits', {
         method: 'POST',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress! || ''
@@ -155,19 +155,17 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
       // Step 2: Process PDF
       onStepUpdate(2, 'processing')
 
-      const host = window.location.host
-      const protocol = window.location.protocol
-      const response = await fetch(`${protocol}//${host}/api/rag-pdf`, {
+      const response = await apiClient<{ deckId: string }>('api/rag-pdf', {
         method: 'POST',
         headers: {
-          'x-user-email': user?.emailAddresses[0].emailAddress!
+          'x-user-email': user?.emailAddresses[0].emailAddress!,
+          'Content-Type': undefined
         },
         body: formData
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to process PDF')
+        throw new Error('Failed to process PDF')
       }
 
       onStepUpdate(2, 'completed')
@@ -190,15 +188,13 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
       // Call onSuccess with the deck ID
       onSuccess(data.deckId)
     } catch (error: any) {
-      console.error('Failed to create deck:', error)
-      setError(error.message === 'Insufficient credits'
-        ? 'Créditos insuficientes para criar este deck'
-        : 'Erro ao criar o deck. Por favor, tente novamente.')
+      console.error('Failed to create deck:', error);
+      onError('Ocorreu um erro ao criar o deck. Por favor, tente novamente mais tarde, ou entre em contato com o suporte.');
 
       // Reset processing state if there's an error
-      onStepUpdate(1, 'waiting')
-      onStepUpdate(2, 'waiting')
-      onStepUpdate(3, 'waiting')
+      onStepUpdate(1, 'waiting');
+      onStepUpdate(2, 'waiting');
+      onStepUpdate(3, 'waiting');
     } finally {
       setIsLoading(false)
     }
@@ -259,6 +255,9 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
           <label htmlFor="pdf">Envie o PDF</label>
           <span className="text-xs text-red-500">*</span>
         </div>
+        <p className="text-sm text-muted-foreground mb-2">
+          Certifique-se de que o PDF contenha texto selecionável. PDFs com texto em formato de imagem ou apenas imagens não terão um bom resultado.
+        </p>
         <div className="w-full flex items-center justify-center">
           <label htmlFor="pdf-upload" className="w-full cursor-pointer">
             <div className={`border-2 border-dashed rounded-lg p-12 w-full flex flex-col items-center justify-center gap-2 transition-colors ${
@@ -355,6 +354,13 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate }: C
           )}
         </Button>
       </div>
+
+      {!isLoading && (
+        <div className="mt-4 text-sm text-muted-foreground">
+          <p>Ao clicar em "Criar deck", você confirma que o PDF contém texto selecionável.</p>
+          <p>Lembre-se: PDFs com texto em formato de imagem ou apenas imagens não terão um bom resultado e os créditos não serão recuperados.</p>
+        </div>
+      )}
     </div>
   )
 }

@@ -17,6 +17,8 @@ import { cn } from "@/src/lib/utils";
 import { Button } from "./ui/button";
 import { useMobileSidebar } from "../contexts/mobile-sidebar";
 import { isPublicRoute } from "@/src/lib/utils";
+import { KIcon } from "../icons/logo/k";
+import { KeezmoIcon } from "../icons/logo/keezmo";
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -119,9 +121,14 @@ export function Sidebar() {
             !isMobile && isCollapsed ? "justify-center" : "justify-start"
           )}>
             <h1 className={cn(
-              "font-bold transition-all duration-300 text-2xl",
+              "font-bold transition-all duration-300",
+              !isMobile && isCollapsed ? "text-2xl" : "text-xl"
             )}>
-              {!isMobile && isCollapsed ? "K" : "Keezmo"}
+              {!isMobile && isCollapsed ? (
+                <KIcon className="w-6 h-6" />
+              ) : (
+                <KeezmoIcon className="w-28 h-8" />
+              )}
             </h1>
           </div>
 

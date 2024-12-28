@@ -61,7 +61,7 @@ const ButtonCheckout = ({
 
 export function PlansSection() {
   return (
-    <section className="flex min-h-screen items-center bg-background px-4 py-16">
+    <section id="plans" className="flex min-h-screen items-center bg-background">
       <div className="w-full space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">

@@ -63,6 +63,11 @@ export default function CreateDeckPage() {
         mobileTitle="Criar deck"
       />
       <main className="bg-[#10111F] w-full h-full rounded-lg border">
+        {error && (
+          <div className="bg-red-500/10 text-red-500 p-4 rounded-md">
+            <p>{error}</p>
+          </div>
+        )}
         <CreateDeckForm
           onSuccess={(deckId) => {
             setCreatedDeckId(deckId)

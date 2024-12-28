@@ -7,10 +7,12 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/src/components/ui/button";
 import { HeroSection } from "@/src/components/landing-page/hero-section";
-import { FeaturesSection } from "@/src/components/landing-page/features-section";
+import { FeaturesAccordion } from "@/src/components/landing-page/features-accordion";
 import { PlansSection } from "@/src/components/landing-page/plans-section";
 import { FAQSection } from "@/src/components/landing-page/faq-section";
 import { Footer } from "@/src/components/landing-page/footer";
+import { JourneySection } from "@/src/components/landing-page/journey-section";
+import { KeezmoIcon } from "../icons/logo/keezmo";
 
 export default function Home() {
   const router = useRouter();
@@ -18,12 +20,10 @@ export default function Home() {
     <div className="relative flex min-h-screen flex-col">
       {/* Fixed Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-neutral-800 bg-background/80 backdrop-blur-md">
-        <div className="flex h-16 items-center justify-between px-4">
+        <div className="flex h-16 items-center justify-between px-8">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-2xl font-bold text-transparent">
-              Keezmo
-            </span>
+            <KeezmoIcon className="w-28 h-8" />
           </Link>
 
           {/* Navigation */}
@@ -41,10 +41,10 @@ export default function Home() {
               Planos
             </a>
             <a
-              href="#about"
+              href="#faq"
               className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary"
             >
-              Sobre
+              FAQ
             </a>
           </nav>
 
@@ -66,9 +66,10 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 px-8">
         <HeroSection />
-        <FeaturesSection />
+        <JourneySection />
+        <FeaturesAccordion />
         <PlansSection />
         <FAQSection />
       </main>

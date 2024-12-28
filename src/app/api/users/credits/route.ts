@@ -5,7 +5,7 @@ import { dynamoDbClient } from '../../clients/dynamodb';
 interface CreditHistory {
   amount: number;
   type: 'add' | 'use';
-  timestamp: string;
+  createdAt: string;
   source: string;
 }
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body: UpdateCreditsRequest = await req.json();
-    const timestamp = new Date().toISOString();
+    const createdAt = new Date().toISOString();
 
     // First get current user data
     const getUserCommand = new GetCommand({
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     const creditHistoryEntry: CreditHistory = {
       amount: body.amount,
       type: body.type,
-      timestamp,
+      createdAt,
       source: body.source
     };
 

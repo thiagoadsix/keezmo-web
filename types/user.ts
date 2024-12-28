@@ -2,7 +2,7 @@ export type CreditHistory = {
   amount: number
   source: string
   type: string
-  timestamp: string
+  createdAt: string
 }
 
 export type Credit = {

@@ -135,8 +135,7 @@ const FaqItem = ({ item }: { item: FAQItemProps }) => {
 
 export function FAQSection() {
   return (
-    <section className="flex min-h-screen items-center bg-neutral-900/50 px-4" id="faq">
-      <div className="w-full max-w-7xl mx-auto py-24">
+    <section id="faq" className="w-full mx-auto flex min-h-screen justify-center items-center">
         <div className="flex flex-col md:flex-row gap-12">
           <div className="flex flex-col text-left basis-1/2">
             <p className="inline-block font-semibold text-primary mb-4">FAQ</p>
@@ -154,7 +153,6 @@ export function FAQSection() {
             ))}
           </ul>
         </div>
-      </div>
     </section>
   );
 }

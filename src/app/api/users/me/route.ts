@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   });
 
   const response = await dynamoDbClient.send(command);
-  const user = response.Items?.[0];
+  const user = response.Items?.[0] || null;
 
   return NextResponse.json(user, { status: 200 });
 }
