@@ -1,20 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { QueryCommand, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { dynamoDbClient } from '../../../clients/dynamodb';
 import { Card } from '@/types/card';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
-type Context = {
-  params: {
-    deckId: string;
-  };
-};
-
-export async function GET(req: NextRequest, { params }: Context) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ deckId: string }> }
+) {
   console.log('➡️ [GET /api/decks/:deckId/cards] Request received');
-  const { deckId } = params;
-  console.log(`📍 [Params] Deck ID: ${deckId}`);
+  const deckId = (await params).deckId
 
   try {
     const command = new QueryCommand({
@@ -27,7 +23,6 @@ export async function GET(req: NextRequest, { params }: Context) {
     });
 
     const response = await dynamoDbClient.send(command);
-    console.log(`📦 [DynamoDB] Retrieved ${response.Items?.length || 0} cards`);
 
     const cards: Card[] = (response.Items || []).map((item): Card => ({
       id: String(item.sk).replace('CARD#', ''),
@@ -36,40 +31,25 @@ export async function GET(req: NextRequest, { params }: Context) {
       correctAnswer: String(item.correctAnswer)
     }));
 
-    console.log('✨ [Transform] Successfully mapped DynamoDB items to Card objects');
-    console.log('✅ [Response] Sending successful response');
     return NextResponse.json(cards, { status: 200 });
   } catch (error: any) {
-    console.error('❌ [Error] Failed to fetch cards:', {
-      error: {
-        message: error?.message,
-        name: error?.name,
-        stack: error?.stack
-      },
-      deckId,
-      tableName: TABLE_NAME
-    });
-
+    console.error('❌ [Error] Failed to fetch cards:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-export async function PUT(req: NextRequest, { params }: Context) {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ deckId: string }> }
+) {
   console.log('➡️ [PUT /api/decks/:deckId/cards] Request received');
-
-  const { deckId } = params;
-  console.log(`📍 [Params] Deck ID: ${deckId}`);
+  const deckId = (await params).deckId;
 
   try {
-    const { cards } = await req.json();
+    const { cards } = await request.json();
     const timestamp = new Date().toISOString();
 
-    console.log(`📦 [DynamoDB] Updating ${cards.length} cards`);
-
-    // Atualizar cada card individualmente
     const updatePromises = cards.map(async (card: Card) => {
-      console.log(`🔄 [Card] Processing card ${card.id}`);
-
       const getCommand = new GetCommand({
         TableName: TABLE_NAME,
         Key: {
@@ -79,7 +59,6 @@ export async function PUT(req: NextRequest, { params }: Context) {
       });
 
       const existingCard = await dynamoDbClient.send(getCommand);
-
       if (!existingCard.Item) {
         throw new Error(`Card ${card.id} not found`);
       }
@@ -102,23 +81,10 @@ export async function PUT(req: NextRequest, { params }: Context) {
     });
 
     await Promise.all(updatePromises);
-    console.log('✅ [Success] All cards updated successfully');
 
     return NextResponse.json({ message: 'Cards updated successfully' });
   } catch (error: any) {
-    console.error('❌ [Error] Failed to update cards:', {
-      error: {
-        message: error?.message,
-        name: error?.name,
-        stack: error?.stack
-      },
-      deckId,
-      tableName: TABLE_NAME
-    });
-
-    return NextResponse.json(
-      { error: 'Failed to update cards' },
-      { status: 500 }
-    );
+    console.error('❌ [Error] Failed to update cards:', error);
+    return NextResponse.json({ error: 'Failed to update cards' }, { status: 500 });
   }
 }

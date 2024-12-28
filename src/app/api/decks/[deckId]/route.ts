@@ -6,9 +6,10 @@ const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { deckId: string } }
+  { params }: { params: Promise<{ deckId: string }> }
 ) {
   const userEmail = req.headers.get('x-user-email');
+  const deckId = (await params).deckId;
 
   if (!userEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +20,7 @@ export async function GET(
       TableName: TABLE_NAME,
       Key: {
         pk: `USER#${userEmail}`,
-        sk: `DECK#${params.deckId}`
+        sk: `DECK#${deckId}`
       }
     });
 
@@ -41,9 +42,10 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { deckId: string } }
+  { params }: { params: Promise<{ deckId: string }> }
 ) {
   const userEmail = req.headers.get('x-user-email');
+  const deckId = (await params).deckId;
 
   if (!userEmail) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -58,7 +60,7 @@ export async function PUT(
       TableName: TABLE_NAME,
       Key: {
         pk: `USER#${userEmail}`,
-        sk: `DECK#${params.deckId}`
+        sk: `DECK#${deckId}`
       }
     });
 
@@ -69,7 +71,7 @@ export async function PUT(
       ...existingItem.Item, // Preserva todos os campos existentes
       ...body, // Aplica as atualizações
       pk: `USER#${userEmail}`, // Garante que pk e sk não sejam alterados
-      sk: `DECK#${params.deckId}`,
+      sk: `DECK#${deckId}`,
       updatedAt: timestamp
     };
 
