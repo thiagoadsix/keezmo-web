@@ -5,10 +5,13 @@ import { Card } from '@/types/card';
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { deckId: string } }
-) {
+type Context = {
+  params: {
+    deckId: string;
+  };
+};
+
+export async function GET(req: NextRequest, { params }: Context) {
   console.log('➡️ [GET /api/decks/:deckId/cards] Request received');
   const { deckId } = params;
   console.log(`📍 [Params] Deck ID: ${deckId}`);
@@ -36,7 +39,6 @@ export async function GET(
     console.log('✨ [Transform] Successfully mapped DynamoDB items to Card objects');
     console.log('✅ [Response] Sending successful response');
     return NextResponse.json(cards, { status: 200 });
-
   } catch (error: any) {
     console.error('❌ [Error] Failed to fetch cards:', {
       error: {
@@ -52,10 +54,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { deckId: string } }
-) {
+export async function PUT(req: NextRequest, { params }: Context) {
   console.log('➡️ [PUT /api/decks/:deckId/cards] Request received');
 
   const { deckId } = params;
@@ -74,7 +73,7 @@ export async function PUT(
       const getCommand = new GetCommand({
         TableName: TABLE_NAME,
         Key: {
-          pk: `DECK#${params.deckId}`,
+          pk: `DECK#${deckId}`,
           sk: `CARD#${card.id}`
         }
       });
@@ -89,7 +88,7 @@ export async function PUT(
         TableName: TABLE_NAME,
         Item: {
           ...existingCard.Item,
-          pk: `DECK#${params.deckId}`,
+          pk: `DECK#${deckId}`,
           sk: `CARD#${card.id}`,
           question: card.question,
           correctAnswer: card.correctAnswer,
