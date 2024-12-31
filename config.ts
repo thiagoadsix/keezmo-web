@@ -15,7 +15,7 @@ const config = {
         priceId:
           process.env.NODE_ENV === "development"
             ? "price_1QYu2DD6NUyMtMNHHmNiBt0F"
-            : "price_prod",
+            : "price_1QbnaHD6NUyMtMNHWIUM7HXo",
         //  REQUIRED - Name of the plan, displayed on the pricing page
         name: "Basic",
         // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
@@ -35,7 +35,7 @@ const config = {
         priceId:
           process.env.NODE_ENV === "development"
             ? "price_1QYu5LD6NUyMtMNH6mLjWhFL"
-            : "price_prod",
+            : "price_1QbnaRD6NUyMtMNHBDJ4PTOx",
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         name: "Pro",
@@ -53,7 +53,7 @@ const config = {
         priceId:
           process.env.NODE_ENV === "development"
             ? "price_1QYu5mD6NUyMtMNH9Qh2yn42"
-            : "price_prod",
+            : "price_1QbnaTD6NUyMtMNHPQIkD1dh",
         isFeatured: false,
         name: "Premium",
         description: "Para estudantes que querem mais",
@@ -69,7 +69,7 @@ const config = {
     ],
     additionalPlans: [
       {
-        priceId: process.env.NODE_ENV === "development" ? "price_1QZEr5D6NUyMtMNHIbsUj42j" : "price_prod",
+        priceId: process.env.NODE_ENV === "development" ? "price_1QZEr5D6NUyMtMNHIbsUj42j" : "price_1QbnaWD6NUyMtMNH82KmpdsD",
         name: "150 de crédito",
         description: "Preciso de um pouco mais de crédito",
         price: 12.45,
@@ -77,7 +77,7 @@ const config = {
         credits: 150,
       },
       {
-        priceId: process.env.NODE_ENV === "development" ? "price_1QaLnMD6NUyMtMNHnXJAwpGk" : "price_prod",
+        priceId: process.env.NODE_ENV === "development" ? "price_1QaLnMD6NUyMtMNHnXJAwpGk" : "price_1QbnaZD6NUyMtMNHVkL6q5YA",
         name: "300 de crédito",
         description: "Para estudantes dedicados",
         price: 24.90,
@@ -85,7 +85,7 @@ const config = {
         credits: 300,
       },
       {
-        priceId: process.env.NODE_ENV === "development" ? "price_1QaLlVD6NUyMtMNH5mQoFEnm" : "price_prod",
+        priceId: process.env.NODE_ENV === "development" ? "price_1QaLlVD6NUyMtMNH5mQoFEnm" : "price_1QbnaXD6NUyMtMNHDZAETA3g",
         name: "450 de crédito",
         description: "Para estudantes que querem mais",
         price: 37.35,
@@ -96,8 +96,8 @@ const config = {
   },
   aws: {
     // If you use AWS S3/Cloudfront, put values in here
-    bucket: "feedbacks",
-    bucketUrl: `https://feedbacks.s3.amazonaws.com/`,
+    bucket: "keezmo-files-prod",
+    bucketUrl: `https://keezmo-files-prod.s3.amazonaws.com/`,
     cdn: "https://cdn-id.cloudfront.net/",
   },
   resend: {
