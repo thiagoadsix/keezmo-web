@@ -3,19 +3,20 @@ import ky from "ky";
 export const apiClient = ky.create({
   prefixUrl: process.env.NEXT_PUBLIC_API_URL,
   timeout: 60000,
+  mode: "cors",
   headers: {
     "Content-Type": "application/json",
   },
   hooks: {
     beforeRequest: [
       (request) => {
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("token")
-            : process.env.SERVER_TOKEN;
-        if (token) {
-          request.headers.set("Authorization", `Bearer ${token}`);
-        }
+        // const token =
+        //   typeof window !== "undefined"
+        //     ? localStorage.getItem("token")
+        //     : process.env.SERVER_TOKEN;
+        // if (token) {
+        //   request.headers.set("Authorization", `Bearer ${token}`);
+        // }
         console.log("Iniciando requisição:", request.url);
       },
     ],
