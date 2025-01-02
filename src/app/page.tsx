@@ -59,7 +59,9 @@ export default function Home() {
               </Button>
             </SignedIn>
             <SignedOut>
-              <Button onClick={() => router.push("/sign-in")}>Entrar</Button>
+              <Button asChild>
+                <Link href="/sign-in">Entrar</Link>
+              </Button>
             </SignedOut>
           </div>
         </div>
