@@ -150,9 +150,10 @@ export async function POST(req: NextRequest) {
           await dynamoDbClient.send(putCommand);
 
           if (userEmail) {
+            console.log("Sending purchase confirmation email to:", userEmail);
             const appUrl =
               process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-            await resendClient.emails.send({
+            const response = await resendClient.emails.send({
               from: "Keezmo <official@keezmo.com>",
               to: userEmail,
               subject: "Confirmação de Compra - Keezmo",
@@ -164,6 +165,7 @@ export async function POST(req: NextRequest) {
                 signUpUrl: `${appUrl}/sign-up?email=${encodeURIComponent(userEmail)}`,
               }),
             });
+            console.log("Purchase confirmation email sent:", JSON.stringify(response, null, 2));
           }
         } catch (error) {
           console.error("Error creating or updating user in DynamoDB:", {
