@@ -12,11 +12,11 @@ export async function GET(req: NextRequest) {
 
   const command = new QueryCommand({
     TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
-    IndexName: 'EmailIndex',
-    KeyConditionExpression: 'email = :email',
+    IndexName: 'GSI1',
+    KeyConditionExpression: 'GSI1PK = :gsi1pk',
     ExpressionAttributeValues: {
-      ':email': email
-    }
+      ':gsi1pk': `USER#EMAIL#${email}`,
+    },
   });
 
   const response = await dynamoDbClient.send(command);

@@ -1,25 +1,26 @@
-import { useAuth } from "@clerk/clerk-react";
 import { NextResponse, NextRequest } from "next/server";
-import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 import { createCustomerPortal } from "@/src/lib/stripe";
 import { dynamoDbClient } from "../../clients/dynamodb";
 
 export async function POST(req: NextRequest) {
   try {
-    const email = req.headers.get('x-user-email');
+    const email = req.headers.get("x-user-email");
 
     const body = await req.json();
 
-    const entity = await dynamoDbClient.send(new QueryCommand({
-      TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
-      IndexName: "EmailIndex",
-      KeyConditionExpression: "email = :email",
-      ExpressionAttributeValues: {
-        ":email": email
-      }
-    }));
-    const user = entity.Items?.[0]
+    const entity = await dynamoDbClient.send(
+      new QueryCommand({
+        TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": `USER#EMAIL#${email}`,
+        },
+      })
+    );
+    const user = entity.Items?.[0];
     console.log("body", body);
     console.log("user", user);
 
