@@ -6,6 +6,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  crossOrigin: 'use-credentials'
 };
 
 module.exports = nextConfig;
