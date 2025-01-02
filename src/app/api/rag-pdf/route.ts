@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { InvokeCommand } from '@aws-sdk/client-lambda';
-import { lambdaClient } from '../clients/lambda';
 import { PDFDocument } from 'pdf-lib';
+
+const KEEZMO_API_URL = process.env.KEEZMO_API_URL
 
 export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/rag-pdf] Request received');
@@ -64,22 +64,23 @@ export async function POST(req: NextRequest) {
       description
     };
 
-    const command = new InvokeCommand({
-      FunctionName: 'keezmo-dev-rag-pdf-invoke',
-      Payload: JSON.stringify(payload)
+    console.log('🚀 [API] Calling generate-cards endpoint');
+    const response = await fetch(`${KEEZMO_API_URL}/generate-cards`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     });
 
-    console.log('🚀 [Lambda] Invoking rag-pdf-invoke function');
-    const response = await lambdaClient.send(command);
-
-    if (response.FunctionError) {
-      throw new Error(response.FunctionError);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
     }
 
-    const result = response.Payload ? JSON.parse(Buffer.from(response.Payload).toString()) : null;
-    console.log('✅ [Lambda] Function executed successfully');
+    const result = await response.json();
+    console.log('✅ [API] Request successful');
 
-    return NextResponse.json({deckId: result.body.deckId});
+    return NextResponse.json({deckId: result.deckId});
 
   } catch (error: any) {
     console.error('❌ [Error] Failed to process PDF:', {
