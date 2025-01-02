@@ -5,8 +5,8 @@ const publicRoutes = [
   "/about",
   "/privacy-policy",
   "/tos",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
+  "/sign-in/[[...sign-in]]",
+  "/sign-up/[[...sign-up]]",
   "/api/webhooks(.*)",
   "/api/stripe/create-checkout(.*)"
 ];
