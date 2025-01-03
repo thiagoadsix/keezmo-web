@@ -56,21 +56,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const payload = {
-      userEmail,
-      numCards: parseInt(numCards),
-      pdfBytes: pdfBase64,
-      title,
-      description
-    };
+    const body = new FormData();
+    body.append('userEmail', userEmail);
+    body.append('numCards', numCards);
+    body.append('pdfBytes', pdfBase64);
+    body.append('title', title);
+    body.append('description', description);
 
     console.log('🚀 [API] Calling generate-cards endpoint');
     const response = await fetch(`${KEEZMO_API_URL}/generate-cards`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+      body,
     });
 
     if (!response.ok) {
