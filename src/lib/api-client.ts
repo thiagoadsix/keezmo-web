@@ -43,6 +43,44 @@ export const apiClient = ky.create({
   },
 });
 
+export function createApiClient(prefixUrl: string) {
+  return ky.create({
+    prefixUrl,
+    timeout: 60000,
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    hooks: {
+      beforeRequest: [
+        (request) => {
+          console.log("Iniciando requisição:", request.url);
+        },
+      ],
+      afterResponse: [
+        async (request, options, response) => {
+          console.log(
+            `Resposta recebida para ${request.url}:`,
+            response.status
+          );
+        },
+      ],
+      beforeRetry: [
+        ({ retryCount, request }) => {
+          console.warn(
+            `Tentativa ${retryCount} para ${request.url} falhou. Retentando...`
+          );
+        },
+      ],
+    },
+    retry: {
+      limit: 3,
+      methods: ["get", "post"],
+      statusCodes: [408, 500, 502, 503, 504],
+    },
+  });
+}
+
 export async function fetchFromClient(path: string, options: RequestInit = {}) {
   if (typeof window === "undefined") {
     throw new Error("fetchFromClient só pode ser usado no ambiente do navegador.");

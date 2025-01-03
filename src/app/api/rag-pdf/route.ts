@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument } from 'pdf-lib';
+import { createApiClient } from '@/src/lib/api-client';
 
 const KEEZMO_API_URL = process.env.KEEZMO_API_URL
 
@@ -64,10 +65,10 @@ export async function POST(req: NextRequest) {
     body.append('description', description);
 
     console.log('🚀 [API] Calling generate-cards endpoint');
-    const response = await fetch(`${KEEZMO_API_URL}/generate-cards`, {
-      method: 'POST',
-      body,
-      signal: AbortSignal.timeout(60000)
+    const keezmoApiClient = createApiClient(String(KEEZMO_API_URL));
+
+    const response = await keezmoApiClient.post<{deckId: string}>('generate-cards', {
+      body
     });
 
     if (!response.ok) {
