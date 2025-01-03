@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/rag-pdf": {
+    "api/rag-pdf.ts": {
       "maxDuration": 60
     }
   }
