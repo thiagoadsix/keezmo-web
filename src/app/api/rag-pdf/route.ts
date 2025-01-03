@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     const response = await fetch(`${KEEZMO_API_URL}/generate-cards`, {
       method: 'POST',
       body,
+      signal: AbortSignal.timeout(60000)
     });
 
     if (!response.ok) {
