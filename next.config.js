@@ -7,10 +7,11 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   async headers() {
-    return {
-      source: "/(.*)",
-      headers: [
-        {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
           key: "Strict-Transport-Security",
           value: "max-age=31536000; includeSubDomains; preload",
         },
@@ -24,11 +25,12 @@ const nextConfig = {
         },
         {
           key: "Referrer-Policy",
-          value: "strict-origin-when-cross-origin",
-        },
-      ],
-    };
-  }
+            value: "strict-origin-when-cross-origin",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
