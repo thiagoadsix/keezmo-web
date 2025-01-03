@@ -46,7 +46,7 @@ export const apiClient = ky.create({
 export function createApiClient(prefixUrl: string) {
   return ky.create({
     prefixUrl,
-    timeout: 60000,
+    timeout: 120000,
     mode: "cors",
     hooks: {
       beforeRequest: [
