@@ -48,9 +48,6 @@ export function createApiClient(prefixUrl: string) {
     prefixUrl,
     timeout: 60000,
     mode: "cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
     hooks: {
       beforeRequest: [
         (request) => {
