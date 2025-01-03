@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/rag-pdf": {
+      "maxDuration": 60
+    }
+  }
+}
