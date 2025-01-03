@@ -57,9 +57,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = new FormData();
-    body.append('userEmail', userEmail);
-    body.append('numCards', numCards);
-    body.append('pdfBytes', pdfBase64);
+    body.append('user_email', userEmail);
+    body.append('num_cards', numCards);
+    body.append('pdf_file', new Blob([newPdfBytes]));
     body.append('title', title);
     body.append('description', description);
 
