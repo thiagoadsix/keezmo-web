@@ -132,12 +132,10 @@ export async function POST(req: NextRequest) {
           const putCommand = new PutCommand({
             TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
             Item: {
-              pk: `USER#${userEmail}`,
-              sk: `USER#${userEmail}`,
-              GSI1PK: `USER#EMAIL#${userEmail}`,
-              GSI1SK: `USER#EMAIL#${userEmail}`,
-              GSI2PK: `USER#CUSTOMER#${customerId}`,
-              GSI2SK: `USER#CUSTOMER#${customerId}`,
+              PK: `USER#${userEmail}`,
+              SK: `USER#${userEmail}`,
+              GSI1PK: `USER#CUSTOMER#${customerId}`,
+              GSI1SK: `USER#CUSTOMER#${customerId}`,
               email: userEmail,
               credits: {
                 plan: planInfo.credits,
@@ -196,10 +194,10 @@ export async function POST(req: NextRequest) {
         // Query the GSI to find the user by customerId
         const queryCommand = new QueryCommand({
           TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME!,
-          IndexName: "GSI2",
-          KeyConditionExpression: "GSI2PK = :gsi2pk",
+          IndexName: "GSI1",
+          KeyConditionExpression: "GSI1PK = :gsi1pk",
           ExpressionAttributeValues: {
-            ":gsi2pk": `USER#CUSTOMER#${customerId}`,
+            ":gsi1pk": `USER#CUSTOMER#${customerId}`,
           },
         });
 

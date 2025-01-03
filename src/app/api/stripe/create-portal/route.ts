@@ -13,10 +13,9 @@ export async function POST(req: NextRequest) {
     const entity = await dynamoDbClient.send(
       new QueryCommand({
         TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
-        IndexName: "GSI1",
-        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        KeyConditionExpression: "pk = :pk",
         ExpressionAttributeValues: {
-          ":gsi1pk": `USER#EMAIL#${email}`,
+          ":pk": `USER#${email}`,
         },
       })
     );
