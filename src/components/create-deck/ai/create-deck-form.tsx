@@ -156,6 +156,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
       await fetch(uploadUrl, {
         method: 'PUT',
         body: selectedFile,
+        mode: 'cors'
       });
 
       onStepUpdate(1, 'completed');
