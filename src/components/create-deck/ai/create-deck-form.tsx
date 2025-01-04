@@ -12,8 +12,6 @@ import { useToast } from "@/src/hooks/use-toast"
 import { PDFDocument } from 'pdf-lib'
 import { ProcessStepStatus } from "@/types/process-step"
 import { User } from "@/types/user"
-import { s3Client } from "@/src/app/api/clients/s3"
-import { PutObjectCommand } from "@aws-sdk/client-s3"
 import config from "@/config"
 
 interface CreateDeckFormProps {
@@ -145,20 +143,13 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
       // Step 1: Upload PDF to S3
       onStepUpdate(1, 'processing');
 
-      const fileName = `user${user?.id}_${selectedFile.name}_${Date.now()}.pdf`;
+      const fileName = `${selectedFile.name}_${Date.now()}.pdf`;
 
-      await fetch('/api/s3/upload-url', {
+      await apiClient('api/s3/upload-url', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'x-user-id': user?.id! },
         body: JSON.stringify({ fileName: fileName }),
       });
-
-      const command = new PutObjectCommand({
-        Bucket: config.aws.bucket,
-        Key: fileName,
-      });
-
-      await s3Client.send(command);
 
       onStepUpdate(1, 'completed');
 

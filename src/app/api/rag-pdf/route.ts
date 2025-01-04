@@ -29,9 +29,11 @@ export async function POST(req: NextRequest) {
     if (pageEnd - pageStart + 1 > 30) throw new Error('Page range too large');
 
     // Carregar PDF do S3 e extrair páginas específicas
+    const key = fileUrl.split('/').slice(-1)[0];
+
     const command = new GetObjectCommand({
       Bucket: appConfig.aws.bucket,
-      Key: fileUrl.split('/').pop(),
+      Key: key,
     });
 
     const { Body } = await s3Client.send(command);
