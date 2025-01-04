@@ -12,9 +12,10 @@ export async function GET(req: NextRequest) {
 
   const command = new QueryCommand({
     TableName: process.env.DYNAMODB_KEEZMO_TABLE_NAME,
-    KeyConditionExpression: 'pk = :pk',
+    KeyConditionExpression: 'pk = :pk AND sk = :sk',
     ExpressionAttributeValues: {
       ':pk': `USER#${email}`,
+      ':sk': `USER#${email}`,
     },
   });
 
