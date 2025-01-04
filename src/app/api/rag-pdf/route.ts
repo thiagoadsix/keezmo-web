@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument } from 'pdf-lib';
 import { createApiClient } from '@/src/lib/api-client';
-
+import { s3Client } from '@/src/app/api/clients/s3';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import appConfig from '@/config';
 const KEEZMO_API_URL = process.env.KEEZMO_API_URL
 
 export async function POST(req: NextRequest) {
@@ -16,22 +18,27 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const pageStart = parseInt(formData.get('pageStart') as string);
-    const pageEnd = parseInt(formData.get('pageEnd') as string);
+    const { fileUrl, numCards, title, description, pageStart, pageEnd } = await req.json();
 
     console.log('📝 [Request] Page start:', pageStart);
     console.log('📝 [Request] Page end:', pageEnd);
 
     // Validações
-    if (!file) throw new Error('No file provided');
+    if (!fileUrl) throw new Error('No file URL provided');
     if (isNaN(pageStart) || isNaN(pageEnd)) throw new Error('Invalid page range');
     if (pageEnd - pageStart + 1 > 30) throw new Error('Page range too large');
 
-    // Carregar PDF e extrair páginas específicas
-    const pdfBytes = await file.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(pdfBytes);
+    // Carregar PDF do S3 e extrair páginas específicas
+    const command = new GetObjectCommand({
+      Bucket: appConfig.aws.bucket,
+      Key: fileUrl.split('/').pop(),
+    });
+
+    const { Body } = await s3Client.send(command);
+    console.log('Body', Body)
+    const pdfBytes = await Body?.transformToByteArray();
+    console.log('pdfBytes', pdfBytes)
+    const pdfDoc = await PDFDocument.load(pdfBytes!);
 
     // Criar novo PDF com apenas as páginas selecionadas
     const newPdfDoc = await PDFDocument.create();
@@ -44,11 +51,6 @@ export async function POST(req: NextRequest) {
 
     // Converter para bytes e depois para base64
     const newPdfBytes = await newPdfDoc.save();
-    const pdfBase64 = Buffer.from(newPdfBytes).toString('base64');
-
-    const numCards = formData.get('numCards') as string;
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
 
     if (!numCards) {
       return NextResponse.json(

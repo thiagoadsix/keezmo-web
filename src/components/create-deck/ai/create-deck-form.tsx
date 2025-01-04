@@ -12,6 +12,9 @@ import { useToast } from "@/src/hooks/use-toast"
 import { PDFDocument } from 'pdf-lib'
 import { ProcessStepStatus } from "@/types/process-step"
 import { User } from "@/types/user"
+import { s3Client } from "@/src/app/api/clients/s3"
+import { PutObjectCommand } from "@aws-sdk/client-s3"
+import config from "@/config"
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
@@ -139,32 +142,48 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         throw new Error('Failed to update credits');
       }
 
-      // Step 1: Upload PDF
-      onStepUpdate(1, 'processing')
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-      formData.append('numCards', numCards)
-      formData.append('title', title)
-      formData.append('description', description)
-      formData.append('pageStart', pageRange.start.toString())
-      formData.append('pageEnd', pageRange.end.toString())
+      // Step 1: Upload PDF to S3
+      onStepUpdate(1, 'processing');
 
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      onStepUpdate(1, 'completed')
+      const fileName = `user${user?.id}_${selectedFile.name}_${Date.now()}.pdf`;
+
+      await fetch('/api/s3/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: fileName }),
+      });
+
+      const command = new PutObjectCommand({
+        Bucket: config.aws.bucket,
+        Key: fileName,
+      });
+
+      await s3Client.send(command);
+
+      onStepUpdate(1, 'completed');
 
       // Step 2: Process PDF
-      onStepUpdate(2, 'processing')
+      onStepUpdate(2, 'processing');
 
-      const response = await apiClient<{ deckId: string }>('api/rag-pdf', {
+      const pdfUrl = `${config.aws.bucketUrl}/${fileName}`;
+
+      const processResponse = await apiClient<{ deckId: string }>('api/rag-pdf', {
         method: 'POST',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress!,
-          'Content-Type': undefined
+          'Content-Type': 'application/json',
         },
-        body: formData
-      })
+        body: JSON.stringify({
+          fileUrl: pdfUrl,
+          numCards,
+          title,
+          description,
+          pageStart: pageRange.start,
+          pageEnd: pageRange.end,
+        }),
+      });
 
-      if (!response.ok) {
+      if (!processResponse.ok) {
         throw new Error('Failed to process PDF')
       }
 
@@ -172,7 +191,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
       // Step 3: Generate cards
       onStepUpdate(3, 'processing')
-      const data = await response.json()
+      const data = await processResponse.json()
       console.log('data', data)
 
       if (!data.deckId) {

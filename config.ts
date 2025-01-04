@@ -99,6 +99,7 @@ const config = {
     bucket: "keezmo-files-prod",
     bucketUrl: `https://keezmo-files-prod.s3.amazonaws.com/`,
     cdn: "https://cdn-id.cloudfront.net/",
+    region: "us-east-1",
   },
   resend: {
     // REQUIRED — Email 'From' field to be used when sending magic login links
