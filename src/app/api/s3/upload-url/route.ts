@@ -7,7 +7,6 @@ export async function POST(request: Request) {
   const { fileName } = await request.json();
   const userId = request.headers.get('x-user-id');
 
-
   const command = new PutObjectCommand({
     Bucket: config.aws.bucket,
     Key: `${userId}/${fileName}`,

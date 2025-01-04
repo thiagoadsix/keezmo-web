@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
   console.log('➡️ [POST /api/rag-pdf] Request received');
 
   const userEmail = req.headers.get('x-user-email');
+  const userId = req.headers.get('x-user-id');
   console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
   if (!userEmail) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     const command = new GetObjectCommand({
       Bucket: appConfig.aws.bucket,
-      Key: key,
+      Key: `${userId}/${key}`,
     });
 
     const { Body } = await s3Client.send(command);

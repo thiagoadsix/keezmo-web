@@ -163,6 +163,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress!,
           'Content-Type': 'application/json',
+          'x-user-id': user?.id!,
         },
         body: JSON.stringify({
           fileUrl: pdfUrl,
