@@ -1,6 +1,6 @@
 import Link from "next/link"
+import { CheckCircle } from "lucide-react"
 import { Button } from "@/src/components/ui/button"
-import { Check, FolderOpen, BookOpen, CheckCircle } from "lucide-react"
 
 interface SuccessMessageProps {
   deckId: string;
@@ -20,11 +20,8 @@ export function SuccessMessage({ deckId, isEdit }: SuccessMessageProps) {
           : 'Seu deck foi criado e está pronto para uso. Você já pode começar a estudar!'}
       </p>
       <div className="flex gap-4">
-        <Button asChild>
-          <Link href={`/decks/${deckId}`}>Ver deck</Link>
-        </Button>
         <Button variant="outline" asChild>
-          <Link href="/decks">Ver todos os decks</Link>
+          <Link href={`/decks/${deckId}/study`}>Começar a estudar</Link>
         </Button>
       </div>
     </div>
