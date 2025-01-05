@@ -18,7 +18,7 @@ export function HeroSection() {
           Transforme seus PDFs em flashcards interativos usando IA. Estude de forma mais inteligente com o sistema de aprendizado do Keezmo.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Link href="#pricing">
+            <Link href="#plans">
               <Button size="lg" className="flex items-center gap-2">
                 Ver planos e preços <ArrowRight className="h-4 w-4" />
               </Button>
