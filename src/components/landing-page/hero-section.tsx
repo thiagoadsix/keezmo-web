@@ -1,7 +1,8 @@
 'use client';
 
-import { SignInButton, SignedOut } from "@clerk/nextjs";
+import { SignedOut } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/src/components/ui/button";
 
@@ -19,15 +20,12 @@ export function HeroSection() {
         {/* TODO: add a button to go to the pricing page */}
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <SignedOut>
-            <SignInButton>
+            <Link href="#pricing">
               <Button size="lg" className="flex items-center gap-2">
-                Começar agora <ArrowRight className="h-4 w-4" />
+                Ver planos e preços <ArrowRight className="h-4 w-4" />
               </Button>
-            </SignInButton>
+            </Link>
           </SignedOut>
-          <Button variant="outline" size="lg">
-            Saiba mais
-          </Button>
         </div>
       </div>
     </section>

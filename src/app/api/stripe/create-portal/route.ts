@@ -21,8 +21,6 @@ export async function POST(req: NextRequest) {
       })
     );
     const user = entity.Items?.[0];
-    console.log("body", body);
-    console.log("user", user);
 
     if (!email) {
       return NextResponse.json(
