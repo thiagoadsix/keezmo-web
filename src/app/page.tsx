@@ -20,14 +20,14 @@ export default function Home() {
     <div className="relative flex min-h-screen flex-col">
       {/* Fixed Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-neutral-800 bg-background/80 backdrop-blur-md">
-        <div className="flex h-16 items-center justify-between px-8">
+        <div className="flex h-16 items-center justify-between px-4 md:px-8">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <KeezmoIcon className="w-28 h-8" />
+            <KeezmoIcon className="w-24 h-6 md:w-28 md:h-8" />
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden items-center gap-8 md:flex">
+          <nav className="hidden items-center gap-6 md:flex">
             <a
               href="#features"
               className="text-sm font-medium text-neutral-400 transition-colors hover:text-primary"
@@ -53,7 +53,7 @@ export default function Home() {
             <SignedIn>
               <Button asChild>
                 <Link href="/dashboard" className="flex items-center gap-2">
-                  Ir para o Dashboard
+                  Dashboard
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -68,7 +68,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-8">
+      <main className="mt-16 flex-1 px-4 md:px-8">
         <HeroSection />
         <JourneySection />
         <FeaturesAccordion />
