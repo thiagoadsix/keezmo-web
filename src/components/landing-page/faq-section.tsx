@@ -69,6 +69,24 @@ const faqList: FAQItemProps[] = [
       </p>
     ),
     icon: <Sparkles className="h-6 w-6 text-primary" />
+  },
+  {
+    question: "Geração rápida de flashcards",
+    answer: (
+      <p className="text-neutral-400">
+        Com nossa tecnologia avançada de IA, você pode transformar seus PDFs em flashcards interativos em questão de minutos. Economize tempo e comece a estudar de forma eficiente rapidamente.
+      </p>
+    ),
+    icon: <Zap className="h-6 w-6 text-primary" />
+  },
+  {
+    question: "Retenção de conhecimento de longo prazo",
+    answer: (
+      <p className="text-neutral-400">
+        Nosso sistema de aprendizado por repetição espaçada é projetado para ajudá-lo a reter o conhecimento a longo prazo. Estudos mostram que você pode manter até 80% do assunto em sua memória com a repetição espaçada estratégica.
+      </p>
+    ),
+    icon: <Clock className="h-6 w-6 text-primary" />
   }
 ];
 
@@ -143,7 +161,7 @@ export function FAQSection() {
               Perguntas Frequentes
             </h2>
             <p className="mt-4 text-lg text-neutral-400">
-              Tudo que você precisa saber sobre o Keezmo
+              Descubra como o Keezmo pode revolucionar seus estudos com geração rápida de flashcards e retenção de conhecimento a longo prazo.
             </p>
           </div>
 

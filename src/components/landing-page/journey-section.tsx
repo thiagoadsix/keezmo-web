@@ -10,9 +10,11 @@ export function JourneySection() {
       </p>
       <div className="mt-8">
         <img
-          src="/screenshots/dashboard.png"
+          src="/dashboard.png"
           alt="Dashboard Keezmo"
           className="rounded-lg shadow-lg"
+          width={1000}
+          height={1000}
         />
       </div>
     </section>
