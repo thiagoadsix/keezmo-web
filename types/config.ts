@@ -17,6 +17,7 @@ export type ConfigProps = {
       features: {
         name: string;
       }[];
+      maxPdfsPerMonth: number;
     }[];
     additionalPlans: {
       priceId: string;

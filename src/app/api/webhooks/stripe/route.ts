@@ -146,6 +146,7 @@ export async function POST(req: NextRequest) {
               updatedAt: new Date().toISOString(),
               createdAt: new Date().toISOString(),
               creditHistory: [creditHistoryEntry],
+              plan: planInfo.name.toUpperCase(),
             },
           });
 

@@ -1,3 +1,22 @@
+"use client";
+
+import * as React from "react";
+import Image from "next/image";
+import Autoplay from "embla-carousel-autoplay";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/src/components/ui/carousel";
+
+const screenshots = [
+  "/dashboard.png",
+  "/decks-creation.png",
+  "/study-mode.png",
+];
+
 export function JourneySection() {
   return (
     <section
@@ -8,15 +27,38 @@ export function JourneySection() {
         Comece sua jornada de estudos agora
       </h2>
       <p className="mt-4 max-w-2xl text-center text-sm sm:text-base md:text-lg text-neutral-400 leading-relaxed">
-        Organize seus materiais, crie flashcards em segundos e
-        estude de forma estratégica com a ajuda da IA.
+        Organize seus materiais, crie flashcards em segundos e estude de forma
+        estratégica com a ajuda da IA.
       </p>
+
+      {/* Carousel */}
       <div className="mt-8 w-full max-w-3xl">
-        <img
-          src="/dashboard.png"
-          alt="Dashboard Keezmo"
-          className="rounded-lg shadow-lg w-full h-auto"
-        />
+        <Carousel
+          className="w-full"
+          opts={{ loop: true }}
+          plugins={[
+            Autoplay({
+              delay: 4000,
+            }),
+          ]}
+        >
+          <CarouselContent>
+            {screenshots.map((src, index) => (
+              <CarouselItem key={index}>
+                <Image
+                  src={src}
+                  alt={`Screenshot ${index + 1}`}
+                  width={1000}
+                  height={600}
+                  className="w-full h-auto object-cover rounded-lg shadow-lg"
+                  priority={index === 0}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
       </div>
     </section>
   );

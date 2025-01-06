@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useUser } from "@clerk/nextjs"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
@@ -38,12 +38,60 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   const [totalPages, setTotalPages] = useState<number>(0);
   const [pageRange, setPageRange] = useState<PageRange>({ start: 1, end: 1 });
   const [pageRangeError, setPageRangeError] = useState<string | null>(null);
+  const [monthlyLimitError, setMonthlyLimitError] = useState<string | null>(null);
+  const [existingPdfs, setExistingPdfs] = useState<{ name: string; uploadDate: Date; url: string }[]>([]);
+  const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+  const [customPdfName, setCustomPdfName] = useState<string>('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchExistingPdfs = async () => {
+      const response = await apiClient<{ name: string; uploadDate: Date; url: string }[]>('api/users/pdfs', {
+        method: 'GET',
+        headers: {
+          'x-user-email': user?.emailAddresses[0].emailAddress! || '',
+          'x-user-id': user?.id! || '',
+        },
+      });
+
+      if (response.ok) {
+        const pdfs = await response.json();
+        setExistingPdfs(pdfs);
+      }
+    };
+
+    fetchExistingPdfs();
+  }, [user?.emailAddresses, user?.id]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       try {
+        // Obter dados do usuário para verificar o plano e limite mensal
+        const userResponse = await apiClient<User & { pdfsUploadedThisMonth?: number }>('api/users/me', {
+          method: 'GET',
+          headers: {
+            'x-user-email': user?.emailAddresses[0].emailAddress! || ''
+          }
+        });
+
+        if (!userResponse.ok) {
+          throw new Error('Failed to get user data');
+        }
+
+        const userData = await userResponse.json();
+        const userPlan = userData.plan;
+        const pdfsUploadedThisMonth = userData.pdfsUploadedThisMonth || 0;
+
+        // Verificar limite mensal de PDFs baseado no plano
+        const maxPdfsPerMonth = config.stripe.plans.find(plan => plan.name === userPlan)?.maxPdfsPerMonth;
+        if (maxPdfsPerMonth && pdfsUploadedThisMonth >= maxPdfsPerMonth) {
+          setMonthlyLimitError(`Você atingiu o limite mensal de ${maxPdfsPerMonth} PDFs para o plano ${userPlan}`);
+          setSelectedFile(null);
+          setSelectedFileName(null);
+          return;
+        }
+
         // Ler número de páginas do PDF
         const arrayBuffer = await file.arrayBuffer();
         const pdfDoc = await PDFDocument.load(arrayBuffer);
@@ -107,7 +155,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   };
 
   const handleCreateDeck = async () => {
-    if (!title || !numCards || !selectedFile) {
+    if (!title || !numCards || (!selectedFile && !selectedPdf)) {
       setError('Por favor, preencha todos os campos obrigatórios')
       return
     }
@@ -140,31 +188,35 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         throw new Error('Failed to update credits');
       }
 
-      // Step 1: Upload PDF to S3
-      onStepUpdate(1, 'processing');
+      // Step 1: Upload PDF to S3 (if a new file is selected)
+      let pdfUrl = selectedPdf;
 
-      const fileName = `${selectedFile.name}_${Date.now()}.pdf`;
+      if (selectedFile) {
+        onStepUpdate(1, 'processing');
 
-      const response = await apiClient<{ uploadUrl: string }>('api/s3/upload-url', {
-        method: 'POST',
-        headers: { 'x-user-id': user?.id! },
-        body: JSON.stringify({ fileName: fileName }),
-      });
+        const fileName = customPdfName || `${selectedFile.name}_${Date.now()}.pdf`;
 
-      const { uploadUrl } = await response.json();
+        const response = await apiClient<{ uploadUrl: string }>('api/s3/upload-url', {
+          method: 'POST',
+          headers: { 'x-user-id': user?.id! },
+          body: JSON.stringify({ fileName: fileName }),
+        });
 
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: selectedFile,
-        mode: 'cors'
-      });
+        const { uploadUrl } = await response.json();
 
-      onStepUpdate(1, 'completed');
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          body: selectedFile,
+          mode: 'cors'
+        });
+
+        onStepUpdate(1, 'completed');
+
+        pdfUrl = `${config.aws.bucketUrl}/${fileName}`;
+      }
 
       // Step 2: Process PDF
       onStepUpdate(2, 'processing');
-
-      const pdfUrl = `${config.aws.bucketUrl}/${fileName}`;
 
       const processResponse = await apiClient<{ deckId: string }>('api/rag-pdf', {
         method: 'POST',
@@ -226,6 +278,11 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
           {error}
         </div>
       )}
+      {monthlyLimitError && (
+        <div className="bg-red-500/10 text-red-500 p-4 rounded-md">
+          {monthlyLimitError}
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex flex-col gap-2 w-full">
@@ -267,6 +324,25 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+      </div>
+
+      <div className="flex flex-col gap-2 w-full">
+        <div>
+          <label htmlFor="existing-pdf">Selecione um PDF existente</label>
+        </div>
+        <select
+          id="existing-pdf"
+          value={selectedPdf || ''}
+          onChange={(e) => setSelectedPdf(e.target.value)}
+          className="border border-gray-300 rounded-md p-2"
+        >
+          <option value="">Selecione um PDF</option>
+          {existingPdfs.map((pdf) => (
+            <option key={pdf.url} value={pdf.url}>
+              {pdf.name} - {new Date(pdf.uploadDate).toLocaleDateString()}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex flex-col gap-2 w-full">
@@ -314,6 +390,17 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
               )}
             </div>
           </label>
+        </div>
+
+        <div className="flex flex-col gap-2 mt-4">
+          <label htmlFor="custom-pdf-name">Nome personalizado do PDF</label>
+          <Input
+            type="text"
+            id="custom-pdf-name"
+            placeholder="Digite um nome para o PDF"
+            value={customPdfName}
+            onChange={(e) => setCustomPdfName(e.target.value)}
+          />
         </div>
 
         {totalPages > 0 && (

@@ -10,6 +10,8 @@ export type Credit = {
   additional: number
 }
 
+type Plan = "BASIC" | "PRO" | "PREMIUM"
+
 export type User = {
   lastName: string
   hasAccess: boolean
@@ -21,4 +23,5 @@ export type User = {
   customerId: string
   email: string
   creditHistory: CreditHistory[]
+  plan: Plan
 }

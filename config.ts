@@ -30,6 +30,7 @@ const config = {
           { name: "Suporte padrão" },
         ],
         credits: 150,
+        maxPdfsPerMonth: 5,
       },
       {
         priceId:
@@ -48,6 +49,7 @@ const config = {
           { name: "Tudo do plano Basic" },
         ],
         credits: 300,
+        maxPdfsPerMonth: 10,
       },
       {
         priceId:
@@ -65,6 +67,7 @@ const config = {
           { name: "Acesso antecipado a novas funcionalidades" },
         ],
         credits: 450,
+        maxPdfsPerMonth: 15,
       },
     ],
     additionalPlans: [

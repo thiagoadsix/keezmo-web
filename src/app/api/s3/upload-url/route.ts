@@ -1,19 +1,30 @@
-import { NextResponse } from 'next/server';
-import { s3Client } from '@/src/app/api/clients/s3';
+import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { s3Client } from '../../clients/s3';
 import config from '@/config';
 
-export async function POST(request: Request) {
-  const { fileName } = await request.json();
-  const userId = request.headers.get('x-user-id');
+export async function POST(req: NextRequest) {
+  const userId = req.headers.get('x-user-id');
+  const { fileName } = await req.json();
+
+  if (!userId) {
+    console.warn('⚠️ [Auth] Missing user ID');
+    return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
+  }
+
+  const key = `user/${userId}/${fileName}`;
 
   const command = new PutObjectCommand({
     Bucket: config.aws.bucket,
-    Key: `${userId}/${fileName}`,
+    Key: key,
+    ContentType: 'application/pdf',
+    Metadata: {
+      'custom-name': fileName.split('_')[0], // Save the custom name as metadata
+    },
   });
 
-  const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-  return NextResponse.json({ uploadUrl });
+  return NextResponse.json({ uploadUrl: url }, { status: 200 });
 }
