@@ -358,9 +358,13 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
       {existingPdfs.length > 0 && (
         <div className="flex flex-col gap-2 w-full">
           <Tabs value={selectedOption} onValueChange={(value) => setSelectedOption(value as 'existing' | 'upload' | undefined)}>
-            <TabsList>
-              <TabsTrigger value="existing">PDF existente</TabsTrigger>
-              <TabsTrigger value="upload">Novo upload</TabsTrigger>
+            <TabsList className="w-full space-x-2">
+              <TabsTrigger value="existing" className="flex-1 justify-center">
+                PDF existente
+              </TabsTrigger>
+              <TabsTrigger value="upload" className="flex-1 justify-center">
+                Novo upload
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="existing">
               <div className="flex flex-col gap-2 w-full">
