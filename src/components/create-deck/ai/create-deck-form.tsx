@@ -385,7 +385,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                       <ChevronsUpDown className="opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
+                  <PopoverContent className="p-0" style={{ width: '100%' }}>
                     <Command>
                       <CommandInput
                         placeholder="Pesquisar PDF..."
