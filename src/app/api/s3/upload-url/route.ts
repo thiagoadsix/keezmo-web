@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
   }
 
-  const key = `user/${userId}/${fileName}`;
+  const key = `${userId}/${fileName}`;
 
   const command = new PutObjectCommand({
     Bucket: config.aws.bucket,
