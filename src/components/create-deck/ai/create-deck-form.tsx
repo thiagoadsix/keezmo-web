@@ -371,59 +371,61 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                 <div>
                   <label htmlFor="existing-pdf">Selecione um PDF existente</label>
                 </div>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-full justify-between"
-                    >
-                      {selectedPdf
-                        ? existingPdfs.find((pdf) => pdf.url === selectedPdf)?.name
-                        : "Selecione um PDF..."}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0" style={{ width: '100%' }}>
-                    <Command>
-                      <CommandInput
-                        placeholder="Pesquisar PDF..."
-                        className="h-9"
-                        value={searchValue}
-                        onValueChange={setSearchValue}
-                      />
-                      <CommandList>
-                        <CommandEmpty>Nenhum PDF encontrado.</CommandEmpty>
-                        <CommandGroup>
-                          {existingPdfs
-                            .filter((pdf) =>
-                              pdf.name.toLowerCase().includes(searchValue.toLowerCase())
-                            )
-                            .map((pdf) => (
-                            <CommandItem
-                              key={pdf.url}
-                              value={pdf.url}
-                              onSelect={(currentValue) => {
-                                setSelectedPdf(currentValue === selectedPdf ? null : currentValue)
-                                setSearchValue('')
-                                setOpen(false)
-                              }}
-                            >
-                              {pdf.name}
-                              <Check
-                                className={cn(
-                                  "ml-auto",
-                                  selectedPdf === pdf.url ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <div className="w-full">
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-full justify-between"
+                      >
+                        {selectedPdf
+                          ? existingPdfs.find((pdf) => pdf.url === selectedPdf)?.name
+                          : "Selecione um PDF..."}
+                        <ChevronsUpDown className="opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command className="w-full">
+                        <CommandInput
+                          placeholder="Pesquisar PDF..."
+                          className="w-full h-9"
+                          value={searchValue}
+                          onValueChange={setSearchValue}
+                        />
+                        <CommandList>
+                          <CommandEmpty>Nenhum PDF encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {existingPdfs
+                              .filter((pdf) =>
+                                pdf.name.toLowerCase().includes(searchValue.toLowerCase())
+                              )
+                              .map((pdf) => (
+                              <CommandItem
+                                key={pdf.url}
+                                value={pdf.url}
+                                onSelect={(currentValue) => {
+                                  setSelectedPdf(currentValue === selectedPdf ? null : currentValue)
+                                  setSearchValue('')
+                                  setOpen(false)
+                                }}
+                              >
+                                {pdf.name}
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    selectedPdf === pdf.url ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
             </TabsContent>
             <TabsContent value="upload">
