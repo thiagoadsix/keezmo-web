@@ -23,6 +23,9 @@ export function SuccessMessage({ deckId, isEdit }: SuccessMessageProps) {
         <Button variant="outline" asChild>
           <Link href={`/decks/${deckId}/study`}>Começar a estudar</Link>
         </Button>
+        <Button variant="outline" asChild>
+          <Link href="/decks">Ver meus decks</Link>
+        </Button>
       </div>
     </div>
   )

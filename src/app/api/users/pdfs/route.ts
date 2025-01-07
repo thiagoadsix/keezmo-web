@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
   const pdfs = listResponse.Contents?.filter((object) => object.Key?.endsWith('.pdf'))
     .map((object) => ({
-      name: object.Key?.split('/').pop() || '',
+      name: object.Key?.split('/')?.pop()?.split('_')?.[0] || '',
       uploadDate: object.LastModified,
       url: `${config.aws.bucketUrl}${object.Key}`,
     })) || [];
