@@ -241,8 +241,9 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
         onStepUpdate(1, 'completed');
 
-        pdfUrl = `${config.aws.bucketUrl}/${fileName}`;
+        pdfUrl = `${config.aws.bucketUrl}${fileName}`;
       }
+      console.log('pdfUrl', pdfUrl)
 
       // Step 2: Process PDF
       onStepUpdate(2, 'processing');

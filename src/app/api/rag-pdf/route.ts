@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
 
     // Carregar PDF do S3 e extrair páginas específicas
     const key = fileUrl.split('/').slice(-1)[0];
+    console.log('key', key)
+    console.log('userId', userId)
 
     const command = new GetObjectCommand({
       Bucket: appConfig.aws.bucket,
