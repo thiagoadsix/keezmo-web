@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
-import { Loader2, ChevronLeft, ChevronRight, Trash, Plus } from "lucide-react"
+import { Loader2, ChevronLeft, ChevronRight, Trash, Plus, Check } from "lucide-react"
 import Link from "next/link"
 import { apiClient } from "@/src/lib/api-client"
 import { Textarea } from "@/src/components/ui/textarea"
@@ -21,8 +21,8 @@ interface CreateDeckFormProps {
 
 interface Card {
   question: string;
-  correctAnswer: string;
   options: string[];
+  correctAnswerIndex: number;
 }
 
 export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onError }: CreateDeckFormProps) {
@@ -30,7 +30,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   const [isLoading, setIsLoading] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [cards, setCards] = useState<Card[]>([{ question: '', correctAnswer: '', options: [''] }])
+  const [cards, setCards] = useState<Card[]>([{ question: '', options: [''], correctAnswerIndex: 0 }])
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,7 +58,12 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
     try {
       onStepUpdate(1, 'processing')
-      const response = await apiClient<Deck>('/api/decks', {
+      const cardsToSend = cards.map(card => ({
+        question: card.question,
+        options: card.options,
+        correctAnswer: card.options[card.correctAnswerIndex]
+      }))
+      const response = await apiClient<Deck>('api/decks', {
         method: 'POST',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress!
@@ -66,7 +71,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         body: JSON.stringify({
           title,
           description,
-          cards
+          cards: cardsToSend
         })
       })
       const data = await response.json()
@@ -130,8 +135,8 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
               variant="outline"
               size="sm"
               onClick={() => {
-                setCards(prev => [...prev, { question: '', correctAnswer: '', options: [''] }])
-                setCurrentCardIndex(cards.length) // Move para o novo card
+                setCards(prev => [...prev, { question: '', options: [''], correctAnswerIndex: 0 }])
+                setCurrentCardIndex(cards.length)
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -166,7 +171,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10 hover:border-destructive/10"
+                        className="text-red-500 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/10"
                         onClick={() => {
                           const newCards = cards.filter((_, index) => index !== currentCardIndex)
                           setCards(newCards)
@@ -197,51 +202,34 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Resposta correta</label>
-                      <Textarea
-                        value={cards[currentCardIndex].correctAnswer}
-                        onChange={(e) => {
-                          const newCards = [...cards]
-                          const currentCard = newCards[currentCardIndex]
-                          const newAnswer = e.target.value
-
-                          // Encontrar se a resposta anterior estava nas opções
-                          const oldAnswerIndex = currentCard.options.indexOf(currentCard.correctAnswer)
-
-                          // Se encontrou, atualiza a opção também
-                          if (oldAnswerIndex !== -1) {
-                            currentCard.options[oldAnswerIndex] = newAnswer
-                          }
-
-                          currentCard.correctAnswer = newAnswer
-                          setCards(newCards)
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Opções incorretas</label>
+                      <label className="text-sm font-medium">Opções</label>
                       <div className="space-y-2">
                         {cards[currentCardIndex].options.map((option, optionIndex) => (
-                          <div key={optionIndex} className="flex gap-2">
+                          <div key={optionIndex} className="flex gap-2 items-center">
                             <Input
                               value={option}
                               onChange={(e) => {
                                 const newCards = [...cards]
                                 const currentCard = newCards[currentCardIndex]
-                                const newValue = e.target.value
-
-                                if (option === currentCard.correctAnswer) {
-                                  currentCard.correctAnswer = newValue
-                                }
-
                                 const newOptions = [...currentCard.options]
-                                newOptions[optionIndex] = newValue
+                                newOptions[optionIndex] = e.target.value
                                 currentCard.options = newOptions
-
                                 setCards(newCards)
                               }}
                               placeholder={`Opção ${optionIndex + 1}`}
                             />
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 shrink-0 flex items-center justify-center"
+                              onClick={() => {
+                                const newCards = [...cards]
+                                newCards[currentCardIndex].correctAnswerIndex = optionIndex
+                                setCards(newCards)
+                              }}
+                            >
+                              {cards[currentCardIndex].correctAnswerIndex === optionIndex ? <Check className="h-4 w-4 text-green-500" /> : null}
+                            </Button>
                             <Button
                               variant="outline"
                               size="icon"
@@ -251,6 +239,11 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                                 const currentCard = newCards[currentCardIndex]
                                 const newOptions = currentCard.options.filter((_, i) => i !== optionIndex)
                                 currentCard.options = newOptions
+                                if (currentCard.correctAnswerIndex === optionIndex) {
+                                  currentCard.correctAnswerIndex = 0
+                                } else if (currentCard.correctAnswerIndex > optionIndex) {
+                                  currentCard.correctAnswerIndex -= 1
+                                }
                                 setCards(newCards)
                               }}
                             >
@@ -258,7 +251,6 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                             </Button>
                           </div>
                         ))}
-
                         <Button
                           variant="outline"
                           size="sm"

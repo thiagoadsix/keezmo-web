@@ -95,9 +95,7 @@ export function DataTable<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
-                  const isHiddenOnMobile =
-                    header.column.id === "description" ||
-                    header.column.id === "createdAt";
+                  const isHiddenOnMobile = header.column.id === "description"
 
                   return (
                     <TableHead

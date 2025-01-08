@@ -4,7 +4,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/src/components/ui/button"
 import { BookOpen, MoreHorizontal, Pencil } from "lucide-react"
 import Link from "next/link"
-import { formatDate } from "@/src/lib/date"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,21 +76,6 @@ export const columns: ColumnDef<Deck>[] = [
   {
     accessorKey: "totalCards",
     header: "CARDS",
-  },
-  {
-    accessorKey: "createdAt",
-    header: "DATA DE CRIAÇÃO",
-    cell: ({ row }) => {
-      const createdAt: string = row.getValue("createdAt")
-      console.log({createdAt})
-      const formattedDate = formatDate(createdAt)
-      console.log({formattedDate})
-      return (
-        <div className="hidden md:block">
-          {formattedDate}
-        </div>
-      )
-    }
   },
   {
     accessorKey: "description",
