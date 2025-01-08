@@ -16,7 +16,7 @@ interface Feature {
 
 const features = [
   {
-    title: "Flashcards Automáticos",
+    title: "Sistema de Flashcards Inteligente",
     description:
       "Envie seus materiais em PDF, e nossa IA os converte em flashcards interativos. Foco no que realmente importa, economizando tempo.",
     type: "video",
@@ -32,7 +32,7 @@ const features = [
     alt: "Análise por IA",
   },
   {
-    title: "Repetição Espaçada",
+    title: "Aprendizado por Repetição Espaçada",
     description:
       "Use intervalos de revisão para reforçar o que precisa de mais atenção. Retenha conhecimento por mais tempo com menos esforço.",
   },
