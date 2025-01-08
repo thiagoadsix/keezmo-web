@@ -81,11 +81,17 @@ export const columns: ColumnDef<Deck>[] = [
   {
     accessorKey: "createdAt",
     header: "DATA DE CRIAÇÃO",
-    cell: ({ row }) => (
-      <div className="hidden md:block">
-        {formatDate(row.getValue("createdAt"))}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const createdAt: string = row.getValue("createdAt")
+      console.log({createdAt})
+      const formattedDate = formatDate(createdAt)
+      console.log({formattedDate})
+      return (
+        <div className="hidden md:block">
+          {formattedDate}
+        </div>
+      )
+    }
   },
   {
     accessorKey: "description",
