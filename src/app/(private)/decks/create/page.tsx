@@ -87,6 +87,13 @@ export default function CreateDeckPage() {
               </div>
             )}
           </div>
+
+          <Link
+            href="/decks"
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            &larr; Voltar
+          </Link>
         </div>
       </main>
     </div>
