@@ -18,7 +18,15 @@ export default function CreateDeckPage() {
           title="Criar deck"
           mobileTitle="Criar deck"
         />
+
+        <Link
+          href="/decks"
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          &larr; Voltar
+        </Link>
       </div>
+
       <main className="flex-1 flex justify-center px-4 sm:px-8 py-4">
         <div className="flex flex-col items-center gap-8 sm:gap-12 w-full max-w-4xl">
           <div className="text-center space-y-2">
@@ -87,13 +95,6 @@ export default function CreateDeckPage() {
               </div>
             )}
           </div>
-
-          <Link
-            href="/decks"
-            className="text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            &larr; Voltar
-          </Link>
         </div>
       </main>
     </div>
