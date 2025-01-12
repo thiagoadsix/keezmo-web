@@ -228,7 +228,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         const response = await apiClient<{ uploadUrl: string }>('api/s3/upload-url', {
           method: 'POST',
           headers: { 'x-user-id': user?.id! },
-          body: JSON.stringify({ fileName: fileName }),
+          body: JSON.stringify({ fileName: fileName, pageCount: totalPages }),
         });
 
         const { uploadUrl } = await response.json();
@@ -237,10 +237,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
           method: 'PUT',
           body: selectedFile,
           mode: 'cors',
-          headers: {
-            'Content-Type': 'application/pdf',
-            'x-amz-meta-page-count': totalPages.toString(),
-          }
+          headers: { 'Content-Type': 'application/pdf' }
         });
 
         onStepUpdate(1, 'completed');

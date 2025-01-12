@@ -6,7 +6,7 @@ import config from '@/config';
 
 export async function POST(req: NextRequest) {
   const userId = req.headers.get('x-user-id');
-  const { fileName } = await req.json();
+  const { fileName, pageCount } = await req.json();
 
   if (!userId) {
     console.warn('⚠️ [Auth] Missing user ID');
@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
     Key: key,
     ContentType: 'application/pdf',
     Metadata: {
-      'custom-name': fileName.split('_')[0], // Save the custom name as metadata
+      'custom-name': fileName.split('_')[0],
+      'page-count': pageCount.toString(),
     },
   });
 
