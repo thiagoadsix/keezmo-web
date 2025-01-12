@@ -60,7 +60,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   const [pageRange, setPageRange] = useState<PageRange>({ start: 1, end: 1 });
   const [pageRangeError, setPageRangeError] = useState<string | null>(null);
   const [monthlyLimitError, setMonthlyLimitError] = useState<string | null>(null);
-  const [existingPdfs, setExistingPdfs] = useState<{ name: string; uploadDate: Date; url: string }[]>([]);
+  const [existingPdfs, setExistingPdfs] = useState<{ name: string; uploadDate: Date; url: string; totalPages: number }[]>([]);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
   const [customPdfName, setCustomPdfName] = useState<string>('');
   const [selectedOption, setSelectedOption] = useState<'existing' | 'upload' | undefined>(undefined);
@@ -70,7 +70,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
   useEffect(() => {
     const fetchExistingPdfs = async () => {
-      const response = await apiClient<{ name: string; uploadDate: Date; url: string }[]>('api/users/pdfs', {
+      const response = await apiClient<{ name: string; uploadDate: Date; url: string; totalPages: number }[]>('api/users/pdfs', {
         method: 'GET',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress! || '',
@@ -407,6 +407,8 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                               value={pdf.url}
                               onSelect={(currentValue) => {
                                 setSelectedPdf(currentValue === selectedPdf ? null : currentValue)
+                                setTotalPages(pdf.totalPages)
+                                setPageRange({ start: 1, end: Math.min(pdf.totalPages, 30) })
                                 setSearchValue('')
                                 setOpen(false)
                               }}
@@ -426,6 +428,44 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                   </PopoverContent>
                 </Popover>
               </div>
+
+              {totalPages > 0 && (
+                <div className="mt-4 space-y-4">
+                  <div className="text-sm text-neutral-400">
+                    Total de páginas: {totalPages}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm">
+                      Intervalo de páginas (máx. 30 páginas)
+                    </label>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={pageRange.start}
+                          onChange={(e) => handlePageRangeChange('start', e.target.value)}
+                          className="w-20"
+                        />
+                        <span>até</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={pageRange.end}
+                          onChange={(e) => handlePageRangeChange('end', e.target.value)}
+                          className="w-20"
+                        />
+                      </div>
+                      {pageRangeError && (
+                        <p className="text-xs text-red-500">{pageRangeError}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </TabsContent>
             <TabsContent value="upload">
               <div className="flex flex-col gap-2 w-full">
