@@ -228,7 +228,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         const response = await apiClient<{ uploadUrl: string }>('api/s3/upload-url', {
           method: 'POST',
           headers: { 'x-user-id': user?.id! },
-          body: JSON.stringify({ fileName: fileName }),
+          body: JSON.stringify({ fileName: fileName, file: selectedFile }),
         });
 
         const { uploadUrl } = await response.json();
