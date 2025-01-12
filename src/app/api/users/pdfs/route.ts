@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import { ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { s3Client } from '../../clients/s3';
 import config from '@/config';
 
@@ -30,24 +30,12 @@ export async function GET(req: NextRequest) {
 
   console.log({listResponse: JSON.stringify(listResponse, null, 2)});
 
-  const pdfs = await Promise.all(
-    listResponse.Contents?.filter((object) => object.Key?.endsWith('.pdf'))
-      .map(async (object) => {
-        const getObjectCommand = new GetObjectCommand({
-          Bucket: config.aws.bucket,
-          Key: object.Key,
-        });
-
-        const objectResponse = await s3Client.send(getObjectCommand);
-
-        return {
-          name: object.Key?.split('/')?.pop()?.split('_')?.[0] || '',
-          uploadDate: object.LastModified,
-          url: `${config.aws.bucketUrl}${object.Key}`,
-          totalPages: parseInt(objectResponse.Metadata?.['page-count'] || '0'),
-        };
-      }) || []
-  );
+  const pdfs = listResponse.Contents?.filter((object) => object.Key?.endsWith('.pdf'))
+    .map((object) => ({
+      name: object.Key?.split('/')?.pop()?.split('_')?.[0] || '',
+      uploadDate: object.LastModified,
+      url: `${config.aws.bucketUrl}${object.Key}`,
+    })) || [];
 
   console.log({pdfs});
 
