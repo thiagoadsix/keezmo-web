@@ -60,7 +60,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   const [pageRange, setPageRange] = useState<PageRange>({ start: 1, end: 1 });
   const [pageRangeError, setPageRangeError] = useState<string | null>(null);
   const [monthlyLimitError, setMonthlyLimitError] = useState<string | null>(null);
-  const [existingPdfs, setExistingPdfs] = useState<{ name: string; uploadDate: Date; url: string }[]>([]);
+  const [existingPdfs, setExistingPdfs] = useState<{ name: string; uploadDate: Date; url: string; pageCount: number }[]>([]);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
   const [customPdfName, setCustomPdfName] = useState<string>('');
   const [selectedOption, setSelectedOption] = useState<'existing' | 'upload' | undefined>(undefined);
@@ -70,7 +70,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
   useEffect(() => {
     const fetchExistingPdfs = async () => {
-      const response = await apiClient<{ name: string; uploadDate: Date; url: string }[]>('api/users/pdfs', {
+      const response = await apiClient<{ name: string; uploadDate: Date; url: string; pageCount: number }[]>('api/users/pdfs', {
         method: 'GET',
         headers: {
           'x-user-email': user?.emailAddresses[0].emailAddress! || '',
@@ -236,7 +236,11 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         await fetch(uploadUrl, {
           method: 'PUT',
           body: selectedFile,
-          mode: 'cors'
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/pdf',
+            'x-amz-meta-page-count': totalPages.toString(),
+          }
         });
 
         onStepUpdate(1, 'completed');
@@ -409,6 +413,12 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                                 setSelectedPdf(currentValue === selectedPdf ? null : currentValue)
                                 setSearchValue('')
                                 setOpen(false)
+
+                                const pdfData = existingPdfs.find((pdf) => pdf.url === currentValue)
+                                if (pdfData) {
+                                  setTotalPages(pdfData.pageCount)
+                                  setPageRange({ start: 1, end: Math.min(pdfData.pageCount, 30) })
+  }
                               }}
                             >
                               {pdf.name}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { ListObjectsV2Command, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '../../clients/s3';
 import config from '@/config';
 
@@ -23,21 +23,32 @@ export async function GET(req: NextRequest) {
     Prefix: clerkId,
   };
 
-  console.log({listParams});
-
   const listCommand = new ListObjectsV2Command(listParams);
   const listResponse = await s3Client.send(listCommand);
 
-  console.log({listResponse: JSON.stringify(listResponse, null, 2)});
+  if (!listResponse.Contents) {
+    return NextResponse.json([], { status: 200 });
+  }
 
-  const pdfs = listResponse.Contents?.filter((object) => object.Key?.endsWith('.pdf'))
-    .map((object) => ({
-      name: object.Key?.split('/')?.pop()?.split('_')?.[0] || '',
-      uploadDate: object.LastModified,
-      url: `${config.aws.bucketUrl}${object.Key}`,
-    })) || [];
+  const pdfs: any[] = [];
+  for (const object of listResponse.Contents) {
+    if (object.Key?.endsWith('.pdf')) {
+      const headCommand = new HeadObjectCommand({
+        Bucket: config.aws.bucket,
+        Key: object.Key,
+      });
+      const headResponse = await s3Client.send(headCommand);
 
-  console.log({pdfs});
+      const metadata = headResponse.Metadata || {};
+
+      pdfs.push({
+        name: metadata['custom-name'] ?? (object.Key?.split('/')?.pop()?.split('_')?.[0] || ''),
+        uploadDate: object.LastModified,
+        url: `${config.aws.bucketUrl}${object.Key}`,
+        pageCount: metadata['page-count'] ? parseInt(metadata['page-count'], 10) : 0,
+      });
+    }
+  }
 
   return NextResponse.json(pdfs, { status: 200 });
 }
