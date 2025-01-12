@@ -224,11 +224,12 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         onStepUpdate(1, 'processing');
 
         const fileName = `${customPdfName}_${Date.now()}.pdf`;
+        const fileUrl = URL.createObjectURL(selectedFile);
 
         const response = await apiClient<{ uploadUrl: string }>('api/s3/upload-url', {
           method: 'POST',
           headers: { 'x-user-id': user?.id! },
-          body: JSON.stringify({ fileName: fileName, file: selectedFile }),
+          body: JSON.stringify({ fileName: fileName, file: fileUrl }),
         });
 
         const { uploadUrl } = await response.json();

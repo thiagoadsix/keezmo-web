@@ -7,7 +7,7 @@ import { PDFDocument } from 'pdf-lib';
 
 export async function POST(req: NextRequest) {
   const userId = req.headers.get('x-user-id');
-  const { fileName, file } = await req.json();
+  const { fileName, fileUrl } = await req.json();
 
   if (!userId) {
     console.warn('⚠️ [Auth] Missing user ID');
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const key = `${userId}/${fileName}`;
 
   // Load the PDF and get the total page count
-  const pdfBytes = await fetch(file).then((res) => res.arrayBuffer());
+  const pdfBytes = await fetch(fileUrl).then((res) => res.arrayBuffer());
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const pageCount = pdfDoc.getPageCount();
 
