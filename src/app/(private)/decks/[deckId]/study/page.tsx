@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -36,6 +36,8 @@ interface QuestionWithMetadata extends Question {
 }
 
 export default function StudyPage() {
+  const searchParams = useSearchParams();
+  const studyMode = searchParams.get("mode") as "multiple-choice" | "flashcard";
   const { deckId } = useParams();
   const { user } = useUser();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -53,6 +55,7 @@ export default function StudyPage() {
   const [questionsMetadata, setQuestionsMetadata] = useState<
     Map<string, QuestionMetadata>
   >(new Map());
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
   useEffect(() => {
     if (!deckId || deckId === "undefined") {
@@ -221,9 +224,14 @@ export default function StudyPage() {
     }
   };
 
+  const handleRevealAnswer = () => {
+    setIsAnswerRevealed(true);
+  };
+
   const handleNext = () => {
     setSelectedOption(null);
     setIsAnswerConfirmed(false);
+    setIsAnswerRevealed(false);
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
@@ -352,35 +360,51 @@ export default function StudyPage() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
-          {currentQuestionData.options.map((option, index) => {
-            const isCorrect = option === currentQuestionData.correctAnswer;
-            const isSelected = option === selectedOption;
+        {studyMode === 'multiple-choice' ? (
+          <div className="flex flex-col gap-4">
+            {currentQuestionData.options.map((option, index) => {
+              const isCorrect = option === currentQuestionData.correctAnswer;
+              const isSelected = option === selectedOption;
 
-            return (
-              <QuestionOption
-                key={index}
-                option={option}
-                isCorrect={isCorrect}
-                isSelected={isSelected}
-                isAnswerConfirmed={isAnswerConfirmed}
-                onClick={() => handleOptionClick(option)}
-              />
-            );
-          })}
-        </div>
+              return (
+                <QuestionOption
+                  key={index}
+                  option={option}
+                  isCorrect={isCorrect}
+                  isSelected={isSelected}
+                  isAnswerConfirmed={isAnswerConfirmed}
+                  onClick={() => handleOptionClick(option)}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div>
+            {!isAnswerRevealed ? (
+              <Button onClick={handleRevealAnswer}>Reveal Answer</Button>
+            ) : (
+              <p>{currentQuestionData.correctAnswer}</p>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-end">
-          {!isAnswerConfirmed ? (
-            <Button
-              onClick={handleConfirmAnswer}
-              disabled={!selectedOption}
-              variant="outline"
-            >
-              Confirmar resposta
-            </Button>
+          {studyMode === 'multiple-choice' ? (
+            !isAnswerConfirmed ? (
+              <Button
+                onClick={handleConfirmAnswer}
+                disabled={!selectedOption}
+                variant="outline"
+              >
+                Confirmar resposta
+              </Button>
+            ) : (
+              <Button onClick={handleNext}>Próxima questão →</Button>
+            )
           ) : (
-            <Button onClick={handleNext}>Próxima questão →</Button>
+            <Button onClick={handleNext} disabled={!isAnswerRevealed}>
+              {isAnswerRevealed ? 'Next Question' : 'Reveal Answer to Continue'}
+            </Button>
           )}
         </div>
       </div>
