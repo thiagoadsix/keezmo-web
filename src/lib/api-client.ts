@@ -38,7 +38,7 @@ export const apiClient = ky.create({
   },
   retry: {
     limit: 3,
-    methods: ["get", "post"],
+    methods: ["get"],
     statusCodes: [408, 500, 502, 503, 504],
   },
 });
@@ -72,7 +72,7 @@ export function createApiClient(prefixUrl: string) {
     },
     retry: {
       limit: 3,
-      methods: ["get", "post"],
+      methods: ["get"],
       statusCodes: [408, 500, 502, 503, 504],
     },
   });
