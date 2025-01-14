@@ -1,23 +1,23 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from "react"
-import { useUser } from "@clerk/nextjs"
-import { Button } from "@/src/components/ui/button"
-import { Input } from "@/src/components/ui/input"
-import { PdfIcon } from "@/src/icons/pdf"
-import { Loader2 } from "lucide-react"
-import Link from "next/link"
-import { apiClient } from "@/src/lib/api-client"
-import { useToast } from "@/src/hooks/use-toast"
-import { PDFDocument } from 'pdf-lib'
-import { ProcessStepStatus } from "@/types/process-step"
-import { User } from "@/types/user"
-import config from "@/config"
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { PdfIcon } from "@/src/icons/pdf";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { apiClient } from "@/src/lib/api-client";
+import { useToast } from "@/src/hooks/use-toast";
+import { PDFDocument } from "pdf-lib";
+import { ProcessStepStatus } from "@/types/process-step";
+import { User } from "@/types/user";
+import config from "@/config";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/src/components/ui/popover"
+} from "@/src/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -25,15 +25,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/src/components/ui/command"
-import { Check, ChevronsUpDown } from "lucide-react"
-import { cn } from "@/src/lib/utils"
+} from "@/src/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-} from "@/src/components/ui/tabs"
+} from "@/src/components/ui/tabs";
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
@@ -47,34 +47,47 @@ interface PageRange {
   end: number;
 }
 
-export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onError }: CreateDeckFormProps) {
-  const { user } = useUser()
-  const [isLoading, setIsLoading] = useState(false)
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [numCards, setNumCards] = useState('')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
+export function CreateDeckForm({
+  onSuccess,
+  onProcessingStart,
+  onStepUpdate,
+  onError,
+}: CreateDeckFormProps) {
+  const { user } = useUser();
+  const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [numCards, setNumCards] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [pageRange, setPageRange] = useState<PageRange>({ start: 1, end: 1 });
   const [pageRangeError, setPageRangeError] = useState<string | null>(null);
-  const [monthlyLimitError, setMonthlyLimitError] = useState<string | null>(null);
-  const [existingPdfs, setExistingPdfs] = useState<{ name: string; uploadDate: Date; url: string; pageCount: number }[]>([]);
+  const [monthlyLimitError, setMonthlyLimitError] = useState<string | null>(
+    null
+  );
+  const [existingPdfs, setExistingPdfs] = useState<
+    { name: string; uploadDate: Date; url: string; pageCount: number }[]
+  >([]);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
-  const [customPdfName, setCustomPdfName] = useState<string>('');
-  const [selectedOption, setSelectedOption] = useState<'existing' | 'upload' | undefined>(undefined);
+  const [customPdfName, setCustomPdfName] = useState<string>("");
+  const [selectedOption, setSelectedOption] = useState<
+    "existing" | "upload" | undefined
+  >(undefined);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('')
+  const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
     const fetchExistingPdfs = async () => {
-      const response = await apiClient<{ name: string; uploadDate: Date; url: string; pageCount: number }[]>('api/users/pdfs', {
-        method: 'GET',
+      const response = await apiClient<
+        { name: string; uploadDate: Date; url: string; pageCount: number }[]
+      >("api/users/pdfs", {
+        method: "GET",
         headers: {
-          'x-user-email': user?.emailAddresses[0].emailAddress! || '',
-          'x-user-id': user?.id! || '',
+          "x-user-email": user?.emailAddresses[0].emailAddress! || "",
+          "x-user-id": user?.id! || "",
         },
       });
 
@@ -87,20 +100,24 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
     fetchExistingPdfs();
   }, [user?.emailAddresses, user?.id]);
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'application/pdf') {
+    if (file && file.type === "application/pdf") {
       try {
         // Obter dados do usuário para verificar o plano e limite mensal
-        const userResponse = await apiClient<User & { pdfsUploadedThisMonth?: number }>('api/users/me', {
-          method: 'GET',
+        const userResponse = await apiClient<
+          User & { pdfsUploadedThisMonth?: number }
+        >("api/users/me", {
+          method: "GET",
           headers: {
-            'x-user-email': user?.emailAddresses[0].emailAddress! || ''
-          }
+            "x-user-email": user?.emailAddresses[0].emailAddress! || "",
+          },
         });
 
         if (!userResponse.ok) {
-          throw new Error('Failed to get user data');
+          throw new Error("Failed to get user data");
         }
 
         const userData = await userResponse.json();
@@ -108,9 +125,13 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         const pdfsUploadedThisMonth = userData.pdfsUploadedThisMonth || 0;
 
         // Verificar limite mensal de PDFs baseado no plano
-        const maxPdfsPerMonth = config.stripe.plans.find(plan => plan.name === userPlan)?.maxPdfsPerMonth;
+        const maxPdfsPerMonth = config.stripe.plans.find(
+          (plan) => plan.name === userPlan
+        )?.maxPdfsPerMonth;
         if (maxPdfsPerMonth && pdfsUploadedThisMonth >= maxPdfsPerMonth) {
-          setMonthlyLimitError(`Você atingiu o limite mensal de ${maxPdfsPerMonth} PDFs para o plano ${userPlan}`);
+          setMonthlyLimitError(
+            `Você atingiu o limite mensal de ${maxPdfsPerMonth} PDFs para o plano ${userPlan}`
+          );
           setSelectedFile(null);
           setSelectedFileName(null);
           return;
@@ -130,47 +151,50 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         toast({
           variant: "destructive",
           title: "Erro ao ler PDF",
-          description: "Não foi possível ler o arquivo PDF. Tente novamente."
+          description: "Não foi possível ler o arquivo PDF. Tente novamente.",
         });
         setSelectedFile(null);
         setSelectedFileName(null);
       }
     } else {
-      setError('Por favor, selecione um arquivo PDF válido');
+      setError("Por favor, selecione um arquivo PDF válido");
       setSelectedFile(null);
       setSelectedFileName(null);
     }
-  }
+  };
 
   // Validação do intervalo de páginas
   const validatePageRange = (range: PageRange): boolean => {
     if (range.start < 1 || range.end > totalPages) {
-      setPageRangeError('Páginas fora do intervalo válido');
+      setPageRangeError("Páginas fora do intervalo válido");
       return false;
     }
     if (range.start > range.end) {
-      setPageRangeError('Página inicial deve ser menor que a final');
+      setPageRangeError("Página inicial deve ser menor que a final");
       return false;
     }
     if (range.end - range.start + 1 > 30) {
-      setPageRangeError('Máximo de 30 páginas permitido');
+      setPageRangeError("Máximo de 30 páginas permitido");
       return false;
     }
     setPageRangeError(null);
     return true;
-  }
+  };
 
-  const handlePageRangeChange = (field: 'start' | 'end', value: string) => {
-    const numValue = value === '' ? '' : parseInt(value);
+  const handlePageRangeChange = (field: "start" | "end", value: string) => {
+    const numValue = value === "" ? "" : parseInt(value);
 
-    setPageRange(prev => {
+    setPageRange((prev) => {
       const newRange = {
         ...prev,
-        [field]: numValue
+        [field]: numValue,
       };
 
       // Só valida se ambos os campos tiverem valores
-      if (typeof newRange.start === 'number' && typeof newRange.end === 'number') {
+      if (
+        typeof newRange.start === "number" &&
+        typeof newRange.end === "number"
+      ) {
         validatePageRange(newRange as PageRange);
       }
 
@@ -179,14 +203,19 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   };
 
   const handleCreateDeck = async () => {
-    if (!title || !numCards || (selectedOption === 'existing' && !selectedPdf) || (selectedOption === 'upload' && !selectedFile)) {
-      setError('Por favor, preencha todos os campos obrigatórios')
-      return
+    if (
+      !title ||
+      !numCards ||
+      (selectedOption === "existing" && !selectedPdf) ||
+      (selectedOption === "upload" && !selectedFile)
+    ) {
+      setError("Por favor, preencha todos os campos obrigatórios");
+      return;
     }
 
-    if (selectedOption === 'upload' && !customPdfName) {
-      setError('Por favor, insira um nome personalizado para o PDF')
-      return
+    if (selectedOption === "upload" && !customPdfName) {
+      setError("Por favor, insira um nome personalizado para o PDF");
+      return;
     }
 
     // Validar intervalo de páginas antes de enviar
@@ -194,120 +223,126 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
       return;
     }
 
-    setIsLoading(true)
-    setError(null)
-    onProcessingStart()
+    setIsLoading(true);
+    setError(null);
+    onProcessingStart();
 
     try {
       // Deduct credits first
       const creditsNeeded = parseInt(numCards);
-      const updateCreditsResponse = await apiClient<User>('api/users/credits', {
-        method: 'POST',
+      const updateCreditsResponse = await apiClient<User>("api/users/credits", {
+        method: "POST",
         headers: {
-          'x-user-email': user?.emailAddresses[0].emailAddress! || ''
+          "x-user-email": user?.emailAddresses[0].emailAddress! || "",
         },
         body: JSON.stringify({
           amount: creditsNeeded,
-          type: 'use',
-          source: 'deck_creation'
-        })
+          type: "use",
+          source: "deck_creation",
+        }),
       });
 
       if (!updateCreditsResponse.ok) {
-        throw new Error('Failed to update credits');
+        throw new Error("Failed to update credits");
       }
 
       // Step 1: Upload PDF to S3 (if a new file is selected)
-      let pdfUrl = selectedOption === 'existing' ? selectedPdf : '';
+      let pdfUrl = selectedOption === "existing" ? selectedPdf : "";
 
-      if (selectedOption === 'upload' && selectedFile) {
-        onStepUpdate(1, 'processing');
+      if (selectedOption === "upload" && selectedFile) {
+        onStepUpdate(1, "processing");
 
         const fileName = `${customPdfName}_${Date.now()}.pdf`;
 
-        const response = await apiClient<{ uploadUrl: string }>('api/s3/upload-url', {
-          method: 'POST',
-          headers: { 'x-user-id': user?.id! },
-          body: JSON.stringify({ fileName: fileName, pageCount: totalPages }),
-        });
+        const response = await apiClient<{ uploadUrl: string }>(
+          "api/s3/upload-url",
+          {
+            method: "POST",
+            headers: { "x-user-id": user?.id! },
+            body: JSON.stringify({ fileName: fileName, pageCount: totalPages }),
+          }
+        );
 
         const { uploadUrl } = await response.json();
 
         await fetch(uploadUrl, {
-          method: 'PUT',
+          method: "PUT",
           body: selectedFile,
-          mode: 'cors',
-          headers: { 'Content-Type': 'application/pdf' }
+          mode: "cors",
+          headers: { "Content-Type": "application/pdf" },
         });
 
-        onStepUpdate(1, 'completed');
+        onStepUpdate(1, "completed");
 
         pdfUrl = `${config.aws.bucketUrl}${fileName}`;
       }
-      console.log('pdfUrl', pdfUrl)
+      console.log("pdfUrl", pdfUrl);
 
       // Step 2: Process PDF
-      onStepUpdate(2, 'processing');
+      onStepUpdate(2, "processing");
 
-      const processResponse = await apiClient<{ deckId: string }>('api/rag-pdf', {
-        method: 'POST',
-        headers: {
-          'x-user-email': user?.emailAddresses[0].emailAddress!,
-          'Content-Type': 'application/json',
-          'x-user-id': user?.id!,
-        },
-        body: JSON.stringify({
-          fileUrl: pdfUrl,
-          numCards,
-          title,
-          description,
-          pageStart: pageRange.start,
-          pageEnd: pageRange.end,
-        }),
-      });
+      const processResponse = await apiClient<{ deckId: string }>(
+        "api/rag-pdf",
+        {
+          method: "POST",
+          headers: {
+            "x-user-email": user?.emailAddresses[0].emailAddress!,
+            "Content-Type": "application/json",
+            "x-user-id": user?.id!,
+          },
+          body: JSON.stringify({
+            fileUrl: pdfUrl,
+            numCards,
+            title,
+            description,
+            pageStart: pageRange.start,
+            pageEnd: pageRange.end,
+          }),
+        }
+      );
 
       if (!processResponse.ok) {
-        throw new Error('Failed to process PDF')
+        throw new Error("Failed to process PDF");
       }
 
-      onStepUpdate(2, 'completed')
+      onStepUpdate(2, "completed");
 
       // Step 3: Generate cards
-      onStepUpdate(3, 'processing')
-      const data = await processResponse.json()
-      console.log('data', data)
+      onStepUpdate(3, "processing");
+      const data = await processResponse.json();
+      console.log("data", data);
 
       if (!data.deckId) {
-        throw new Error('No deck ID returned from server')
+        throw new Error("No deck ID returned from server");
       }
 
-      console.log('Deck created successfully:', data)
-      onStepUpdate(3, 'completed')
+      console.log("Deck created successfully:", data);
+      onStepUpdate(3, "completed");
 
       // Add a small delay before showing success
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Call onSuccess with the deck ID
-      onSuccess(data.deckId)
+      onSuccess(data.deckId);
     } catch (error: any) {
-      console.error('Failed to create deck:', error);
-      onError('Ocorreu um erro ao criar o deck. Por favor, tente novamente mais tarde, ou entre em contato com o suporte.');
+      console.error("Failed to create deck:", error);
+      onError(
+        "Ocorreu um erro ao criar o deck. Por favor, tente novamente mais tarde, ou entre em contato com o suporte."
+      );
 
       // Reset processing state if there's an error
-      onStepUpdate(1, 'waiting');
-      onStepUpdate(2, 'waiting');
-      onStepUpdate(3, 'waiting');
+      onStepUpdate(1, "waiting");
+      onStepUpdate(2, "waiting");
+      onStepUpdate(3, "waiting");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-6 px-8 py-6">
       {error && (
-        <div className="bg-red-500/10 text-red-500 p-4 rounded-md">
-          {error}
-        </div>
+        <div className="bg-red-500/10 text-red-500 p-4 rounded-md">{error}</div>
       )}
       {monthlyLimitError && (
         <div className="bg-red-500/10 text-red-500 p-4 rounded-md">
@@ -359,7 +394,12 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
       {existingPdfs.length > 0 && (
         <div className="flex flex-col gap-2 w-full">
-          <Tabs value={selectedOption} onValueChange={(value) => setSelectedOption(value as 'existing' | 'upload' | undefined)}>
+          <Tabs
+            value={selectedOption}
+            onValueChange={(value) =>
+              setSelectedOption(value as "existing" | "upload" | undefined)
+            }
+          >
             <TabsList className="w-full space-x-2">
               <TabsTrigger value="existing" className="flex-1 justify-center">
                 PDF existente
@@ -371,7 +411,9 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
             <TabsContent value="existing">
               <div className="flex flex-col gap-2 w-full">
                 <div>
-                  <label htmlFor="existing-pdf">Selecione um PDF existente</label>
+                  <label htmlFor="existing-pdf">
+                    Selecione um PDF existente
+                  </label>
                 </div>
                 <Popover open={open} onOpenChange={setOpen}>
                   <PopoverTrigger asChild>
@@ -382,7 +424,8 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                       className="w-full justify-between"
                     >
                       {selectedPdf
-                        ? existingPdfs.find((pdf) => pdf.url === selectedPdf)?.name
+                        ? existingPdfs.find((pdf) => pdf.url === selectedPdf)
+                            ?.name
                         : "Selecione um PDF..."}
                       <ChevronsUpDown className="opacity-50" />
                     </Button>
@@ -400,38 +443,94 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                         <CommandGroup>
                           {existingPdfs
                             .filter((pdf) =>
-                              pdf.name.toLowerCase().includes(searchValue.toLowerCase())
+                              pdf.name
+                                .toLowerCase()
+                                .includes(searchValue.toLowerCase())
                             )
                             .map((pdf) => (
-                            <CommandItem
-                              key={pdf.url}
-                              value={pdf.url}
-                              onSelect={(currentValue) => {
-                                setSelectedPdf(currentValue === selectedPdf ? null : currentValue)
-                                setSearchValue('')
-                                setOpen(false)
+                              <CommandItem
+                                key={pdf.url}
+                                value={pdf.url}
+                                onSelect={(currentValue) => {
+                                  setSelectedPdf(
+                                    currentValue === selectedPdf
+                                      ? null
+                                      : currentValue
+                                  );
+                                  setSearchValue("");
+                                  setOpen(false);
 
-                                const pdfData = existingPdfs.find((pdf) => pdf.url === currentValue)
-                                if (pdfData) {
-                                  setTotalPages(pdfData.pageCount)
-                                  setPageRange({ start: 1, end: Math.min(pdfData.pageCount, 30) })
-  }
-                              }}
-                            >
-                              {pdf.name}
-                              <Check
-                                className={cn(
-                                  "ml-auto",
-                                  selectedPdf === pdf.url ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
+                                  const pdfData = existingPdfs.find(
+                                    (pdf) => pdf.url === currentValue
+                                  );
+                                  if (pdfData) {
+                                    setTotalPages(pdfData.pageCount);
+                                    setPageRange({
+                                      start: 1,
+                                      end: Math.min(pdfData.pageCount, 30),
+                                    });
+                                  }
+                                }}
+                              >
+                                {pdf.name}
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    selectedPdf === pdf.url
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
                         </CommandGroup>
                       </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
+                {selectedPdf && totalPages > 0 && (
+                  <div className="mt-4 space-y-4">
+                    <div className="text-sm text-neutral-400">
+                      Total de páginas: {totalPages}
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm">
+                        Intervalo de páginas (máx. 30 páginas)
+                      </label>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            min={1}
+                            max={totalPages}
+                            value={pageRange.start}
+                            onChange={(e) =>
+                              handlePageRangeChange("start", e.target.value)
+                            }
+                            className="w-20"
+                          />
+                          <span>até</span>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={totalPages}
+                            value={pageRange.end}
+                            onChange={(e) =>
+                              handlePageRangeChange("end", e.target.value)
+                            }
+                            className="w-20"
+                          />
+                        </div>
+                        {pageRangeError && (
+                          <p className="text-xs text-red-500">
+                            {pageRangeError}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
             <TabsContent value="upload">
@@ -441,16 +540,24 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                   <span className="text-xs text-red-500">*</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Certifique-se de que o PDF contenha texto selecionável. PDFs com texto em formato de imagem ou apenas imagens não terão um bom resultado.
+                  Certifique-se de que o PDF contenha texto selecionável. PDFs
+                  com texto em formato de imagem ou apenas imagens não terão um
+                  bom resultado.
                 </p>
                 <div className="w-full flex items-center justify-center">
                   <label htmlFor="pdf-upload" className="w-full cursor-pointer">
-                    <div className={`border-2 border-dashed rounded-lg p-12 w-full flex flex-col items-center justify-center gap-2 transition-colors ${
-                      selectedFileName
-                        ? 'border-primary bg-primary/5'
-                        : 'border-neutral-700 hover:border-primary-800'
-                    }`}>
-                      <PdfIcon className={selectedFileName ? 'text-primary' : 'text-neutral-400'} />
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-12 w-full flex flex-col items-center justify-center gap-2 transition-colors ${
+                        selectedFileName
+                          ? "border-primary bg-primary/5"
+                          : "border-neutral-700 hover:border-primary-800"
+                      }`}
+                    >
+                      <PdfIcon
+                        className={
+                          selectedFileName ? "text-primary" : "text-neutral-400"
+                        }
+                      />
                       <input
                         type="file"
                         id="pdf-upload"
@@ -483,7 +590,9 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                 </div>
 
                 <div className="flex flex-col gap-2 mt-4">
-                  <label htmlFor="custom-pdf-name">Nome personalizado do PDF</label>
+                  <label htmlFor="custom-pdf-name">
+                    Nome personalizado do PDF
+                  </label>
                   <Input
                     type="text"
                     id="custom-pdf-name"
@@ -510,7 +619,9 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                             min={1}
                             max={totalPages}
                             value={pageRange.start}
-                            onChange={(e) => handlePageRangeChange('start', e.target.value)}
+                            onChange={(e) =>
+                              handlePageRangeChange("start", e.target.value)
+                            }
                             className="w-20"
                           />
                           <span>até</span>
@@ -519,12 +630,16 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                             min={1}
                             max={totalPages}
                             value={pageRange.end}
-                            onChange={(e) => handlePageRangeChange('end', e.target.value)}
+                            onChange={(e) =>
+                              handlePageRangeChange("end", e.target.value)
+                            }
                             className="w-20"
                           />
                         </div>
                         {pageRangeError && (
-                          <p className="text-xs text-red-500">{pageRangeError}</p>
+                          <p className="text-xs text-red-500">
+                            {pageRangeError}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -540,27 +655,30 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         <Button variant="destructive" asChild>
           <Link href="/decks/create">Cancelar</Link>
         </Button>
-        <Button
-          onClick={handleCreateDeck}
-          disabled={isLoading}
-        >
+        <Button onClick={handleCreateDeck} disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processando...
             </>
           ) : (
-            'Criar deck'
+            "Criar deck"
           )}
         </Button>
       </div>
 
       {!isLoading && (
         <div className="mt-4 text-sm text-muted-foreground">
-          <p>Ao clicar em "Criar deck", você confirma que o PDF contém texto selecionável.</p>
-          <p>Lembre-se: PDFs com texto em formato de imagem ou apenas imagens não terão um bom resultado e os créditos não serão recuperados.</p>
+          <p>
+            Ao clicar em "Criar deck", você confirma que o PDF contém texto
+            selecionável.
+          </p>
+          <p>
+            Lembre-se: PDFs com texto em formato de imagem ou apenas imagens não
+            terão um bom resultado e os créditos não serão recuperados.
+          </p>
         </div>
       )}
     </div>
-  )
+  );
 }
