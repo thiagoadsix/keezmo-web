@@ -8,7 +8,7 @@ import { ProcessingStatus } from "@/src/components/create-deck/ai/processing-sta
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
 import { ProcessStep } from "@/types/process-step"
 
-const initialSteps: ProcessStep[] = [
+const stepsForUpload: ProcessStep[] = [
   {
     id: 1,
     title: 'Enviando PDF',
@@ -32,12 +32,31 @@ const initialSteps: ProcessStep[] = [
   }
 ]
 
+const stepsForExisting: ProcessStep[] = [
+  {
+    id: 2,
+    title: 'Analisando conteúdo',
+    description: 'Extraindo e processando o conteúdo do PDF',
+    icon: <Brain className="h-5 w-5" />,
+    status: 'waiting'
+  },
+  {
+    id: 3,
+    title: 'Gerando cards',
+    description: 'Criando cards de estudo com IA',
+    icon: <Sparkles className="h-5 w-5" />,
+    status: 'waiting'
+  }
+]
+
+
 export default function CreateDeckPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [createdDeckId, setCreatedDeckId] = useState<string | null>(null)
-  const [steps, setSteps] = useState<ProcessStep[]>(initialSteps)
+  const [steps, setSteps] = useState<ProcessStep[]>([])
   const [error, setError] = useState<string | null>(null)
+
   const updateStepStatus = (stepId: number, status: ProcessStep['status']) => {
     setSteps(steps =>
       steps.map(step =>
@@ -45,6 +64,16 @@ export default function CreateDeckPage() {
       )
     )
   }
+
+  const handleProcessingStart = (option: 'existing' | 'upload' | undefined) => {
+    if (option === 'upload') {
+      setSteps(stepsForUpload)
+    } else {
+      setSteps(stepsForExisting)
+    }
+    setIsProcessing(true)
+  }
+
 
   if (isProcessing) {
     return (
@@ -74,7 +103,7 @@ export default function CreateDeckPage() {
             setIsCompleted(true)
             setIsProcessing(false)
           }}
-          onProcessingStart={() => setIsProcessing(true)}
+          onProcessingStart={handleProcessingStart}
           onStepUpdate={updateStepStatus}
           onError={(error) => {
             setError(error)

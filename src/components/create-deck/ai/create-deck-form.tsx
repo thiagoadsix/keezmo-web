@@ -37,7 +37,7 @@ import {
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
-  onProcessingStart: () => void;
+  onProcessingStart: (option: 'existing' | 'upload' | undefined) => void;
   onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
   onError: (error: string) => void;
 }
@@ -225,7 +225,7 @@ export function CreateDeckForm({
 
     setIsLoading(true);
     setError(null);
-    onProcessingStart();
+    onProcessingStart(selectedOption);
 
     try {
       // Deduct credits first
