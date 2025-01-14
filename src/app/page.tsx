@@ -7,12 +7,11 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/src/components/ui/button";
 import { HeroSection } from "@/src/components/landing-page/hero-section";
-import { FeaturesAccordion } from "@/src/components/landing-page/features-accordion";
 import { PlansSection } from "@/src/components/landing-page/plans-section";
 import { FAQSection } from "@/src/components/landing-page/faq-section";
 import { Footer } from "@/src/components/landing-page/footer";
-import { JourneySection } from "@/src/components/landing-page/journey-section";
 import { KeezmoIcon } from "../icons/logo/keezmo";
+import { FeaturesGallery } from "../components/landing-page/feature-gallery";
 
 export default function Home() {
   const router = useRouter();
@@ -70,8 +69,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="mt-16 flex-1 px-4 md:px-8">
         <HeroSection />
-        <JourneySection />
-        <FeaturesAccordion />
+        <FeaturesGallery />
         <PlansSection />
         <FAQSection />
       </main>

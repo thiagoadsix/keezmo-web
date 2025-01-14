@@ -7,9 +7,12 @@ import Image from "next/image";
 interface Feature {
   title: string;
   description: string;
-  type?: "video" | "image";
+  /**
+   * Se preferir, pode unificar "gif" e "image" em um tipo só (por exemplo: "image").
+   * Aqui deixamos separado para ilustrar a mudança.
+   */
+  type?: "gif" | "image";
   path?: string;
-  format?: string;
   alt?: string;
   svg?: JSX.Element;
 }
@@ -19,9 +22,10 @@ const features = [
     title: "Sistema de Flashcards Inteligente",
     description:
       "Envie seus materiais em PDF, e nossa IA os converte em flashcards interativos. Foco no que realmente importa, economizando tempo.",
-    type: "video",
-    path: "/videos/pdf-processing.webm",
-    format: "video/webm",
+    // era "video", agora usamos "gif"
+    type: "gif",
+    // exemplo de caminho para gif (ajuste conforme seu repositório real)
+    path: "/ai-pdf.gif",
   },
   {
     title: "IA Avançada",
@@ -35,6 +39,8 @@ const features = [
     title: "Aprendizado por Repetição Espaçada",
     description:
       "Use intervalos de revisão para reforçar o que precisa de mais atenção. Retenha conhecimento por mais tempo com menos esforço.",
+    type: "gif",
+    path: "/spaced-repetition.gif",
   },
 ] as Feature[];
 
@@ -104,27 +110,15 @@ const Item = ({
 };
 
 const Media = ({ feature }: { feature: Feature }) => {
-  const { type, path, format, alt } = feature;
-  const style = "rounded-2xl w-full sm:w-[26rem] aspect-square";
-  const size = { width: 500, height: 500 };
+  const { type, path, alt } = feature;
+  const style = "rounded-2xl w-full sm:w-[26rem]";
+  const size = { width: 640, height: 360 };
 
-  if (type === "video" && path) {
-    return (
-      <video
-        className={`${style} object-cover`}
-        autoPlay
-        muted
-        loop
-        playsInline
-        controls
-        width={size.width}
-        height={size.height}
-      >
-        <source src={path} type={format} />
-      </video>
-    );
-  }
-  if (type === "image" && path) {
+  /**
+   * Removemos completamente a lógica de <video>.
+   * Agora só tratamos imagem/gif de forma unificada.
+   */
+  if ((type === "image" || type === "gif") && path) {
     return (
       <Image
         src={path}
@@ -135,6 +129,8 @@ const Media = ({ feature }: { feature: Feature }) => {
       />
     );
   }
+
+  // Caso não tenha `path` ou `type`, retornamos um fallback
   return <div className={`${style} bg-neutral-700`} />;
 };
 
@@ -163,10 +159,7 @@ export function FeaturesAccordion() {
                 />
               ))}
             </ul>
-            <Media
-              feature={features[featureSelected]}
-              key={featureSelected}
-            />
+            <Media feature={features[featureSelected]} key={featureSelected} />
           </div>
         </div>
       </div>

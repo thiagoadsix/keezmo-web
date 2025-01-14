@@ -6,7 +6,7 @@ import { Button } from "@/src/components/ui/button";
 
 export function HeroSection() {
   return (
-    <section className="flex min-h-[80vh] items-center justify-center bg-background">
+    <section className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center max-w-screen-md mx-auto">
         <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
           Crie flashcards inteligentes em segundos
