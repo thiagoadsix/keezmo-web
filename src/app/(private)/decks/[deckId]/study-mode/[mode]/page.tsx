@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -36,9 +36,8 @@ interface QuestionWithMetadata extends Question {
 }
 
 export default function StudyPage() {
-  const searchParams = useSearchParams();
-  const studyMode = searchParams.get("mode") as "multiple-choice" | "flashcard";
-  const { deckId } = useParams();
+  const { deckId, mode } = useParams();
+  const studyMode = mode as "multiple-choice" | "flashcard";
   const { user } = useUser();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
