@@ -379,32 +379,25 @@ export default function StudyPage() {
           </div>
         ) : (
           <div>
-            {!isAnswerRevealed ? (
-              <Button onClick={handleRevealAnswer}>Revelar resposta</Button>
-            ) : (
-              <p>{currentQuestionData.correctAnswer}</p>
-            )}
+            <p className={`${isAnswerRevealed ? 'block' : 'hidden'}`}>
+              {currentQuestionData.correctAnswer}
+            </p>
           </div>
         )}
 
-        <div className="flex justify-end">
-          {studyMode === 'multiple-choice' ? (
-            !isAnswerConfirmed ? (
-              <Button
-                onClick={handleConfirmAnswer}
-                disabled={!selectedOption}
-                variant="outline"
-              >
-                Confirmar resposta
-              </Button>
-            ) : (
-              <Button onClick={handleNext}>Próxima questão →</Button>
-            )
-          ) : (
-            <Button onClick={handleNext} disabled={!isAnswerRevealed}>
-              {isAnswerRevealed ? 'Próxima questão →' : 'Revelar resposta para continuar'}
-            </Button>
-          )}
+        <div className="flex justify-center">
+          <Button
+            onClick={() => {
+              if (!isAnswerRevealed) {
+                handleRevealAnswer();
+              } else {
+                handleNext();
+              }
+            }}
+            className="w-auto"
+          >
+            Próxima questão →
+          </Button>
         </div>
       </div>
     </div>
