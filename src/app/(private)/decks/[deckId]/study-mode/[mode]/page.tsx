@@ -380,7 +380,7 @@ export default function StudyPage() {
         ) : (
           <div>
             {!isAnswerRevealed ? (
-              <Button onClick={handleRevealAnswer}>Reveal Answer</Button>
+              <Button onClick={handleRevealAnswer}>Revelar resposta</Button>
             ) : (
               <p>{currentQuestionData.correctAnswer}</p>
             )}
@@ -402,7 +402,7 @@ export default function StudyPage() {
             )
           ) : (
             <Button onClick={handleNext} disabled={!isAnswerRevealed}>
-              {isAnswerRevealed ? 'Next Question' : 'Reveal Answer to Continue'}
+              {isAnswerRevealed ? 'Próxima questão →' : 'Revelar resposta para continuar'}
             </Button>
           )}
         </div>
