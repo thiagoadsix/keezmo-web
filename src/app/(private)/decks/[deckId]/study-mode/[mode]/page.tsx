@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import {
   calculateNextInterval,
@@ -396,7 +396,14 @@ export default function StudyPage() {
             }}
             className="w-auto"
           >
-            Próxima questão →
+            {!isAnswerRevealed ? (
+              'Revelar resposta'
+            ) : (
+              <div className="flex items-center gap-2">
+                <span>Ir para próxima</span>
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            )}
           </Button>
         </div>
       </div>
