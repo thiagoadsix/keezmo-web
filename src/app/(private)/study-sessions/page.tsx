@@ -8,7 +8,7 @@ import { apiClient } from "@/src/lib/api-client";
 export default async function StudySessionsPage() {
   const { getToken, userId } = await auth();
   const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
-  const studySessionsResponse = await apiClient<StudySession[]>('api/study-sessions', {
+  const studySessionsResponse = await apiClient<StudySession[]>('api/study-sessions/multiple-choices', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${await getToken()}`,

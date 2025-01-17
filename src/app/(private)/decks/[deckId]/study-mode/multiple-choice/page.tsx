@@ -247,7 +247,7 @@ export default function StudyPage() {
         (a, b) => b.errors - a.errors
       );
 
-      const response = await apiClient(`api/study-sessions`, {
+      const response = await apiClient(`api/study-sessions/multiple-choices`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { QueryCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDbClient } from "../clients/dynamodb";
+import { dynamoDbClient } from "../../clients/dynamodb";
 import { StudySession } from "@/types/study";
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME

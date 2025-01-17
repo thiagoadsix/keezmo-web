@@ -37,7 +37,7 @@ export function RecentActivity() {
             },
             cache: 'no-store'
           }),
-          apiClient<StudySession[]>(`api/study-sessions`, {
+          apiClient<StudySession[]>(`api/study-sessions/multiple-choices`, {
             headers: {
               'x-user-email': user.emailAddresses[0].emailAddress!
             },
