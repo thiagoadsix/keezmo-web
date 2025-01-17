@@ -3,7 +3,7 @@ import { QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { dynamoDbClient } from "../../../clients/dynamodb";
 import { CardProgress } from "@/types/card-progress";
 
-const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || "";
+const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,24 +16,18 @@ export async function GET(req: NextRequest) {
     const searchParams = new URL(req.url).searchParams;
     const deckId = searchParams.get("deckId");
 
-    const queryParams: any = {
+    const command = new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
       ExpressionAttributeValues: {
         ":pk": `USER#${userEmail}`,
         ":sk": "CARD_PROGRESS#",
         ":type": "flashcard",
+        ":deckId": deckId
       },
-      FilterExpression: "type = :type",
+      FilterExpression: "type = :type AND deckId = :deckId",
 
-    };
-
-    if (deckId) {
-      queryParams.FilterExpression += " AND deckId = :deckId";
-      queryParams.ExpressionAttributeValues[":deckId"] = deckId;
-    }
-
-    const command = new QueryCommand(queryParams);
+    });
     const response = await dynamoDbClient.send(command);
 
     const responseItems: CardProgress[] = (response.Items || []).map((item) => {

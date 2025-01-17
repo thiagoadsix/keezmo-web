@@ -390,7 +390,7 @@ export function RecentActivity() {
         <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
           <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">
-              Sessões (Flashcards)
+              Sessões (Flashcard)
             </h2>
             {renderFlashcardSessions()}
           </div>
