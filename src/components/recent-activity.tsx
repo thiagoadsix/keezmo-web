@@ -138,6 +138,7 @@ export function RecentActivity() {
     }
 
     if (state.multipleChoices.length > 0) {
+      console.log({mc: state.multipleChoices});
       return (
         <>
           <div className="flex flex-col gap-4">
