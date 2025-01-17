@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { dynamoDbClient } from '../../clients/dynamodb';
+import { dynamoDbClient } from '../../../clients/dynamodb';
 import { CardProgress } from '@/types/card-progress';
 
-const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
+const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME
 
 export async function GET(req: NextRequest) {
-  console.log('➡️ [GET /api/cards/progress] Request received');
-
   try {
     const userEmail = req.headers.get('x-user-email');
-    console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
     if (!userEmail) {
-      console.warn('⚠️ [Auth] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -28,43 +24,34 @@ export async function GET(req: NextRequest) {
         ':sk': 'CARD_PROGRESS#'
       },
       ...(deckId && {
-        FilterExpression: 'deckId = :deckId',
+        FilterExpression: 'deckId = :deckId AND type = :type',
         ExpressionAttributeValues: {
           ':pk': `USER#${userEmail}`,
           ':sk': 'CARD_PROGRESS#',
-          ':deckId': deckId
+          ':deckId': deckId,
+          ':type': 'multipleChoice'
         }
       })
     });
 
     const response = await dynamoDbClient.send(command);
-    console.log(`📦 [DynamoDB] Retrieved ${response.Items?.length || 0} card progress records`);
     const responseItems: CardProgress[] = (response.Items || []).map((item) => item as CardProgress);
 
     return NextResponse.json(responseItems, { status: 200 });
-
   } catch (error: any) {
-    console.error('❌ [Error] Failed to fetch card progress:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
-  console.log('➡️ [POST /api/cards/progress] Request received');
-
   try {
     const userEmail = req.headers.get('x-user-email');
-    console.log(`📍 [Auth] User email from request: ${userEmail || 'none'}`);
 
     if (!userEmail) {
-      console.warn('⚠️ [Auth] Unauthorized access attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body: CardProgress = await req.json();
-    console.log('📝 [Request] Card progress data:', body);
-
-    const timestamp = new Date().toISOString();
 
     const command = new PutCommand({
       TableName: TABLE_NAME,
@@ -79,18 +66,16 @@ export async function POST(req: NextRequest) {
         consecutiveHits: body.consecutiveHits,
         totalAttempts: body.totalAttempts,
         totalErrors: body.totalErrors,
-        createdAt: timestamp,
-        updatedAt: timestamp
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        type: "multipleChoice"
       }
     });
 
     await dynamoDbClient.send(command);
-    console.log('✨ [DynamoDB] Successfully updated card progress');
 
-    return NextResponse.json({}, { status: 200 });
-
+    return NextResponse.json({ }, { status: 200 });
   } catch (error: any) {
-    console.error('❌ [Error] Failed to update card progress:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

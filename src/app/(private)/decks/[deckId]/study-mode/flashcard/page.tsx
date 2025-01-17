@@ -8,16 +8,25 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { StudyProgress } from "@/src/components/study-progress";
 import { apiClient } from "@/src/lib/api-client";
+import { calculateNextFlashcardInterval, calculateNextFlashcardReview } from "@/src/lib/flashcard-spaced-repetition";
 
 export type Question = {
   id: string;
   question: string;
   options: string[];
   correctAnswer: string;
-  attempts: number;
-  errors: number;
   lastAttempt?: Date;
+  interval?: number;
+  nextReview?: string;
 };
+
+interface FlashcardProgress {
+  cardId: string;
+  deckId: string;
+  interval: number;
+  nextReview: string;
+  rating: "easy" | "normal" | "hard"
+}
 
 export default function FlashcardStudyPage() {
   const { deckId } = useParams();
@@ -34,49 +43,128 @@ export default function FlashcardStudyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Buscar cards e (opcional) progresso atual
   useEffect(() => {
-    const fetchQuestions = async () => {
+    async function fetchQuestionsAndProgress() {
       try {
-        const response = await apiClient(`api/decks/${deckId}/cards`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
+        // 1) buscar cards
+        const [cardsResponse, flashProgressResponse] = await Promise.all([
+          apiClient(`api/decks/${deckId}/cards`, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            cache: "no-store",
+          }),
+          // Se desejar manter progresso individual:
+          apiClient(`api/cards/progress/flashcards?deckId=${deckId}`, {
+            headers: {
+              "Content-Type": "application/json",
+              "x-user-email": user?.emailAddresses[0].emailAddress!,
+            },
+            cache: "no-store",
+          }),
+        ]);
+
+        if (!cardsResponse.ok) throw new Error("Failed to fetch questions");
+        const cardsData: Question[] = await cardsResponse.json();
+
+        // 2) mesclar progresso, se quiser
+        let progressData: any[] = [];
+        if (flashProgressResponse.ok) {
+          progressData = await flashProgressResponse.json();
+        }
+
+        // ex: cria map de progresso { [cardId]: { interval, nextReview, ... } }
+        const progressMap = new Map<string, FlashcardProgress>();
+        progressData.forEach((p: FlashcardProgress) => {
+          progressMap.set(p.cardId, p);
         });
 
-        if (!response.ok) throw new Error("Failed to fetch questions");
-        const data = await response.json();
-        setQuestions(data as Question[]);
+        // 3) mesclar cada card com seu progresso
+        const enrichedCards = cardsData.map((card: Question) => {
+          const p = progressMap.get(card.id);
+          return {
+            ...card,
+            interval: p?.interval || 0,
+            nextReview: p?.nextReview || new Date().toISOString(),
+          };
+        });
+
+        setQuestions(enrichedCards);
         setStartTime(new Date().toISOString());
       } catch (error) {
-        console.error("Failed to fetch questions:", error);
+        console.error("Failed to fetch flashcard questions:", error);
         setError("Erro ao carregar as perguntas");
       } finally {
         setIsLoading(false);
       }
-    };
+    }
 
-    fetchQuestions();
-  }, [deckId]);
+    if (deckId) {
+      fetchQuestionsAndProgress();
+    }
+  }, [deckId, user]);
 
   const handleRevealAnswer = () => {
     setIsAnswerRevealed(true);
   };
 
   const handleNext = () => {
+    // marca rating como required
+    if (!ratings[questions[currentQuestion].id]) {
+      return;
+    }
+    // passa para próxima
     if (currentQuestion < questions.length - 1) {
       setIsAnswerRevealed(false);
       setCurrentQuestion((prev) => prev + 1);
     } else {
+      // ultima, finaliza
       handleStudyComplete();
     }
   };
 
+  /** Ao finalizar a sessão:
+   * 1) para cada card, calculamos o nextInterval & nextReview
+   * 2) salvamos no DB (api/cards/progress/flashcards)
+   * 3) criamos (opcional) a study session
+  */
   const handleStudyComplete = async () => {
     try {
       const endTime = new Date().toISOString();
 
-      const response = await apiClient(`api/study-sessions/flashcards`, {
+      // 1) Para cada [cardId, rating], atualizamos progresso
+      for (const [questionId, rating] of Object.entries(ratings)) {
+        const card = questions.find((q) => q.id === questionId);
+        if (!card) continue; // segurança
+
+        // calcula newInterval & newReview
+        const newInterval = calculateNextFlashcardInterval(
+          rating,
+          card.interval || 0
+        );
+        const newReview = calculateNextFlashcardReview(newInterval);
+
+        // Chamar POST /api/cards/progress/flashcards
+        await apiClient(`api/cards/progress/flashcards`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-email": user?.emailAddresses[0].emailAddress!,
+          },
+          body: JSON.stringify({
+            cardId: questionId,
+            deckId,
+            rating,
+            interval: newInterval,
+            nextReview: newReview,
+            lastReviewed: new Date().toISOString(),
+          }),
+        });
+      }
+
+      // 2) Salvar a study session no /api/study-sessions/flashcards
+      const sessionResp = await apiClient(`api/study-sessions/flashcards`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,10 +183,11 @@ export default function FlashcardStudyPage() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to save study session");
+      if (!sessionResp.ok) throw new Error("Failed to save study session");
+
       setIsCompleted(true);
     } catch (error) {
-      console.error("Failed to save study session:", error);
+      console.error("Failed to save flashcard progress/study session:", error);
     }
   };
 

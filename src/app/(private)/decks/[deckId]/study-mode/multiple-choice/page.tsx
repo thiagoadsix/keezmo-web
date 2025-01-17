@@ -73,7 +73,7 @@ export default function StudyPage() {
             },
             cache: "no-store",
           }),
-          apiClient<CardProgress[]>(`api/cards/progress?deckId=${deckId}`, {
+          apiClient<CardProgress[]>(`api/cards/progress/multiple-choices?deckId=${deckId}`, {
             headers: {
               "Content-Type": "application/json",
               "x-user-email": user?.emailAddresses[0].emailAddress!,
@@ -197,7 +197,7 @@ export default function StudyPage() {
     setQuestionsMetadata((prev) => new Map(prev).set(questionId, metadata));
 
     try {
-      const response = await apiClient(`api/cards/progress`, {
+      const response = await apiClient(`api/cards/progress/multiple-choices`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
