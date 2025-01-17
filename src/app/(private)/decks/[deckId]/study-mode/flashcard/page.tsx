@@ -327,13 +327,6 @@ export default function FlashcardStudyPage() {
           <p>{card.correctAnswer}</p>
         )}
 
-        {/* Exibir contadores de avaliação */}
-        <div className="flex justify-center gap-4 mt-2">
-          <span className="text-green-600">Fácil: {card.easyCount}</span>
-          <span className="text-yellow-500">Normal: {card.normalCount}</span>
-          <span className="text-red-500">Difícil: {card.hardCount}</span>
-        </div>
-
         {/* Botões de rating - só aparecem após revelar */}
         {isAnswerRevealed && (
           <div className="flex justify-center gap-3">
