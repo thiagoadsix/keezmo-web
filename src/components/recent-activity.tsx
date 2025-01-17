@@ -141,10 +141,12 @@ export function RecentActivity() {
       return (
         <>
           <div className="flex flex-col gap-4">
-            {state.multipleChoices.map((session, index) => (
-              <React.Fragment key={session.id}>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-primary">
+            {state.multipleChoices
+              .filter((session) => session.studyType === "multipleChoice")
+              .map((session, index) => (
+                <React.Fragment key={session.id}>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-primary">
                     {session.deck?.title || "Deck não encontrado"}
                   </h3>
                   <div className="flex flex-row gap-4">
@@ -216,10 +218,13 @@ export function RecentActivity() {
       return (
         <>
           <div className="flex flex-col gap-4">
-            {state.flashcards.map((session, index) => {
-              // Calcular quantos easies, normals, hards
-              const easyCount =
-                session.ratings?.filter((r) => r.rating === "easy").length || 0;
+            {state.flashcards
+              .filter((session) => session.studyType === "flashcard")
+              .map((session, index) => {
+                // Calcular quantos easies, normals, hards
+                const easyCount =
+                  session.ratings?.filter((r) => r.rating === "easy").length ||
+                  0;
               const normalCount =
                 session.ratings?.filter((r) => r.rating === "normal").length ||
                 0;
@@ -373,7 +378,7 @@ export function RecentActivity() {
         <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
           <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">
-              Sessões (Multiple Choice)
+              Sessões (Múltipla Escolha)
             </h2>
             {renderMultipleChoiceSessions()}
           </div>
