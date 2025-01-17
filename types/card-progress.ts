@@ -11,4 +11,7 @@ export type CardProgress = {
   lastReviewed: string;
   updatedAt: string;
   rating: "easy" | "normal" | "hard";
+  easyCount?: number;
+  normalCount?: number;
+  hardCount?: number;
 };

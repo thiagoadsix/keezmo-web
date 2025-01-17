@@ -31,6 +31,9 @@ export type Question = {
   nextReview?: string;
   totalAttempts?: number;
   totalErrors?: number;
+  easyCount?: number;
+  normalCount?: number;
+  hardCount?: number;
 };
 
 export default function FlashcardStudyPage() {
@@ -44,7 +47,9 @@ export default function FlashcardStudyPage() {
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
   // ratings: { [cardId]: "easy" | "normal" | "hard" }
-  const [ratings, setRatings] = useState<Record<string, "easy" | "normal" | "hard">>({});
+  const [ratings, setRatings] = useState<
+    Record<string, "easy" | "normal" | "hard">
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,7 +98,9 @@ export default function FlashcardStudyPage() {
             nextReview: p?.nextReview || new Date().toISOString(),
             totalAttempts: p?.totalAttempts || 0,
             totalErrors: p?.totalErrors || 0,
-            // Se quiser counters (easyCount, etc.), também pode mesclar aqui
+            easyCount: p?.easyCount || 0,
+            normalCount: p?.normalCount || 0,
+            hardCount: p?.hardCount || 0,
           };
         });
 
@@ -111,13 +118,6 @@ export default function FlashcardStudyPage() {
   }, [deckId, user]);
 
   /**
-   * "Revelar resposta"
-   */
-  const handleRevealAnswer = () => {
-    setIsAnswerRevealed(true);
-  };
-
-  /**
    * Quando o usuário clica em "Próxima" (já escolheu rating),
    * salvamos imediatamente o progresso desse cartão.
    */
@@ -128,7 +128,8 @@ export default function FlashcardStudyPage() {
 
     // Calcula interval + nextReview
     const totalAtt = (card.totalAttempts || 0) + 1;
-    const totalErr = rating === "hard" ? (card.totalErrors || 0) + 1 : card.totalErrors || 0;
+    const totalErr =
+      rating === "hard" ? (card.totalErrors || 0) + 1 : card.totalErrors || 0;
 
     const newInterval = calculateNextFlashcardInterval(
       rating,
@@ -153,10 +154,8 @@ export default function FlashcardStudyPage() {
           interval: newInterval,
           nextReview: newReview,
           lastReviewed: new Date().toISOString(),
-          // guardando info de tentativas/erros
           totalAttempts: totalAtt,
           totalErrors: totalErr,
-          // se quiser counters do rating, ex: easyCount, normalCount, etc.
         }),
       });
     } catch (err) {
@@ -166,21 +165,38 @@ export default function FlashcardStudyPage() {
     // Limpa a resposta revelada
     setIsAnswerRevealed(false);
 
+    // Atualiza localmente os contadores
+    setQuestions((prev) => {
+      const newQuestions = [...prev];
+      const updatedCard = {
+        ...card,
+        interval: newInterval,
+        nextReview: newReview,
+        totalAttempts: totalAtt,
+        totalErrors: totalErr,
+      };
+
+      // Incrementa o contador correspondente
+      switch (rating) {
+        case "easy":
+          updatedCard.easyCount = (updatedCard.easyCount || 0) + 1;
+          break;
+        case "normal":
+          updatedCard.normalCount = (updatedCard.normalCount || 0) + 1;
+          break;
+        case "hard":
+          updatedCard.hardCount = (updatedCard.hardCount || 0) + 1;
+          break;
+        default:
+          break;
+      }
+
+      newQuestions[currentQuestionIndex] = updatedCard;
+      return newQuestions;
+    });
+
     // Avança ou finaliza
     if (currentQuestionIndex < questions.length - 1) {
-      setQuestions((prev) => {
-        // atualiza localmente também, para manter a coerência (opcional)
-        const newQuestions = [...prev];
-        newQuestions[currentQuestionIndex] = {
-          ...card,
-          interval: newInterval,
-          nextReview: newReview,
-          totalAttempts: totalAtt,
-          totalErrors: totalErr,
-        };
-        return newQuestions;
-      });
-
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
       handleStudyComplete();
@@ -307,11 +323,16 @@ export default function FlashcardStudyPage() {
         <h2 className="text-xl font-medium">{card.question}</h2>
 
         {/* Resposta */}
-        {isAnswerRevealed ? (
+        {isAnswerRevealed ?? (
           <p>{card.correctAnswer}</p>
-        ) : (
-          <p className="italic text-neutral-500 text-sm">Clique em "Revelar resposta"</p>
         )}
+
+        {/* Exibir contadores de avaliação */}
+        <div className="flex justify-center gap-4 mt-2">
+          <span className="text-green-600">Fácil: {card.easyCount}</span>
+          <span className="text-yellow-500">Normal: {card.normalCount}</span>
+          <span className="text-red-500">Difícil: {card.hardCount}</span>
+        </div>
 
         {/* Botões de rating - só aparecem após revelar */}
         {isAnswerRevealed && (
@@ -367,16 +388,16 @@ export default function FlashcardStudyPage() {
               }
             }}
           >
-            {!isAnswerRevealed
-              ? "Revelar resposta"
-              : currentQuestionIndex < questions.length - 1
-              ? (
-                <div className="flex items-center gap-2">
-                  <span>Ir para próxima</span>
-                  <ArrowRight className="h-4 w-4" />
-                </div>
-              )
-              : "Finalizar Sessão"}
+            {!isAnswerRevealed ? (
+              "Revelar resposta"
+            ) : currentQuestionIndex < questions.length - 1 ? (
+              <div className="flex items-center gap-2">
+                <span>Ir para próxima</span>
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            ) : (
+              "Finalizar Sessão"
+            )}
           </Button>
         </div>
       </div>
