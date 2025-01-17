@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       ":rating": body.rating,
       ":lastReviewed": body.lastReviewed || now,
       ":nextReview": body.nextReview || now,
-      ":interval": body.interval || 0,
+      ":reviewInterval": body.interval || 0,
       ":totalAttempts": body.totalAttempts || 0,
       ":totalErrors": body.totalErrors || 0,
       ":updatedAt": now,
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
           rating = :rating,
           lastReviewed = :lastReviewed,
           nextReview = :nextReview,
-          interval = :interval,
+          interval = :reviewInterval,
           totalAttempts = :totalAttempts,
           totalErrors = :totalErrors,
           updatedAt = :updatedAt
