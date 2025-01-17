@@ -8,11 +8,6 @@ export interface QuestionMetadata {
   nextReview: string;
 }
 
-export interface FlashcardRating {
-  questionId: string;
-  rating: "easy" | "normal" | "hard";
-}
-
 export interface StudySession {
   id: string;
   deckId: string;
@@ -20,14 +15,26 @@ export interface StudySession {
   startTime: string;
   endTime: string;
   createdAt: string;
+
+  hits?: number;
+  misses?: number;
+  questionsMetadata?: {
+    questionId: string;
+    attempts: number;
+    errors: number;
+  }[];
+
+  ratings?: {
+    questionId: string;
+    rating: "easy" | "normal" | "hard";
+  }[];
+
+  studyType?: 'multipleChoice' | 'flashcard';
+
   deck?: {
     id: string;
     title: string;
     description: string;
     totalCards: number;
   };
-  hits?: number;
-  misses?: number;
-  questionsMetadata?: QuestionMetadata[];
-  ratings?: FlashcardRating[];
 }

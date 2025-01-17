@@ -261,6 +261,7 @@ export default function StudyPage() {
           startTime,
           endTime,
           questionsMetadata: metadataArray,
+          studyType: "multipleChoice",
         }),
       });
 

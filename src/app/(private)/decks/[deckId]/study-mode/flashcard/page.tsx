@@ -76,7 +76,7 @@ export default function FlashcardStudyPage() {
     try {
       const endTime = new Date().toISOString();
 
-      const response = await apiClient(`api/study-sessions`, {
+      const response = await apiClient(`api/study-sessions/flashcards`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,6 +91,7 @@ export default function FlashcardStudyPage() {
             questionId,
             rating,
           })),
+          studyType: "flashcard",
         }),
       });
 
