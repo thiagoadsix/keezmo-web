@@ -1,9 +1,81 @@
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { NextRequest, NextResponse } from "next/server";
+import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { StudySession } from "@/types/study";
 import { dynamoDbClient } from "../../clients/dynamodb";
 
 const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME;
+
+export async function GET(req: NextRequest) {
+  const userEmail = req.headers.get("x-user-email");
+
+  if (!userEmail) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const command = new QueryCommand({
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+    ExpressionAttributeValues: {
+      ":pk": `USER#${userEmail}`,
+      ":sk": "STUDY_SESSION#",
+    },
+  });
+
+  const response = await dynamoDbClient.send(command);
+
+  const studySessions: StudySession[] = await Promise.all(
+    (response.Items || []).map(async (item): Promise<StudySession> => {
+      const deckId = String(item.deckId);
+
+      const deckCommand = new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          pk: `USER#${userEmail}`,
+          sk: `DECK#${deckId}`,
+        },
+      });
+
+      const cardsCommand = new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+        ExpressionAttributeValues: {
+          ":pk": `DECK#${deckId}`,
+          ":sk": "CARD#",
+        },
+      });
+
+      const [deckResponse, cardsResponse] = await Promise.all([
+        dynamoDbClient.send(deckCommand),
+        dynamoDbClient.send(cardsCommand),
+      ]);
+
+      const deck = deckResponse.Item;
+      const cards = cardsResponse.Items;
+
+      return {
+        id: String(item.id),
+        deckId,
+        totalQuestions: Number(item.totalQuestions),
+        startTime: String(item.startTime),
+        endTime: String(item.endTime),
+        createdAt: String(item.createdAt),
+        studyType: item.studyType as "multipleChoice" | "flashcard",
+        ratings: item.ratings,
+        deck: deck
+          ? {
+              id: String(deck.id),
+              title: String(deck.title),
+              description: String(deck.description),
+              totalCards: cards?.length || 0,
+            }
+          : undefined,
+      };
+    })
+  );
+
+  return NextResponse.json(studySessions, { status: 200 });
+}
 
 type Request = Pick<
   StudySession,

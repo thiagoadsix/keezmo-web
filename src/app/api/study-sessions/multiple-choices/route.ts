@@ -75,15 +75,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(studySessions, { status: 200 });
   } catch (error: any) {
-    console.error("❌ [Error] Failed to fetch study sessions:", {
-      error: {
-        message: error?.message,
-        name: error?.name,
-        stack: error?.stack,
-      },
-      tableName: TABLE_NAME,
-    });
-
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
@@ -108,7 +99,6 @@ export async function POST(req: NextRequest) {
     const userEmail = req.headers.get("x-user-email");
 
     if (!userEmail) {
-      console.warn("⚠️ [Auth] Unauthorized access attempt");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
