@@ -93,6 +93,7 @@ export function RecentActivity() {
 
         // Pegamos as 2 sessões de multiple choices mais recentes
         const recentMultipleChoices = multipleChoicesData
+          .filter((session) => session.studyType === "multipleChoice")
           .sort(
             (a: StudySession, b: StudySession) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -101,6 +102,7 @@ export function RecentActivity() {
 
         // Pegamos as 2 sessões de flashcards mais recentes
         const recentFlashcards = flashcardsData
+          .filter((session) => session.studyType === "flashcard")
           .sort(
             (a: StudySession, b: StudySession) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -138,7 +140,6 @@ export function RecentActivity() {
     }
 
     if (state.multipleChoices.length > 0) {
-      console.log({mc: state.multipleChoices});
       return (
         <>
           <div className="flex flex-col gap-4">
