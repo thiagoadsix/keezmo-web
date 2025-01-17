@@ -10,7 +10,7 @@ export interface QuestionMetadata {
 
 export interface FlashcardRating {
   questionId: string;
-  rating: "easy" | "normal" | "hard" | null;
+  rating: "easy" | "normal" | "hard";
 }
 
 export interface StudySession {

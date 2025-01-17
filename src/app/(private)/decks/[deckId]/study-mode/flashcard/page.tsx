@@ -27,7 +27,7 @@ export default function FlashcardStudyPage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
-  const [rating, setRating] = useState<"easy" | "normal" | "hard" | null>(null);
+  const [ratings, setRatings] = useState<Record<string, "easy" | "normal" | "hard">>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +62,6 @@ export default function FlashcardStudyPage() {
 
   const handleNext = () => {
     setIsAnswerRevealed(false);
-    setRating(null);
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
@@ -86,9 +85,9 @@ export default function FlashcardStudyPage() {
           totalQuestions: questions.length,
           startTime,
           endTime,
-          ratings: questions.map((question, index) => ({
-            questionId: question.id,
-            rating: index === currentQuestion ? rating : null,
+          ratings: Object.entries(ratings).map(([questionId, rating]) => ({
+            questionId,
+            rating,
           })),
         }),
       });
@@ -166,20 +165,23 @@ export default function FlashcardStudyPage() {
         {isAnswerRevealed && (
           <div className="flex justify-center gap-4">
             <Button
-              onClick={() => setRating("easy")}
-              variant={rating === "easy" ? "default" : "outline"}
+              onClick={() => setRatings((prev) => ({ ...prev, [currentQuestionData.id]: "easy" }))}
+              variant={ratings[currentQuestionData.id] === "easy" ? "default" : "outline"}
+              className="bg-green-500 hover:bg-green-600 text-white"
             >
               Fácil
             </Button>
             <Button
-              onClick={() => setRating("normal")}
-              variant={rating === "normal" ? "default" : "outline"}
+              onClick={() => setRatings((prev) => ({ ...prev, [currentQuestionData.id]: "normal" }))}
+              variant={ratings[currentQuestionData.id] === "normal" ? "default" : "outline"}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white"
             >
               Normal
             </Button>
             <Button
-              onClick={() => setRating("hard")}
-              variant={rating === "hard" ? "default" : "outline"}
+              onClick={() => setRatings((prev) => ({ ...prev, [currentQuestionData.id]: "hard" }))}
+              variant={ratings[currentQuestionData.id] === "hard" ? "default" : "outline"}
+              className="bg-red-500 hover:bg-red-600 text-white"
             >
               Difícil
             </Button>
@@ -196,6 +198,7 @@ export default function FlashcardStudyPage() {
               }
             }}
             className="w-auto"
+            disabled={isAnswerRevealed && !ratings[currentQuestionData.id]}
           >
             {!isAnswerRevealed ? (
               'Revelar resposta'
