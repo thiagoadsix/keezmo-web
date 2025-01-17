@@ -8,7 +8,10 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { StudyProgress } from "@/src/components/study-progress";
 import { apiClient } from "@/src/lib/api-client";
-import { calculateNextFlashcardInterval, calculateNextFlashcardReview } from "@/src/lib/flashcard-spaced-repetition";
+import {
+  calculateNextFlashcardInterval,
+  calculateNextFlashcardReview,
+} from "@/src/lib/flashcard-spaced-repetition";
 
 export type Question = {
   id: string;
@@ -25,7 +28,8 @@ interface FlashcardProgress {
   deckId: string;
   interval: number;
   nextReview: string;
-  rating: "easy" | "normal" | "hard"
+  rating: "easy" | "normal" | "hard";
+  lastReviewed?: string;
 }
 
 export default function FlashcardStudyPage() {
@@ -33,29 +37,28 @@ export default function FlashcardStudyPage() {
   const { user } = useUser();
 
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
-  const [ratings, setRatings] = useState<
-    Record<string, "easy" | "normal" | "hard">
-  >({});
+
+  // ratings guarda o rating de cada card (por id)
+  const [ratings, setRatings] = useState<Record<string, "easy" | "normal" | "hard">>({});
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Buscar cards e (opcional) progresso atual
+  /**
+   * Busca as perguntas + (opcional) progresso atual de cada cartão
+   */
   useEffect(() => {
     async function fetchQuestionsAndProgress() {
       try {
-        // 1) buscar cards
         const [cardsResponse, flashProgressResponse] = await Promise.all([
           apiClient(`api/decks/${deckId}/cards`, {
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             cache: "no-store",
           }),
-          // Se desejar manter progresso individual:
           apiClient(`api/cards/progress/flashcards?deckId=${deckId}`, {
             headers: {
               "Content-Type": "application/json",
@@ -65,23 +68,24 @@ export default function FlashcardStudyPage() {
           }),
         ]);
 
-        if (!cardsResponse.ok) throw new Error("Failed to fetch questions");
+        if (!cardsResponse.ok) {
+          throw new Error("Failed to fetch questions");
+        }
         const cardsData: Question[] = await cardsResponse.json();
 
-        // 2) mesclar progresso, se quiser
-        let progressData: any[] = [];
+        let progressData: FlashcardProgress[] = [];
         if (flashProgressResponse.ok) {
           progressData = await flashProgressResponse.json();
         }
 
-        // ex: cria map de progresso { [cardId]: { interval, nextReview, ... } }
+        // Cria um Map para acessar progresso por cardId
         const progressMap = new Map<string, FlashcardProgress>();
-        progressData.forEach((p: FlashcardProgress) => {
+        progressData.forEach((p) => {
           progressMap.set(p.cardId, p);
         });
 
-        // 3) mesclar cada card com seu progresso
-        const enrichedCards = cardsData.map((card: Question) => {
+        // Mesclamos interval / nextReview, se existir
+        const enriched = cardsData.map((card) => {
           const p = progressMap.get(card.id);
           return {
             ...card,
@@ -90,10 +94,10 @@ export default function FlashcardStudyPage() {
           };
         });
 
-        setQuestions(enrichedCards);
+        setQuestions(enriched);
         setStartTime(new Date().toISOString());
-      } catch (error) {
-        console.error("Failed to fetch flashcard questions:", error);
+      } catch (err) {
+        console.error("Failed to fetch flashcard questions:", err);
         setError("Erro ao carregar as perguntas");
       } finally {
         setIsLoading(false);
@@ -105,65 +109,73 @@ export default function FlashcardStudyPage() {
     }
   }, [deckId, user]);
 
+  /**
+   * Quando o usuário clica em “Revelar resposta”
+   */
   const handleRevealAnswer = () => {
     setIsAnswerRevealed(true);
   };
 
-  const handleNext = () => {
-    // marca rating como required
-    if (!ratings[questions[currentQuestion].id]) {
-      return;
+  /**
+   * Chamada cada vez que avançamos para a “próxima” questão.
+   * Aqui já salvamos o progresso do cartão atual (rating + interval + nextReview).
+   */
+  const handleNext = async () => {
+    const currentCard = questions[currentQuestionIndex];
+    const rating = ratings[currentCard.id];
+
+    if (!rating) {
+      return; // não pode avançar se não escolheu rating
     }
-    // passa para próxima
-    if (currentQuestion < questions.length - 1) {
-      setIsAnswerRevealed(false);
-      setCurrentQuestion((prev) => prev + 1);
+
+    try {
+      // 1) Calcula novo interval + nextReview
+      const newInterval = calculateNextFlashcardInterval(
+        rating,
+        currentCard.interval || 0
+      );
+      const newReview = calculateNextFlashcardReview(newInterval);
+
+      // 2) Salva imediatamente no DB
+      await apiClient(`api/cards/progress/flashcards`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": user?.emailAddresses[0].emailAddress!,
+        },
+        body: JSON.stringify({
+          cardId: currentCard.id,
+          deckId,
+          rating,
+          interval: newInterval,
+          nextReview: newReview,
+          lastReviewed: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.error("⚠️ Erro ao salvar progresso do cartão:", err);
+      // Podemos optar por continuar mesmo assim
+    }
+
+    // Limpa o “isAnswerRevealed”
+    setIsAnswerRevealed(false);
+
+    // Avança ou finaliza
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
     } else {
-      // ultima, finaliza
       handleStudyComplete();
     }
   };
 
-  /** Ao finalizar a sessão:
-   * 1) para cada card, calculamos o nextInterval & nextReview
-   * 2) salvamos no DB (api/cards/progress/flashcards)
-   * 3) criamos (opcional) a study session
-  */
+  /**
+   * Quando chega na última questão, salvamos a “study session”
+   */
   const handleStudyComplete = async () => {
     try {
       const endTime = new Date().toISOString();
 
-      // 1) Para cada [cardId, rating], atualizamos progresso
-      for (const [questionId, rating] of Object.entries(ratings)) {
-        const card = questions.find((q) => q.id === questionId);
-        if (!card) continue; // segurança
-
-        // calcula newInterval & newReview
-        const newInterval = calculateNextFlashcardInterval(
-          rating,
-          card.interval || 0
-        );
-        const newReview = calculateNextFlashcardReview(newInterval);
-
-        // Chamar POST /api/cards/progress/flashcards
-        await apiClient(`api/cards/progress/flashcards`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-email": user?.emailAddresses[0].emailAddress!,
-          },
-          body: JSON.stringify({
-            cardId: questionId,
-            deckId,
-            rating,
-            interval: newInterval,
-            nextReview: newReview,
-            lastReviewed: new Date().toISOString(),
-          }),
-        });
-      }
-
-      // 2) Salvar a study session no /api/study-sessions/flashcards
+      // Salva a "study session" final com as notas de cada pergunta
       const sessionResp = await apiClient(`api/study-sessions/flashcards`, {
         method: "POST",
         headers: {
@@ -183,14 +195,17 @@ export default function FlashcardStudyPage() {
         }),
       });
 
-      if (!sessionResp.ok) throw new Error("Failed to save study session");
+      if (!sessionResp.ok) {
+        throw new Error("Failed to save study session");
+      }
 
       setIsCompleted(true);
-    } catch (error) {
-      console.error("Failed to save flashcard progress/study session:", error);
+    } catch (err) {
+      console.error("⚠️ Erro ao salvar study session:", err);
     }
   };
 
+  // Contagem de quantos “easy”, “normal”, “hard”
   const ratingCounts = Object.values(ratings).reduce(
     (acc, rating) => {
       acc[rating] = (acc[rating] || 0) + 1;
@@ -199,6 +214,7 @@ export default function FlashcardStudyPage() {
     { easy: 0, normal: 0, hard: 0 }
   );
 
+  // Renderização de estados
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -239,7 +255,6 @@ export default function FlashcardStudyPage() {
             Difícil: <strong>{ratingCounts.hard}</strong>
           </p>
         </div>
-
         <Button asChild>
           <Link href="/decks">Voltar para os decks</Link>
         </Button>
@@ -247,10 +262,11 @@ export default function FlashcardStudyPage() {
     );
   }
 
-  const currentQuestionData = questions[currentQuestion];
+  const currentQuestion = questions[currentQuestionIndex];
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto px-8 py-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/decks" className="flex items-center gap-2">
@@ -259,104 +275,91 @@ export default function FlashcardStudyPage() {
           </Link>
         </Button>
         <StudyProgress
-          currentQuestion={currentQuestion}
+          currentQuestion={currentQuestionIndex}
           totalQuestions={questions.length}
         />
       </div>
 
+      {/* Card principal */}
       <div className="bg-[#10111F] border border-neutral-800 rounded-md p-8 flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-medium">
-            {currentQuestionData.question}
-          </h2>
+          <h2 className="text-xl font-medium">{currentQuestion.question}</h2>
         </div>
 
+        {/* Resposta */}
         <div>
           <p className={isAnswerRevealed ? "block" : "hidden"}>
-            {currentQuestionData.correctAnswer}
+            {currentQuestion.correctAnswer}
           </p>
         </div>
 
+        {/* Botões de rating - aparecem após revelar */}
         {isAnswerRevealed && (
           <div className="flex justify-center gap-4">
             <Button
               onClick={() =>
                 setRatings((prev) => ({
                   ...prev,
-                  [currentQuestionData.id]: "easy",
+                  [currentQuestion.id]: "easy",
                 }))
               }
-              className={`text-white px-4
-    ${
-      ratings[currentQuestionData.id] === "easy"
-        ? "bg-green-600 opacity-100"
-        : "bg-green-600 opacity-50"
-    }
-    hover:opacity-80 hover:bg-green-700
-    focus:outline-none focus:ring-0
-  `}
+              className={`text-white px-4 ${
+                ratings[currentQuestion.id] === "easy"
+                  ? "bg-green-600 opacity-100"
+                  : "bg-green-600 opacity-50"
+              } hover:opacity-80 hover:bg-green-700 focus:outline-none focus:ring-0`}
             >
               Fácil
             </Button>
-
             <Button
               onClick={() =>
                 setRatings((prev) => ({
                   ...prev,
-                  [currentQuestionData.id]: "normal",
+                  [currentQuestion.id]: "normal",
                 }))
               }
-              className={`text-white px-4
-    ${
-      ratings[currentQuestionData.id] === "normal"
-        ? "bg-yellow-500 opacity-100"
-        : "bg-yellow-500 opacity-50"
-    }
-    hover:opacity-80 hover:bg-yellow-600
-    focus:outline-none focus:ring-0
-  `}
+              className={`text-white px-4 ${
+                ratings[currentQuestion.id] === "normal"
+                  ? "bg-yellow-500 opacity-100"
+                  : "bg-yellow-500 opacity-50"
+              } hover:opacity-80 hover:bg-yellow-600 focus:outline-none focus:ring-0`}
             >
               Normal
             </Button>
-
             <Button
               onClick={() =>
                 setRatings((prev) => ({
                   ...prev,
-                  [currentQuestionData.id]: "hard",
+                  [currentQuestion.id]: "hard",
                 }))
               }
-              className={`text-white px-4
-    ${
-      ratings[currentQuestionData.id] === "hard"
-        ? "bg-red-500 opacity-100"
-        : "bg-red-500 opacity-50"
-    }
-    hover:opacity-80 hover:bg-red-600
-    focus:outline-none focus:ring-0
-  `}
+              className={`text-white px-4 ${
+                ratings[currentQuestion.id] === "hard"
+                  ? "bg-red-500 opacity-100"
+                  : "bg-red-500 opacity-50"
+              } hover:opacity-80 hover:bg-red-600 focus:outline-none focus:ring-0`}
             >
               Difícil
             </Button>
           </div>
         )}
 
+        {/* Botão "Próxima" ou "Revelar" */}
         <div className="flex justify-center">
           <Button
             onClick={() => {
               if (!isAnswerRevealed) {
-
-                handleRevealAnswer();
+                setIsAnswerRevealed(true);
               } else {
                 handleNext();
               }
             }}
+            disabled={isAnswerRevealed && !ratings[currentQuestion.id]}
             className="w-auto"
-            disabled={isAnswerRevealed && !ratings[currentQuestionData.id]}
           >
             {!isAnswerRevealed ? (
               "Revelar resposta"
-            ) : currentQuestion < questions.length - 1 ? (
+            ) : currentQuestionIndex < questions.length - 1 ? (
               <div className="flex items-center gap-2">
                 <span>Ir para próxima</span>
                 <ArrowRight className="h-4 w-4" />
