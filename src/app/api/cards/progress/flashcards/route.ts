@@ -133,12 +133,15 @@ export async function POST(req: NextRequest) {
           rating = :rating,
           lastReviewed = :lastReviewed,
           nextReview = :nextReview,
-          interval = :reviewInterval,
+          #intervalAttr = :reviewInterval,
           totalAttempts = :totalAttempts,
           totalErrors = :totalErrors,
           updatedAt = :updatedAt
         ${updateExpressions.length > 0 ? ", " + updateExpressions.join(", ") : ""}
       `,
+      ExpressionAttributeNames: {
+        "#intervalAttr": "interval",
+      },
       ExpressionAttributeValues: expressionAttributeValues,
       ReturnValues: "UPDATED_NEW",
     });
