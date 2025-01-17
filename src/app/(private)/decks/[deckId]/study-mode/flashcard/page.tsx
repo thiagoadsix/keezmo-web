@@ -13,24 +13,25 @@ import {
   calculateNextFlashcardReview,
 } from "@/src/lib/flashcard-spaced-repetition";
 
+/**
+ * Cada "Question" pode ter:
+ * - interval (em horas)
+ * - nextReview (ISOString)
+ * - totalAttempts
+ * - totalErrors
+ * - easyCount, normalCount, hardCount, etc. (Opcional)
+ */
 export type Question = {
   id: string;
   question: string;
   options: string[];
   correctAnswer: string;
-  lastAttempt?: Date;
+
   interval?: number;
   nextReview?: string;
+  totalAttempts?: number;
+  totalErrors?: number;
 };
-
-interface FlashcardProgress {
-  cardId: string;
-  deckId: string;
-  interval: number;
-  nextReview: string;
-  rating: "easy" | "normal" | "hard";
-  lastReviewed?: string;
-}
 
 export default function FlashcardStudyPage() {
   const { deckId } = useParams();
@@ -42,101 +43,103 @@ export default function FlashcardStudyPage() {
   const [startTime, setStartTime] = useState<string | null>(null);
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
-  // ratings guarda o rating de cada card (por id)
+  // ratings: { [cardId]: "easy" | "normal" | "hard" }
   const [ratings, setRatings] = useState<Record<string, "easy" | "normal" | "hard">>({});
-
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Busca as perguntas + (opcional) progresso atual de cada cartão
-   */
+  // Busca os cartões e progresso
   useEffect(() => {
-    async function fetchQuestionsAndProgress() {
+    async function fetchCardsAndProgress() {
+      if (!deckId || !user) return;
+
       try {
-        const [cardsResponse, flashProgressResponse] = await Promise.all([
+        const [cardsResp, progressResp] = await Promise.all([
+          // 1) Cards
           apiClient(`api/decks/${deckId}/cards`, {
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
           }),
+          // 2) Progress de flashcards
           apiClient(`api/cards/progress/flashcards?deckId=${deckId}`, {
             headers: {
               "Content-Type": "application/json",
-              "x-user-email": user?.emailAddresses[0].emailAddress!,
+              "x-user-email": user.emailAddresses[0].emailAddress!,
             },
             cache: "no-store",
           }),
         ]);
 
-        if (!cardsResponse.ok) {
-          throw new Error("Failed to fetch questions");
-        }
-        const cardsData: Question[] = await cardsResponse.json();
+        if (!cardsResp.ok) throw new Error("Failed to fetch cards");
+        const cardsData: Question[] = await cardsResp.json();
 
-        let progressData: FlashcardProgress[] = [];
-        if (flashProgressResponse.ok) {
-          progressData = await flashProgressResponse.json();
+        let progressData: any[] = [];
+        if (progressResp.ok) {
+          progressData = await progressResp.json();
         }
 
-        // Cria um Map para acessar progresso por cardId
-        const progressMap = new Map<string, FlashcardProgress>();
-        progressData.forEach((p) => {
+        // Cria um map do progresso
+        const progressMap = new Map<string, any>();
+        for (const p of progressData) {
           progressMap.set(p.cardId, p);
-        });
+        }
 
-        // Mesclamos interval / nextReview, se existir
-        const enriched = cardsData.map((card) => {
-          const p = progressMap.get(card.id);
+        // mesclar
+        const enriched = cardsData.map((c) => {
+          const p = progressMap.get(c.id);
           return {
-            ...card,
+            ...c,
             interval: p?.interval || 0,
             nextReview: p?.nextReview || new Date().toISOString(),
+            totalAttempts: p?.totalAttempts || 0,
+            totalErrors: p?.totalErrors || 0,
+            // Se quiser counters (easyCount, etc.), também pode mesclar aqui
           };
         });
 
         setQuestions(enriched);
         setStartTime(new Date().toISOString());
       } catch (err) {
-        console.error("Failed to fetch flashcard questions:", err);
+        console.error("Erro ao buscar flashcards e progresso:", err);
         setError("Erro ao carregar as perguntas");
       } finally {
         setIsLoading(false);
       }
     }
 
-    if (deckId) {
-      fetchQuestionsAndProgress();
-    }
+    fetchCardsAndProgress();
   }, [deckId, user]);
 
   /**
-   * Quando o usuário clica em “Revelar resposta”
+   * "Revelar resposta"
    */
   const handleRevealAnswer = () => {
     setIsAnswerRevealed(true);
   };
 
   /**
-   * Chamada cada vez que avançamos para a “próxima” questão.
-   * Aqui já salvamos o progresso do cartão atual (rating + interval + nextReview).
+   * Quando o usuário clica em "Próxima" (já escolheu rating),
+   * salvamos imediatamente o progresso desse cartão.
    */
   const handleNext = async () => {
-    const currentCard = questions[currentQuestionIndex];
-    const rating = ratings[currentCard.id];
+    const card = questions[currentQuestionIndex];
+    const rating = ratings[card.id];
+    if (!rating) return;
 
-    if (!rating) {
-      return; // não pode avançar se não escolheu rating
-    }
+    // Calcula interval + nextReview
+    const totalAtt = (card.totalAttempts || 0) + 1;
+    const totalErr = rating === "hard" ? (card.totalErrors || 0) + 1 : card.totalErrors || 0;
 
+    const newInterval = calculateNextFlashcardInterval(
+      rating,
+      card.interval || 0,
+      totalAtt,
+      totalErr
+    );
+    const newReview = calculateNextFlashcardReview(newInterval);
+
+    // Tenta salvar no DB
     try {
-      // 1) Calcula novo interval + nextReview
-      const newInterval = calculateNextFlashcardInterval(
-        rating,
-        currentCard.interval || 0
-      );
-      const newReview = calculateNextFlashcardReview(newInterval);
-
-      // 2) Salva imediatamente no DB
       await apiClient(`api/cards/progress/flashcards`, {
         method: "POST",
         headers: {
@@ -144,24 +147,40 @@ export default function FlashcardStudyPage() {
           "x-user-email": user?.emailAddresses[0].emailAddress!,
         },
         body: JSON.stringify({
-          cardId: currentCard.id,
+          cardId: card.id,
           deckId,
           rating,
           interval: newInterval,
           nextReview: newReview,
           lastReviewed: new Date().toISOString(),
+          // guardando info de tentativas/erros
+          totalAttempts: totalAtt,
+          totalErrors: totalErr,
+          // se quiser counters do rating, ex: easyCount, normalCount, etc.
         }),
       });
     } catch (err) {
-      console.error("⚠️ Erro ao salvar progresso do cartão:", err);
-      // Podemos optar por continuar mesmo assim
+      console.error("Falha ao salvar progresso do card:", err);
     }
 
-    // Limpa o “isAnswerRevealed”
+    // Limpa a resposta revelada
     setIsAnswerRevealed(false);
 
     // Avança ou finaliza
     if (currentQuestionIndex < questions.length - 1) {
+      setQuestions((prev) => {
+        // atualiza localmente também, para manter a coerência (opcional)
+        const newQuestions = [...prev];
+        newQuestions[currentQuestionIndex] = {
+          ...card,
+          interval: newInterval,
+          nextReview: newReview,
+          totalAttempts: totalAtt,
+          totalErrors: totalErr,
+        };
+        return newQuestions;
+      });
+
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
       handleStudyComplete();
@@ -169,55 +188,56 @@ export default function FlashcardStudyPage() {
   };
 
   /**
-   * Quando chega na última questão, salvamos a “study session”
+   * Ao finalizar a sessão (último cartão), salva a "study session" no DB
    */
   const handleStudyComplete = async () => {
     try {
       const endTime = new Date().toISOString();
 
-      // Salva a "study session" final com as notas de cada pergunta
-      const sessionResp = await apiClient(`api/study-sessions/flashcards`, {
+      const body = {
+        deckId,
+        totalQuestions: questions.length,
+        startTime,
+        endTime,
+        ratings: Object.entries(ratings).map(([questionId, rating]) => ({
+          questionId,
+          rating,
+        })),
+        studyType: "flashcard",
+      };
+
+      const resp = await apiClient(`api/study-sessions/flashcards`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-user-email": user?.emailAddresses[0].emailAddress!,
         },
-        body: JSON.stringify({
-          deckId,
-          totalQuestions: questions.length,
-          startTime,
-          endTime,
-          ratings: Object.entries(ratings).map(([questionId, rating]) => ({
-            questionId,
-            rating,
-          })),
-          studyType: "flashcard",
-        }),
+        body: JSON.stringify(body),
       });
 
-      if (!sessionResp.ok) {
-        throw new Error("Failed to save study session");
+      if (!resp.ok) {
+        throw new Error("Falha ao salvar study session!");
       }
 
       setIsCompleted(true);
     } catch (err) {
-      console.error("⚠️ Erro ao salvar study session:", err);
+      console.error("Erro ao salvar study session de flashcards:", err);
     }
   };
 
-  // Contagem de quantos “easy”, “normal”, “hard”
+  // Estatística local: quantos easy, normal, hard
   const ratingCounts = Object.values(ratings).reduce(
-    (acc, rating) => {
-      acc[rating] = (acc[rating] || 0) + 1;
+    (acc, r) => {
+      acc[r] = (acc[r] || 0) + 1;
       return acc;
     },
     { easy: 0, normal: 0, hard: 0 }
   );
 
-  // Renderização de estados
+  // Render
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="min-h-screen flex items-center justify-center">
         <p>Carregando...</p>
       </div>
     );
@@ -225,12 +245,12 @@ export default function FlashcardStudyPage() {
 
   if (error || questions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="min-h-screen flex flex-col items-center justify-center">
         <p className="text-red-500">{error || "Nenhuma pergunta encontrada"}</p>
         <Button variant="outline" asChild>
-          <Link href="/decks" className="flex items-center gap-2">
+          <Link href="/decks">
             <ArrowLeft className="h-4 w-4" />
-            Voltar para os Decks
+            Voltar para Decks
           </Link>
         </Button>
       </div>
@@ -239,7 +259,7 @@ export default function FlashcardStudyPage() {
 
   if (isCompleted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-6">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6">
         <h2 className="text-2xl font-bold">Sessão de estudo concluída!</h2>
         <div className="space-y-2 text-center">
           <p>
@@ -255,6 +275,7 @@ export default function FlashcardStudyPage() {
             Difícil: <strong>{ratingCounts.hard}</strong>
           </p>
         </div>
+
         <Button asChild>
           <Link href="/decks">Voltar para os decks</Link>
         </Button>
@@ -262,16 +283,17 @@ export default function FlashcardStudyPage() {
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
+  const card = questions[currentQuestionIndex];
+  const rating = ratings[card.id];
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto px-8 py-4">
+    <div className="max-w-4xl mx-auto px-8 py-4 flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="ghost" asChild>
           <Link href="/decks" className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Voltar para os Decks
+            Voltar para Decks
           </Link>
         </Button>
         <StudyProgress
@@ -281,72 +303,62 @@ export default function FlashcardStudyPage() {
       </div>
 
       {/* Card principal */}
-      <div className="bg-[#10111F] border border-neutral-800 rounded-md p-8 flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-medium">{currentQuestion.question}</h2>
-        </div>
+      <div className="bg-[#10111F] border border-neutral-800 rounded-md p-8 flex flex-col gap-4">
+        <h2 className="text-xl font-medium">{card.question}</h2>
 
         {/* Resposta */}
-        <div>
-          <p className={isAnswerRevealed ? "block" : "hidden"}>
-            {currentQuestion.correctAnswer}
-          </p>
-        </div>
+        {isAnswerRevealed ? (
+          <p>{card.correctAnswer}</p>
+        ) : (
+          <p className="italic text-neutral-500 text-sm">Clique em "Revelar resposta"</p>
+        )}
 
-        {/* Botões de rating - aparecem após revelar */}
+        {/* Botões de rating - só aparecem após revelar */}
         {isAnswerRevealed && (
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-3">
             <Button
               onClick={() =>
-                setRatings((prev) => ({
-                  ...prev,
-                  [currentQuestion.id]: "easy",
-                }))
+                setRatings((prev) => ({ ...prev, [card.id]: "easy" }))
               }
               className={`text-white px-4 ${
-                ratings[currentQuestion.id] === "easy"
+                rating === "easy"
                   ? "bg-green-600 opacity-100"
                   : "bg-green-600 opacity-50"
-              } hover:opacity-80 hover:bg-green-700 focus:outline-none focus:ring-0`}
+              } hover:bg-green-700 focus:outline-none`}
             >
               Fácil
             </Button>
             <Button
               onClick={() =>
-                setRatings((prev) => ({
-                  ...prev,
-                  [currentQuestion.id]: "normal",
-                }))
+                setRatings((prev) => ({ ...prev, [card.id]: "normal" }))
               }
               className={`text-white px-4 ${
-                ratings[currentQuestion.id] === "normal"
+                rating === "normal"
                   ? "bg-yellow-500 opacity-100"
                   : "bg-yellow-500 opacity-50"
-              } hover:opacity-80 hover:bg-yellow-600 focus:outline-none focus:ring-0`}
+              } hover:bg-yellow-600 focus:outline-none`}
             >
               Normal
             </Button>
             <Button
               onClick={() =>
-                setRatings((prev) => ({
-                  ...prev,
-                  [currentQuestion.id]: "hard",
-                }))
+                setRatings((prev) => ({ ...prev, [card.id]: "hard" }))
               }
               className={`text-white px-4 ${
-                ratings[currentQuestion.id] === "hard"
+                rating === "hard"
                   ? "bg-red-500 opacity-100"
                   : "bg-red-500 opacity-50"
-              } hover:opacity-80 hover:bg-red-600 focus:outline-none focus:ring-0`}
+              } hover:bg-red-600 focus:outline-none`}
             >
               Difícil
             </Button>
           </div>
         )}
 
-        {/* Botão "Próxima" ou "Revelar" */}
+        {/* Botão principal (Revelar/Próximo) */}
         <div className="flex justify-center">
           <Button
+            disabled={isAnswerRevealed && !rating}
             onClick={() => {
               if (!isAnswerRevealed) {
                 setIsAnswerRevealed(true);
@@ -354,19 +366,17 @@ export default function FlashcardStudyPage() {
                 handleNext();
               }
             }}
-            disabled={isAnswerRevealed && !ratings[currentQuestion.id]}
-            className="w-auto"
           >
-            {!isAnswerRevealed ? (
-              "Revelar resposta"
-            ) : currentQuestionIndex < questions.length - 1 ? (
-              <div className="flex items-center gap-2">
-                <span>Ir para próxima</span>
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            ) : (
-              "Finalizar Sessão"
-            )}
+            {!isAnswerRevealed
+              ? "Revelar resposta"
+              : currentQuestionIndex < questions.length - 1
+              ? (
+                <div className="flex items-center gap-2">
+                  <span>Ir para próxima</span>
+                  <ArrowRight className="h-4 w-4" />
+                </div>
+              )
+              : "Finalizar Sessão"}
           </Button>
         </div>
       </div>
