@@ -24,12 +24,12 @@ export async function GET(req: NextRequest) {
         ':sk': 'CARD_PROGRESS#'
       },
       ...(deckId && {
-        FilterExpression: 'deckId = :deckId AND type = :type',
+        FilterExpression: 'deckId = :deckId AND cardType = :cardType',
         ExpressionAttributeValues: {
           ':pk': `USER#${userEmail}`,
           ':sk': 'CARD_PROGRESS#',
           ':deckId': deckId,
-          ':type': 'multipleChoice'
+          ':cardType': 'multipleChoice'
         }
       })
     });
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         totalErrors: body.totalErrors,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        type: "multipleChoice"
+        cardType: "multipleChoice"
       }
     });
 

@@ -1,5 +1,5 @@
 export type CardProgress = {
-  type: "flashcard" | "multipleChoice";
+  cardType: "flashcard" | "multipleChoice";
   consecutiveHits: number;
   createdAt: string;
   deckId: string;

@@ -22,10 +22,10 @@ export async function GET(req: NextRequest) {
       ExpressionAttributeValues: {
         ":pk": `USER#${userEmail}`,
         ":sk": "CARD_PROGRESS#",
-        ":type": "flashcard",
+        ":cardType": "flashcard",
         ":deckId": deckId
       },
-      FilterExpression: "type = :type AND deckId = :deckId",
+      FilterExpression: "cardType = :cardType AND deckId = :deckId",
 
     });
     const response = await dynamoDbClient.send(command);
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
         interval: body.interval || 0,
         createdAt: now,
         updatedAt: now,
-        type: "flashcard",
+        cardType: "flashcard",
       },
     });
 
