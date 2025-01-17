@@ -101,7 +101,12 @@ interface QuestionMetadata {
   errors: number;
 }
 
-interface CreateStudySessionRequest {
+interface FlashcardRating {
+  questionId: string;
+  rating: "easy" | "normal" | "hard" | null;
+}
+
+interface CreateMultipleChoiceStudySessionRequest {
   deckId: string;
   hits: number;
   misses: number;
@@ -109,6 +114,14 @@ interface CreateStudySessionRequest {
   startTime: string;
   endTime: string;
   questionsMetadata: QuestionMetadata[];
+}
+
+interface CreateFlashcardStudySessionRequest {
+  deckId: string;
+  totalQuestions: number;
+  startTime: string;
+  endTime: string;
+  ratings: FlashcardRating[];
 }
 
 export async function POST(req: NextRequest) {
@@ -124,7 +137,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body: CreateStudySessionRequest = await req.json();
+    const body: CreateMultipleChoiceStudySessionRequest | CreateFlashcardStudySessionRequest = await req.json();
     const sessionId = crypto.randomUUID();
     const timestamp = new Date().toISOString();
 
@@ -137,13 +150,18 @@ export async function POST(req: NextRequest) {
         sk: `STUDY_SESSION#${sessionId}`,
         id: sessionId,
         deckId: body.deckId,
-        hits: body.hits,
-        misses: body.misses,
         totalQuestions: body.totalQuestions,
         startTime: body.startTime,
         endTime: body.endTime,
         createdAt: timestamp,
-        questionsMetadata: body.questionsMetadata,
+        ...(body as CreateMultipleChoiceStudySessionRequest).questionsMetadata && {
+          hits: (body as CreateMultipleChoiceStudySessionRequest).hits,
+          misses: (body as CreateMultipleChoiceStudySessionRequest).misses,
+          questionsMetadata: (body as CreateMultipleChoiceStudySessionRequest).questionsMetadata,
+        },
+        ...(body as CreateFlashcardStudySessionRequest).ratings && {
+          ratings: (body as CreateFlashcardStudySessionRequest).ratings,
+        },
       }
     });
 

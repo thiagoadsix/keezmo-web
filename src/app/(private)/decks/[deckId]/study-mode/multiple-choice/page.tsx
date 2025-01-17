@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import {
   calculateNextInterval,
@@ -36,8 +36,7 @@ interface QuestionWithMetadata extends Question {
 }
 
 export default function StudyPage() {
-  const { deckId, mode } = useParams();
-  const studyMode = mode as "multiple-choice" | "flashcard";
+  const { deckId } = useParams();
   const { user } = useUser();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +53,6 @@ export default function StudyPage() {
   const [questionsMetadata, setQuestionsMetadata] = useState<
     Map<string, QuestionMetadata>
   >(new Map());
-  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
   useEffect(() => {
     if (!deckId || deckId === "undefined") {
@@ -223,14 +221,9 @@ export default function StudyPage() {
     }
   };
 
-  const handleRevealAnswer = () => {
-    setIsAnswerRevealed(true);
-  };
-
   const handleNext = () => {
     setSelectedOption(null);
     setIsAnswerConfirmed(false);
-    setIsAnswerRevealed(false);
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
@@ -359,52 +352,36 @@ export default function StudyPage() {
           </p>
         </div>
 
-        {studyMode === 'multiple-choice' ? (
-          <div className="flex flex-col gap-4">
-            {currentQuestionData.options.map((option, index) => {
-              const isCorrect = option === currentQuestionData.correctAnswer;
-              const isSelected = option === selectedOption;
+        <div className="flex flex-col gap-4">
+          {currentQuestionData.options.map((option, index) => {
+            const isCorrect = option === currentQuestionData.correctAnswer;
+            const isSelected = option === selectedOption;
 
-              return (
-                <QuestionOption
-                  key={index}
-                  option={option}
-                  isCorrect={isCorrect}
-                  isSelected={isSelected}
-                  isAnswerConfirmed={isAnswerConfirmed}
-                  onClick={() => handleOptionClick(option)}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <div>
-            <p className={`${isAnswerRevealed ? 'block' : 'hidden'}`}>
-              {currentQuestionData.correctAnswer}
-            </p>
-          </div>
-        )}
+            return (
+              <QuestionOption
+                key={index}
+                option={option}
+                isCorrect={isCorrect}
+                isSelected={isSelected}
+                isAnswerConfirmed={isAnswerConfirmed}
+                onClick={() => handleOptionClick(option)}
+              />
+            );
+          })}
+        </div>
 
-        <div className="flex justify-center">
-          <Button
-            onClick={() => {
-              if (!isAnswerRevealed) {
-                handleRevealAnswer();
-              } else {
-                handleNext();
-              }
-            }}
-            className="w-auto"
-          >
-            {!isAnswerRevealed ? (
-              'Revelar resposta'
-            ) : (
-              <div className="flex items-center gap-2">
-                <span>Ir para próxima</span>
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            )}
-          </Button>
+        <div className="flex justify-end">
+          {!isAnswerConfirmed ? (
+            <Button
+              onClick={handleConfirmAnswer}
+              disabled={!selectedOption}
+              variant="outline"
+            >
+              Confirmar resposta
+            </Button>
+          ) : (
+            <Button onClick={handleNext}>Próxima questão →</Button>
+          )}
         </div>
       </div>
     </div>

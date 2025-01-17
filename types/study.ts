@@ -1,33 +1,33 @@
-export type QuestionMetadata = {
-  consecutiveHits: number;
+export interface QuestionMetadata {
   questionId: string;
-  nextReview: string;
-  interval: number;
-  errors: number;
   attempts: number;
+  errors: number;
+  consecutiveHits: number;
+  interval: number;
   lastReviewed: string;
+  nextReview: string;
 }
 
-export type StudySession = {
-  hits: number;
-  totalQuestions: number;
-  createdAt: string;
-  deckId: string;
-  misses: number;
-  startTime: string;
+export interface FlashcardRating {
+  questionId: string;
+  rating: "easy" | "normal" | "hard" | null;
+}
+
+export interface StudySession {
   id: string;
+  deckId: string;
+  totalQuestions: number;
+  startTime: string;
   endTime: string;
-  questionsMetadata: QuestionMetadata[];
-  /**
-   * A deck is associated with a study session.
-   * @argument {string} title - The title of the deck.
-   * @argument {string} description - The description of the deck.
-   * @argument {number} totalCards - The total number of cards in the deck.
-   */
+  createdAt: string;
   deck?: {
     id: string;
     title: string;
     description: string;
     totalCards: number;
   };
+  hits?: number;
+  misses?: number;
+  questionsMetadata?: QuestionMetadata[];
+  ratings?: FlashcardRating[];
 }
