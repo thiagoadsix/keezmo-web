@@ -1,82 +1,49 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { Info } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { apiClient } from "@/src/lib/api-client";
 import { Dashboard } from "@/types/dashboard";
-import { useUser } from "@clerk/nextjs";
 
-interface DecksNeedingAttentionState {
-  multipleChoices: Dashboard["decksNeedingAttention"];
-  flashcards: Dashboard["decksNeedingAttention"];
-  isLoading: boolean;
+/**
+ * Define o formato das props para o componente.
+ * Aqui, assumimos que o 'dashboardData.decksNeedingAttention'
+ * é do tipo `Dashboard['decksNeedingAttention']`.
+ */
+interface DecksNeedingAttentionProps {
+  decks: Dashboard["decksNeedingAttention"];
 }
 
-export function DecksNeedingAttention() {
-  const { user } = useUser();
-  const [state, setState] = useState<DecksNeedingAttentionState>({
-    multipleChoices: [],
-    flashcards: [],
-    isLoading: true,
-  });
+/**
+ * Componente que recebe as props em vez de chamar a API internamente.
+ */
+export function DecksNeedingAttention({ decks }: DecksNeedingAttentionProps) {
+  // Filtra decks conforme o tipo de cartão (multipleChoice vs flashcard).
+  const multipleChoices = decks.filter((deck) => deck.cardType === "multipleChoice");
+  const flashcards = decks.filter((deck) => deck.cardType === "flashcard");
 
-  useEffect(() => {
-    async function fetchDecksNeedingAttention() {
-      if (!user) return;
-
-      try {
-        const response = await apiClient<Dashboard>("api/dashboard", {
-          method: "GET",
-          headers: {
-            "x-user-email": user?.emailAddresses[0].emailAddress,
-          },
-          cache: "no-store",
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch decks needing attention");
-        }
-        const data = await response.json();
-
-        setState({
-          multipleChoices: data.decksNeedingAttention.filter(
-            (deck) => deck.cardType === "multipleChoice"
-          ),
-          flashcards: data.decksNeedingAttention.filter(
-            (deck) => deck.cardType === "flashcard"
-          ),
-          isLoading: false,
-        });
-      } catch (error) {
-        console.error("Failed to fetch decks needing attention:", error);
-        setState({ multipleChoices: [], flashcards: [], isLoading: false });
-      }
-    }
-
-    fetchDecksNeedingAttention();
-  }, []);
-
+  /**
+   * Função auxiliar para renderizar os decks de um tipo específico.
+   */
   const renderDecks = (
-    decks: Dashboard["decksNeedingAttention"],
+    subset: DecksNeedingAttentionProps["decks"],
     title: string
   ) => {
-    if (state.isLoading) {
-      return <p className="text-neutral-400">Carregando...</p>;
-    }
-
-    if (decks.length === 0) {
+    if (subset.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center space-y-2 text-neutral-500">
           <Info className="h-8 w-8" />
-          <p className="text-sm">Nenhum deck de {title} precisa de atenção no momento.</p>
+          <p className="text-sm">
+            Nenhum deck de {title} precisa de atenção no momento.
+          </p>
         </div>
       );
     }
 
     return (
       <div className="space-y-3">
-        {decks.map((deck) => (
+        {subset.map((deck) => (
           <div key={deck.deckId} className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium">{deck.title}</div>
@@ -100,22 +67,16 @@ export function DecksNeedingAttention() {
 
   return (
     <section className="flex flex-col gap-4">
-      {/*
-        Título da seção, seguindo o padrão do "RecentActivity",
-        que usa um <h1> ao invés de um componente Header
-      */}
+      {/* Título principal, como no "RecentActivity" */}
       <h1 className="text-xl sm:text-3xl font-bold">Decks Precisando de Atenção</h1>
 
-      {/*
-        Grid que separa as “Sessões (Múltipla Escolha)” e “Sessões (Flashcard)”
-        no mesmo estilo do snippet com cards em BG escuro, bordas etc.
-      */}
+      {/* Layout em "cards" no mesmo estilo do snippet enviado */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Sessões (Múltipla Escolha) */}
         <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
           <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">Sessões (Múltipla Escolha)</h2>
-            {renderDecks(state.multipleChoices, "múltipla escolha")}
+            {renderDecks(multipleChoices, "múltipla escolha")}
           </div>
         </div>
 
@@ -123,7 +84,7 @@ export function DecksNeedingAttention() {
         <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
           <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">Sessões (Flashcard)</h2>
-            {renderDecks(state.flashcards, "flashcard")}
+            {renderDecks(flashcards, "flashcard")}
           </div>
         </div>
       </div>

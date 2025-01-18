@@ -33,7 +33,7 @@ export default async function DashboardPage() {
       <Header subtitle={`Hoje é ${today}`} />
       <main className="flex flex-col gap-10 py-6">
         <StatsOverview />
-        <DecksNeedingAttention />
+        <DecksNeedingAttention decks={data.decksNeedingAttention} />
         <RecentActivity />
       </main>
     </div>
