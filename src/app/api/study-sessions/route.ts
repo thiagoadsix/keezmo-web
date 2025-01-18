@@ -86,6 +86,7 @@ export async function GET(req: NextRequest) {
           createdAt: String(item.createdAt),
           questionsMetadata: item.questionsMetadata,
           studyType: item.studyType as "multipleChoice" | "flashcard",
+          ratings: item.ratings,
           deck: deckResponse.Item
             ? {
                 id: String(deckResponse.Item.id),
