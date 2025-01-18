@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { QueryCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, GetCommand, QueryCommandInput } from "@aws-sdk/lib-dynamodb";
 import { StudySession } from "@/types/study";
 import { dynamoDbClient } from "../clients/dynamodb";
 
@@ -36,12 +36,16 @@ export async function GET(req: NextRequest) {
       ...(searchText && { ":searchText": searchText }),
     };
 
-    const command = new QueryCommand({
+    const queryCommandInput: QueryCommandInput = {
       TableName: TABLE_NAME,
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
-      FilterExpression: filterExpressions.join(" AND "),
       ExpressionAttributeValues: expressionAttributeValues,
-    });
+      ...(filterExpressions.length > 0 && {
+        FilterExpression: filterExpressions.join(" AND "),
+      }),
+    };
+
+    const command = new QueryCommand(queryCommandInput);
 
     const response = await dynamoDbClient.send(command);
 
