@@ -26,6 +26,7 @@ async function getMultipleChoiceStudySessions(): Promise<StudySession[]> {
 
 export default async function StudySessionsPage() {
   const multipleChoiceStudySessions = await getMultipleChoiceStudySessions();
+  console.log({multipleChoiceStudySessions});
 
   return <ClientStudySessionsPage studySessions={multipleChoiceStudySessions} />;
 }
