@@ -43,7 +43,7 @@ async function findDecksNeedingAttention(items: any[], userEmail: string) {
       return {
         ...deck,
         title: deckData?.title || '',
-        description: deckData?.description || ''
+        description: deckData?.description || '',
       };
     })
   );
@@ -91,12 +91,9 @@ export async function GET(req: NextRequest) {
     const command = new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
-      FilterExpression: 'cardType IN (:multipleChoice, :flashcard)',
       ExpressionAttributeValues: {
         ':pk': `USER#${userEmail}`,
-        ':sk': 'CARD_PROGRESS#',
-        ':multipleChoice': 'multipleChoice',
-        ':flashcard': 'flashcard'
+        ':sk': 'CARD_PROGRESS#'
       }
     });
 
