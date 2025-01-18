@@ -13,15 +13,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const searchText = searchParams.get("searchText");
+
+    const filterExpressions = [
+      "studyType = :studyType",
+      ...(startDate ? ["createdAt >= :startDate"] : []),
+      ...(endDate ? ["createdAt <= :endDate"] : []),
+      ...(searchText ? ["contains(deck.title, :searchText) OR contains(deck.description, :searchText)"] : []),
+    ];
+
+    const expressionAttributeValues = {
+      ":pk": `USER#${userEmail}`,
+      ":sk": "STUDY_SESSION#",
+      ":studyType": "multipleChoice",
+      ...(startDate && { ":startDate": startDate }),
+      ...(endDate && { ":endDate": endDate }),
+      ...(searchText && { ":searchText": searchText }),
+    };
+
     const command = new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
-      FilterExpression: "studyType = :studyType",
-      ExpressionAttributeValues: {
-        ":pk": `USER#${userEmail}`,
-        ":sk": "STUDY_SESSION#",
-        ":studyType": "multipleChoice"
-      },
+      FilterExpression: filterExpressions.join(" AND "),
+      ExpressionAttributeValues: expressionAttributeValues,
     });
 
     const response = await dynamoDbClient.send(command);
