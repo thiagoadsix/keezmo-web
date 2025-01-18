@@ -9,7 +9,8 @@ export interface DeckNeedingAttention {
 
 export interface ReviewCalendarDay {
   date: string;
-  reviewCount: number;
+  multipleChoiceReviewCount: number;
+  flashcardReviewCount: number;
   deckId: string;
 }
 

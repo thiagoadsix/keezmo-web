@@ -95,7 +95,7 @@ async function findDecksNeedingAttention(items: any[], userEmail: string) {
 
 // Função para gerar calendário de revisões
 function generateReviewCalendar(items: any[]) {
-  const calendar = new Map<string, { count: number; deckId: string }>();
+  const calendar = new Map<string, { multipleChoiceCount: number; flashcardCount: number; deckId: string }>();
   const today = new Date();
   const next7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(today);
@@ -108,16 +108,25 @@ function generateReviewCalendar(items: any[]) {
     if (next7Days.includes(reviewDate)) {
       const currentEntry = calendar.get(reviewDate);
       if (currentEntry) {
-        currentEntry.count++;
+        if (item.cardType === "multipleChoice") {
+          currentEntry.multipleChoiceCount++;
+        } else if (item.cardType === "flashcard") {
+          currentEntry.flashcardCount++;
+        }
       } else {
-        calendar.set(reviewDate, { count: 1, deckId: item.deckId });
+        calendar.set(reviewDate, {
+          multipleChoiceCount: item.cardType === "multipleChoice" ? 1 : 0,
+          flashcardCount: item.cardType === "flashcard" ? 1 : 0,
+          deckId: item.deckId
+        });
       }
     }
   });
 
   return next7Days.map(date => ({
     date,
-    reviewCount: calendar.get(date)?.count || 0,
+    multipleChoiceReviewCount: calendar.get(date)?.multipleChoiceCount || 0,
+    flashcardReviewCount: calendar.get(date)?.flashcardCount || 0,
     deckId: calendar.get(date)?.deckId || ''
   }));
 }
