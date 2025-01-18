@@ -24,6 +24,8 @@ export function DecksNeedingAttention() {
 
   useEffect(() => {
     async function fetchDecksNeedingAttention() {
+      if (!user) return;
+
       try {
         const response = await apiClient<Dashboard>("api/dashboard", {
           method: "GET",
