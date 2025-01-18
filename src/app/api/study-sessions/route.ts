@@ -19,8 +19,9 @@ export async function GET(req: NextRequest) {
     const endDate = searchParams.get("endDate");
     const searchText = searchParams.get("searchText");
     const studyType = searchParams.get("studyType");
+
     const filterExpressions = [
-      "studyType = :studyType",
+      ...(studyType ? ["studyType = :studyType"] : []),
       ...(startDate ? ["createdAt >= :startDate"] : []),
       ...(endDate ? ["createdAt <= :endDate"] : []),
       ...(searchText ? ["contains(deck.title, :searchText) OR contains(deck.description, :searchText)"] : []),
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     const expressionAttributeValues = {
       ":pk": `USER#${userEmail}`,
       ":sk": "STUDY_SESSION#",
-      ":studyType": studyType,
+      ...(studyType && { ":studyType": studyType }),
       ...(startDate && { ":startDate": startDate }),
       ...(endDate && { ":endDate": endDate }),
       ...(searchText && { ":searchText": searchText }),
