@@ -39,7 +39,7 @@ export function ClientStudySessionsPage({
 
   const filteredSessions = studySessions.filter(
     (session) =>
-      (!studyType || session.studyType === studyType) &&
+      (!studyType || session.studyType === studyType || studyType === "all") &&
       (!startDate || new Date(session.createdAt) >= startDate) &&
       (!endDate || new Date(session.createdAt) <= endDate) &&
       (session.deck.title.includes(searchText) ||
@@ -60,6 +60,7 @@ export function ClientStudySessionsPage({
             <SelectContent>
               <SelectItem value="multipleChoice">Múltipla escolha</SelectItem>
               <SelectItem value="flashcard">Flashcard</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
             </SelectContent>
           </Select>
         </div>
