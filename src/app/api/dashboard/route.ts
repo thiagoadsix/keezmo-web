@@ -7,28 +7,53 @@ const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME
 
 // Função para encontrar decks que precisam de atenção
 async function findDecksNeedingAttention(items: any[], userEmail: string) {
-  const deckStats = new Map<string, { errors: number; total: number }>();
+  // Vamos agrupar por (deckId + cardType), em vez de somente deckId
+  // Assim, se um deck tiver tipos diferentes, cada tipo é um "grupo" diferente
+  type DeckKey = `${string}#${string}`; // "deckId#cardType"
+  const deckStats = new Map<DeckKey, { errors: number; total: number; cardType: string }>();
 
+  // Percorremos cada item (cada registro de progresso de cartão)
   items.forEach(item => {
-    const current = deckStats.get(item.deckId) || { errors: 0, total: 0 };
-    deckStats.set(item.deckId, {
-      errors: current.errors + item.totalErrors,
-      total: current.total + item.totalAttempts
+    // Gera uma chave única deckId#cardType
+    const key = `${item.deckId}#${item.cardType}` as DeckKey;
+
+    // Se não existir no map, inicializa
+    const current = deckStats.get(key) || {
+      errors: 0,
+      total: 0,
+      cardType: item.cardType, // Mantém qual é o tipo
+    };
+
+    deckStats.set(key, {
+      errors: current.errors + (item.totalErrors ?? 0),
+      total: current.total + (item.totalAttempts ?? 0),
+      cardType: item.cardType,
     });
   });
 
+  // Monta o array final a partir do Map
   const decksNeedingAttention = Array.from(deckStats.entries())
-    .map(([deckId, stats]) => ({
-      deckId,
-      errorRate: (stats.errors / stats.total) * 100,
-      totalAttempts: stats.total
-    }))
-    .filter(deck => deck.errorRate > 30) // Decks com taxa de erro > 30%
+    .map(([key, stats]) => {
+      // key = deckId#cardType
+      const [deckId] = key.split("#");
+      const { cardType, errors, total } = stats;
+
+      const errorRate = total ? (errors / total) * 100 : 0;
+      return {
+        deckId,
+        cardType,           // <<<<< inclui o cardType no objeto
+        errorRate,
+        totalAttempts: total,
+      };
+    })
+    // Filtra somente decks com taxa de erro > 30%
+    .filter(deck => deck.errorRate > 30)
+    // Ordena do maior para o menor
     .sort((a, b) => b.errorRate - a.errorRate);
 
-  // Buscar os detalhes dos decks
+  // Buscar os detalhes de cada deck (title, description) no Dynamo
   const deckDetails = await Promise.all(
-    decksNeedingAttention.map(async deck => {
+    decksNeedingAttention.map(async (deck) => {
       const deckCommand = new GetCommand({
         TableName: TABLE_NAME,
         Key: {
@@ -42,8 +67,8 @@ async function findDecksNeedingAttention(items: any[], userEmail: string) {
 
       return {
         ...deck,
-        title: deckData?.title || '',
-        description: deckData?.description || '',
+        title: deckData?.title || "",
+        description: deckData?.description || "",
       };
     })
   );
