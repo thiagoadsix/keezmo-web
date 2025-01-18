@@ -8,7 +8,7 @@ type StudySessionCardProps = {
 
 export function StudySessionCard({ studySession }: StudySessionCardProps) {
   return (
-    <Card>
+    <Card className="bg-[#10111F]">
       <CardHeader>
         <CardTitle>{studySession.deck.title}</CardTitle>
         <CardDescription>{format(new Date(studySession.createdAt), "dd/MM/yyyy")}</CardDescription>
