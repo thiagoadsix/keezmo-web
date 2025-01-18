@@ -16,9 +16,11 @@ export async function GET(req: NextRequest) {
   const command = new QueryCommand({
     TableName: TABLE_NAME,
     KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+    FilterExpression: "studyType = :studyType",
     ExpressionAttributeValues: {
       ":pk": `USER#${userEmail}`,
       ":sk": "STUDY_SESSION#",
+      ":studyType": "flashcard"
     },
   });
 
