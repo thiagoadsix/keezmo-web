@@ -67,7 +67,7 @@ export function DecksNeedingAttention({ decks }: DecksNeedingAttentionProps) {
 
   return (
     <section className="flex flex-col gap-4">
-      {/* Título principal, como no "RecentActivity" */}
+      {/* Título principal*/}
       <h1 className="text-xl sm:text-3xl font-bold">Decks Precisando de Atenção</h1>
 
       {/* Layout em "cards" no mesmo estilo do snippet enviado */}

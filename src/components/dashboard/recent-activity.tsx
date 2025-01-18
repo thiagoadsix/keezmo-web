@@ -9,11 +9,11 @@ import {
   XCircle,
   Plus,
 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "@/src/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useUser } from "@clerk/nextjs";
-import { apiClient } from "../lib/api-client";
+import { apiClient } from "@/src/lib/api-client";
 import { StudySession } from "@/types/study";
 import { Deck } from "@/types/deck";
 
