@@ -11,7 +11,7 @@ interface ReviewCalendarProps {
 
 export function ReviewCalendar({ reviewCalendar }: ReviewCalendarProps) {
   // Verifica se há revisões agendadas
-  const hasReviews = reviewCalendar.some(day => day.multipleChoiceReviewCount > 0 || day.flashcardReviewCount > 0);
+  const hasReviews = reviewCalendar.some(day => day.multipleChoiceCards.length > 0 || day.flashcardCards.length > 0);
 
   if (!hasReviews) {
     return (
@@ -28,32 +28,54 @@ export function ReviewCalendar({ reviewCalendar }: ReviewCalendarProps) {
   return (
     <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800">
       <h2 className="text-lg font-bold mb-4">Próximas Revisões</h2>
-      <div className="space-y-4">
+      <div className="space-y-8">
         {reviewCalendar.map((day, index) => {
           const date = day.date ? parse(day.date, 'yyyy-MM-dd', new Date()) : null;
           const isValidDate = date && isValid(date);
-          const totalReviewCount = day.multipleChoiceReviewCount + day.flashcardReviewCount;
 
-          return isValidDate && totalReviewCount > 0 ? (
-            <Link key={index} href={`/decks/${day.deckId}/study`}>
-              <div className="flex justify-between items-center p-3 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors duration-200">
-                <div>
-                  <div className="text-sm font-medium">{format(date, 'EEEE, d MMMM', { locale: ptBR })}</div>
-                  <div className="text-xs mt-1">
-                    {day.multipleChoiceReviewCount > 0 && (
-                      <span>{day.multipleChoiceReviewCount} múltipla escolha</span>
-                    )}
-                    {day.multipleChoiceReviewCount > 0 && day.flashcardReviewCount > 0 && (
-                      <span className="mx-1">•</span>
-                    )}
-                    {day.flashcardReviewCount > 0 && (
-                      <span>{day.flashcardReviewCount} flashcards</span>
-                    )}
+          return isValidDate && (day.multipleChoiceCards.length > 0 || day.flashcardCards.length > 0) ? (
+            <div key={index}>
+              <h3 className="text-lg font-bold mb-2">{format(date, 'EEEE, d MMMM', { locale: ptBR })}</h3>
+
+              {day.multipleChoiceCards.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-base font-bold mb-2">Múltipla Escolha</h4>
+                  <div className="space-y-2">
+                    {day.multipleChoiceCards.map(card => (
+                      <div key={card.id} className="p-2 rounded bg-primary/10">
+                        <div className="font-medium">{card.front}</div>
+                        <div className="text-sm">
+                          <span className="text-green-500">{card.hits} acertos</span>
+                          <span className="mx-2">•</span>
+                          <span className="text-red-500">{card.misses} erros</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="text-sm font-medium">{totalReviewCount} revisões</div>
-              </div>
-            </Link>
+              )}
+
+              {day.flashcardCards.length > 0 && (
+                <div>
+                  <h4 className="text-base font-bold mb-2">Flashcards</h4>
+                  <div className="space-y-2">
+                    {day.flashcardCards.map(card => (
+                      <div key={card.id} className="p-2 rounded bg-primary/10">
+                        <div className="font-medium">{card.front}</div>
+                        <div className="text-sm">
+                          <span className="text-green-500">Fácil: {card.easyCount}</span>
+                          <span className="mx-2">•</span>
+                          <span className="text-yellow-500">Normal: {card.normalCount}</span>
+                          <span className="mx-2">•</span>
+                          <span className="text-red-500">Difícil: {card.hardCount}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
           ) : null;
         })}
       </div>

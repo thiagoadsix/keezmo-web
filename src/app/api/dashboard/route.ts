@@ -95,7 +95,23 @@ async function findDecksNeedingAttention(items: any[], userEmail: string) {
 
 // Função para gerar calendário de revisões
 function generateReviewCalendar(items: any[]) {
-  const calendar = new Map<string, { multipleChoiceCount: number; flashcardCount: number; deckId: string }>();
+  const calendar = new Map<string, {
+    multipleChoiceCards: {
+      id: string;
+      front: string;
+      hits: number;
+      misses: number;
+    }[];
+    flashcardCards: {
+      id: string;
+      front: string;
+      easyCount: number;
+      normalCount: number;
+      hardCount: number;
+    }[];
+    deckId: string;
+  }>();
+
   const today = new Date();
   const next7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(today);
@@ -109,14 +125,39 @@ function generateReviewCalendar(items: any[]) {
       const currentEntry = calendar.get(reviewDate);
       if (currentEntry) {
         if (item.cardType === "multipleChoice") {
-          currentEntry.multipleChoiceCount++;
+          currentEntry.multipleChoiceCards.push({
+            id: item.cardId,
+            front: item.front,
+            hits: item.hits,
+            misses: item.misses
+          });
         } else if (item.cardType === "flashcard") {
-          currentEntry.flashcardCount++;
+          const easyCount = item.ratings?.filter((r: any) => r.rating === "easy").length || 0;
+          const normalCount = item.ratings?.filter((r: any) => r.rating === "normal").length || 0;
+          const hardCount = item.ratings?.filter((r: any) => r.rating === "hard").length || 0;
+          currentEntry.flashcardCards.push({
+            id: item.cardId,
+            front: item.front,
+            easyCount,
+            normalCount,
+            hardCount
+          });
         }
       } else {
         calendar.set(reviewDate, {
-          multipleChoiceCount: item.cardType === "multipleChoice" ? 1 : 0,
-          flashcardCount: item.cardType === "flashcard" ? 1 : 0,
+          multipleChoiceCards: item.cardType === "multipleChoice" ? [{
+            id: item.cardId,
+            front: item.front,
+            hits: item.hits,
+            misses: item.misses
+          }] : [],
+          flashcardCards: item.cardType === "flashcard" ? [{
+            id: item.cardId,
+            front: item.front,
+            easyCount: item.ratings?.filter((r: any) => r.rating === "easy").length || 0,
+            normalCount: item.ratings?.filter((r: any) => r.rating === "normal").length || 0,
+            hardCount: item.ratings?.filter((r: any) => r.rating === "hard").length || 0
+          }] : [],
           deckId: item.deckId
         });
       }
@@ -125,8 +166,8 @@ function generateReviewCalendar(items: any[]) {
 
   return next7Days.map(date => ({
     date,
-    multipleChoiceReviewCount: calendar.get(date)?.multipleChoiceCount || 0,
-    flashcardReviewCount: calendar.get(date)?.flashcardCount || 0,
+    multipleChoiceCards: calendar.get(date)?.multipleChoiceCards || [],
+    flashcardCards: calendar.get(date)?.flashcardCards || [],
     deckId: calendar.get(date)?.deckId || ''
   }));
 }
