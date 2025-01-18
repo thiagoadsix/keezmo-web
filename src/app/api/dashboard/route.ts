@@ -112,64 +112,57 @@ function generateReviewCalendar(items: any[]) {
     deckId: string;
   }>();
 
-  const today = new Date();
-  const next7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    return date.toISOString().split('T')[0];
-  });
-
   items.forEach(item => {
     const reviewDate = new Date(item.nextReview).toISOString().split('T')[0];
-    if (next7Days.includes(reviewDate)) {
-      const currentEntry = calendar.get(reviewDate);
-      if (currentEntry) {
-        if (item.cardType === "multipleChoice") {
-          currentEntry.multipleChoiceCards.push({
-            id: item.cardId,
-            front: item.front,
-            hits: item.hits,
-            misses: item.misses
-          });
-        } else if (item.cardType === "flashcard") {
-          const easyCount = item.ratings?.filter((r: any) => r.rating === "easy").length || 0;
-          const normalCount = item.ratings?.filter((r: any) => r.rating === "normal").length || 0;
-          const hardCount = item.ratings?.filter((r: any) => r.rating === "hard").length || 0;
-          currentEntry.flashcardCards.push({
-            id: item.cardId,
-            front: item.front,
-            easyCount,
-            normalCount,
-            hardCount
-          });
-        }
-      } else {
-        calendar.set(reviewDate, {
-          multipleChoiceCards: item.cardType === "multipleChoice" ? [{
-            id: item.cardId,
-            front: item.front,
-            hits: item.hits,
-            misses: item.misses
-          }] : [],
-          flashcardCards: item.cardType === "flashcard" ? [{
-            id: item.cardId,
-            front: item.front,
-            easyCount: item.ratings?.filter((r: any) => r.rating === "easy").length || 0,
-            normalCount: item.ratings?.filter((r: any) => r.rating === "normal").length || 0,
-            hardCount: item.ratings?.filter((r: any) => r.rating === "hard").length || 0
-          }] : [],
-          deckId: item.deckId
+    const currentEntry = calendar.get(reviewDate);
+    if (currentEntry) {
+      if (item.cardType === "multipleChoice") {
+        currentEntry.multipleChoiceCards.push({
+          id: item.cardId,
+          front: item.front,
+          hits: item.hits,
+          misses: item.misses
+        });
+      } else if (item.cardType === "flashcard") {
+        const easyCount = item.ratings?.filter((r: any) => r.rating === "easy").length || 0;
+        const normalCount = item.ratings?.filter((r: any) => r.rating === "normal").length || 0;
+        const hardCount = item.ratings?.filter((r: any) => r.rating === "hard").length || 0;
+        currentEntry.flashcardCards.push({
+          id: item.cardId,
+          front: item.front,
+          easyCount,
+          normalCount,
+          hardCount
         });
       }
+    } else {
+      calendar.set(reviewDate, {
+        multipleChoiceCards: item.cardType === "multipleChoice" ? [{
+          id: item.cardId,
+          front: item.front,
+          hits: item.hits,
+          misses: item.misses
+        }] : [],
+        flashcardCards: item.cardType === "flashcard" ? [{
+          id: item.cardId,
+          front: item.front,
+          easyCount: item.ratings?.filter((r: any) => r.rating === "easy").length || 0,
+          normalCount: item.ratings?.filter((r: any) => r.rating === "normal").length || 0,
+          hardCount: item.ratings?.filter((r: any) => r.rating === "hard").length || 0
+        }] : [],
+        deckId: item.deckId
+      });
     }
   });
 
-  return next7Days.map(date => ({
-    date,
-    multipleChoiceCards: calendar.get(date)?.multipleChoiceCards || [],
-    flashcardCards: calendar.get(date)?.flashcardCards || [],
-    deckId: calendar.get(date)?.deckId || ''
-  }));
+  // Filter out dates with no reviews and sort in ascending order
+  return Array.from(calendar.entries())
+    .filter(([_, value]) => value.multipleChoiceCards.length > 0 || value.flashcardCards.length > 0)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, cards]) => ({
+      date,
+      ...cards
+    }));
 }
 
 export async function GET(req: NextRequest) {

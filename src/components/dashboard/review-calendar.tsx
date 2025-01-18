@@ -11,7 +11,7 @@ interface ReviewCalendarProps {
 
 export function ReviewCalendar({ reviewCalendar }: ReviewCalendarProps) {
   // Verifica se há revisões agendadas
-  const hasReviews = reviewCalendar.some(day => day.multipleChoiceCards.length > 0 || day.flashcardCards.length > 0);
+  const hasReviews = reviewCalendar.length > 0;
 
   if (!hasReviews) {
     return (
@@ -30,10 +30,9 @@ export function ReviewCalendar({ reviewCalendar }: ReviewCalendarProps) {
       <h2 className="text-lg font-bold mb-4">Próximas Revisões</h2>
       <div className="space-y-8">
         {reviewCalendar.map((day, index) => {
-          const date = day.date ? parse(day.date, 'yyyy-MM-dd', new Date()) : null;
-          const isValidDate = date && isValid(date);
+          const date = parse(day.date, 'yyyy-MM-dd', new Date());
 
-          return isValidDate && (day.multipleChoiceCards.length > 0 || day.flashcardCards.length > 0) ? (
+          return (
             <div key={index}>
               <h3 className="text-lg font-bold mb-2">{format(date, 'EEEE, d MMMM', { locale: ptBR })}</h3>
 
@@ -76,7 +75,7 @@ export function ReviewCalendar({ reviewCalendar }: ReviewCalendarProps) {
               )}
 
             </div>
-          ) : null;
+          );
         })}
       </div>
     </div>
