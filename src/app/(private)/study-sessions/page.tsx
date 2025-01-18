@@ -1,6 +1,7 @@
+"use client";
+
 import {Header} from "@/src/components/header";
-import { columns, StudySession } from "./columns";
-import { DataTable } from "./data-table";
+import { StudySession } from "./columns";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { apiClient } from "@/src/lib/api-client";
