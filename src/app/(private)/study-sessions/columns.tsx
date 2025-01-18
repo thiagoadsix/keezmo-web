@@ -2,8 +2,9 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/src/components/ui/badge";
-import { formatDate } from "@/src/lib/date";
 import { Deck } from "@/types/deck";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export type StudySession = {
   id: string;
@@ -64,7 +65,7 @@ export const columns: ColumnDef<StudySession>[] = [
     header: "DATA",
     cell: ({ row }) => {
       const date = row.getValue("createdAt") as string;
-      return <div className="hidden md:block">{formatDate(date)}</div>;
+      return <div className="hidden md:block">{format(new Date(date), "dd/MM/yyyy", { locale: ptBR })}</div>;
     },
     meta: {
       className: "hidden md:table-cell",
