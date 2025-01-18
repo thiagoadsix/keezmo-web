@@ -81,34 +81,46 @@ function generateReviewCalendar(items: any[]) {
 }
 
 export async function GET(req: NextRequest) {
-  const userEmail = req.headers.get('x-user-email');
+  const userEmail = req.headers.get("x-user-email");
+  console.log("[Dashboard] GET route called. userEmail:", userEmail);
 
   if (!userEmail) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.log("[Dashboard] Missing userEmail in headers");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const command = new QueryCommand({
       TableName: TABLE_NAME,
-      KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
+      KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
       ExpressionAttributeValues: {
-        ':pk': `USER#${userEmail}`,
-        ':sk': 'CARD_PROGRESS#'
-      }
+        ":pk": `USER#${userEmail}`,
+        ":sk": "CARD_PROGRESS#",
+      },
     });
 
     const response = await dynamoDbClient.send(command);
 
+    console.log("[Dashboard] DynamoDB response items:", JSON.stringify(response.Items, null, 2));
+
+    const decksNeedingAttention = await findDecksNeedingAttention(response.Items || [], userEmail);
+    console.log("[Dashboard] decksNeedingAttention:", JSON.stringify(decksNeedingAttention, null, 2));
+
+    const reviewCalendar = generateReviewCalendar(response.Items || []);
+    console.log("[Dashboard] reviewCalendar:", JSON.stringify(reviewCalendar, null, 2));
+
     const dashboardData = {
-      decksNeedingAttention: await findDecksNeedingAttention(response.Items || [], userEmail),
-      reviewCalendar: generateReviewCalendar(response.Items || [])
+      decksNeedingAttention,
+      reviewCalendar,
     };
+
+    console.log("[Dashboard] returning dashboardData:", JSON.stringify(dashboardData, null, 2));
 
     return NextResponse.json<Dashboard>(dashboardData);
   } catch (error) {
-    console.error('Failed to fetch dashboard data:', error);
+    console.error("Failed to fetch dashboard data:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch dashboard data' },
+      { error: "Failed to fetch dashboard data" },
       { status: 500 }
     );
   }

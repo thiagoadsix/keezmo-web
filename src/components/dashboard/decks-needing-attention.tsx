@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Info, CheckCircle2, XCircle } from "lucide-react";
+import { Info } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { apiClient } from "@/src/lib/api-client";
 import { Dashboard } from "@/types/dashboard";
 
 interface DecksNeedingAttentionState {
-  multipleChoices: Dashboard['decksNeedingAttention'];
-  flashcards: Dashboard['decksNeedingAttention'];
+  multipleChoices: Dashboard["decksNeedingAttention"];
+  flashcards: Dashboard["decksNeedingAttention"];
   isLoading: boolean;
 }
 
@@ -24,12 +24,18 @@ export function DecksNeedingAttention() {
     async function fetchDecksNeedingAttention() {
       try {
         const response = await apiClient<Dashboard>("api/dashboard");
-        if (!response.ok) throw new Error("Failed to fetch decks needing attention");
+        if (!response.ok) {
+          throw new Error("Failed to fetch decks needing attention");
+        }
         const data = await response.json();
 
         setState({
-          multipleChoices: data.decksNeedingAttention.filter(deck => deck.cardType === "multipleChoice"),
-          flashcards: data.decksNeedingAttention.filter(deck => deck.cardType === "flashcard"),
+          multipleChoices: data.decksNeedingAttention.filter(
+            (deck) => deck.cardType === "multipleChoice"
+          ),
+          flashcards: data.decksNeedingAttention.filter(
+            (deck) => deck.cardType === "flashcard"
+          ),
           isLoading: false,
         });
       } catch (error) {
@@ -41,7 +47,10 @@ export function DecksNeedingAttention() {
     fetchDecksNeedingAttention();
   }, []);
 
-  const renderDecks = (decks: Dashboard['decksNeedingAttention'], title: string) => {
+  const renderDecks = (
+    decks: Dashboard["decksNeedingAttention"],
+    title: string
+  ) => {
     if (state.isLoading) {
       return <p className="text-neutral-400">Carregando...</p>;
     }
@@ -57,17 +66,17 @@ export function DecksNeedingAttention() {
 
     return (
       <div className="space-y-3">
-        {decks.map(deck => (
+        {decks.map((deck) => (
           <div key={deck.deckId} className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium">{deck.title}</div>
               <div className="text-xs text-neutral-400">{deck.description}</div>
               <div className="text-sm text-neutral-400">
                 {deck.totalAttempts} tentativas
-                <span className="ml-2">•</span>
-                <span className="ml-2">
-                  {deck.errorRate ? `${deck.errorRate.toFixed(1)}% taxa de erro` : "N/A"}
-                </span>
+                <span className="mx-2">•</span>
+                {deck.errorRate
+                  ? `${deck.errorRate.toFixed(1)}% taxa de erro`
+                  : "N/A"}
               </div>
             </div>
             <Button variant="outline" size="sm" asChild>
@@ -80,16 +89,34 @@ export function DecksNeedingAttention() {
   };
 
   return (
-    <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800">
-      <h2 className="text-lg font-bold mb-4">Decks Precisando de Atenção</h2>
-      <div className="mb-6">
-        <h3 className="text-md font-semibold">Múltipla Escolha</h3>
-        {renderDecks(state.multipleChoices, "múltipla escolha")}
+    <section className="flex flex-col gap-4">
+      {/*
+        Título da seção, seguindo o padrão do "RecentActivity",
+        que usa um <h1> ao invés de um componente Header
+      */}
+      <h1 className="text-xl sm:text-3xl font-bold">Decks Precisando de Atenção</h1>
+
+      {/*
+        Grid que separa as “Sessões (Múltipla Escolha)” e “Sessões (Flashcard)”
+        no mesmo estilo do snippet com cards em BG escuro, bordas etc.
+      */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Sessões (Múltipla Escolha) */}
+        <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
+          <div className="flex flex-col gap-4 flex-1">
+            <h2 className="text-lg sm:text-xl font-bold">Sessões (Múltipla Escolha)</h2>
+            {renderDecks(state.multipleChoices, "múltipla escolha")}
+          </div>
+        </div>
+
+        {/* Sessões (Flashcard) */}
+        <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
+          <div className="flex flex-col gap-4 flex-1">
+            <h2 className="text-lg sm:text-xl font-bold">Sessões (Flashcard)</h2>
+            {renderDecks(state.flashcards, "flashcard")}
+          </div>
+        </div>
       </div>
-      <div>
-        <h3 className="text-md font-semibold">Flashcards</h3>
-        {renderDecks(state.flashcards, "flashcard")}
-      </div>
-    </div>
+    </section>
   );
 }

@@ -1,8 +1,7 @@
-import {StatsOverview} from "@/src/components/stats-overview";
-import {RecentActivity} from "@/src/components/recent-activity";
-import {Header} from "@/src/components/header";
+import { StatsOverview } from "@/src/components/stats-overview";
+import { RecentActivity } from "@/src/components/recent-activity";
+import { Header } from "@/src/components/header";
 import { DecksNeedingAttention } from "@/src/components/dashboard/decks-needing-attention";
-import { ReviewCalendar } from "@/src/components/dashboard/review-calendar";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { apiClient } from "@/src/lib/api-client";
 import { Dashboard } from "@/types/dashboard";
@@ -34,10 +33,7 @@ export default async function DashboardPage() {
       <Header subtitle={`Hoje é ${today}`} />
       <main className="flex flex-col gap-10 py-6">
         <StatsOverview />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <DecksNeedingAttention/>
-          <ReviewCalendar reviewCalendar={data.reviewCalendar} />
-        </div>
+        <DecksNeedingAttention />
         <RecentActivity />
       </main>
     </div>
