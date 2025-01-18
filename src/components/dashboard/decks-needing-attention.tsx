@@ -6,6 +6,7 @@ import { Info } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { apiClient } from "@/src/lib/api-client";
 import { Dashboard } from "@/types/dashboard";
+import { useUser } from "@clerk/nextjs";
 
 interface DecksNeedingAttentionState {
   multipleChoices: Dashboard["decksNeedingAttention"];
@@ -14,6 +15,7 @@ interface DecksNeedingAttentionState {
 }
 
 export function DecksNeedingAttention() {
+  const { user } = useUser();
   const [state, setState] = useState<DecksNeedingAttentionState>({
     multipleChoices: [],
     flashcards: [],
@@ -23,7 +25,13 @@ export function DecksNeedingAttention() {
   useEffect(() => {
     async function fetchDecksNeedingAttention() {
       try {
-        const response = await apiClient<Dashboard>("api/dashboard");
+        const response = await apiClient<Dashboard>("api/dashboard", {
+          method: "GET",
+          headers: {
+            "x-user-email": user?.emailAddresses[0].emailAddress,
+          },
+          cache: "no-store",
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch decks needing attention");
         }
