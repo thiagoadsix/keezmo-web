@@ -4,6 +4,7 @@ export interface DeckNeedingAttention {
   totalAttempts: number;
   title: string;
   description: string;
+  cardType: string;
 }
 
 export interface ReviewCalendarDay {

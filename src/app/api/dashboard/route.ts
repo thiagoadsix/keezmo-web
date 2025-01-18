@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dynamoDbClient } from '../clients/dynamodb';
 import { Dashboard } from '@/types/dashboard';
 
-const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME || '';
+const TABLE_NAME = process.env.DYNAMODB_KEEZMO_TABLE_NAME
 
 // Função para encontrar decks que precisam de atenção
 async function findDecksNeedingAttention(items: any[], userEmail: string) {
@@ -91,9 +91,12 @@ export async function GET(req: NextRequest) {
     const command = new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
+      FilterExpression: 'cardType IN (:multipleChoice, :flashcard)',
       ExpressionAttributeValues: {
         ':pk': `USER#${userEmail}`,
-        ':sk': 'CARD_PROGRESS#'
+        ':sk': 'CARD_PROGRESS#',
+        ':multipleChoice': 'multipleChoice',
+        ':flashcard': 'flashcard'
       }
     });
 
