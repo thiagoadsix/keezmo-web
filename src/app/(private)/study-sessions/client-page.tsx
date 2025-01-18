@@ -42,8 +42,7 @@ export function ClientStudySessionsPage({
       (!studyType || session.studyType === studyType || studyType === "all") &&
       (!startDate || new Date(session.createdAt) >= startDate) &&
       (!endDate || new Date(session.createdAt) <= endDate) &&
-      (session.deck.title.includes(searchText) ||
-        session.deck.description.includes(searchText))
+      session.deck.title.includes(searchText)
   );
 
   return (
@@ -65,7 +64,7 @@ export function ClientStudySessionsPage({
           </Select>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="searchText">Buscar por título/descrição</Label>
+          <Label htmlFor="searchText">Buscar por título</Label>
           <Input
             type="text"
             value={searchText}
