@@ -323,7 +323,7 @@ export default function FlashcardStudyPage() {
         <h2 className="text-xl font-medium">{card.question}</h2>
 
         {/* Resposta */}
-        {isAnswerRevealed ?? (
+        {isAnswerRevealed && (
           <p>{card.correctAnswer}</p>
         )}
 
