@@ -25,7 +25,9 @@ import { Loader2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
 export default function FeedbackPage() {
-  const [feedbackType, setFeedbackType] = useState<"bug" | "improvement">("bug");
+  const [feedbackType, setFeedbackType] = useState<"bug" | "improvement">(
+    "bug"
+  );
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -37,11 +39,17 @@ export default function FeedbackPage() {
     e.preventDefault();
     setLoading(true);
 
+    let base64ImageString: string | null = null;
+
+    if (image) {
+      base64ImageString = await fileToBase64(image);
+    }
+
     const payload = {
       type: feedbackType,
       title,
       detail,
-      image,
+      image: base64ImageString,
     };
 
     try {
@@ -50,33 +58,20 @@ export default function FeedbackPage() {
         body: JSON.stringify(payload),
         headers: {
           "Content-Type": "application/json",
-          "x-user-email": user?.emailAddresses[0].emailAddress! || "",
+          "x-user-email": user?.emailAddresses[0].emailAddress || "",
         },
       });
 
       if (response.ok) {
         toast({
-          title: "Feedback enviado!",
-          description: "Obrigado por nos enviar seu feedback!",
-        });
-
-        // Resetar estado
-        setFeedbackType("bug");
-        setTitle("");
-        setDetail("");
-        setImage(null);
-      } else {
-        toast({
-          title: "Erro ao enviar feedback",
-          description: "Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente.",
-          variant: "destructive",
+          title: "Feedback enviado com sucesso",
+          description: "Obrigado pelo seu feedback!",
         });
       }
     } catch (error) {
-      console.error("Erro ao enviar feedback:", error);
       toast({
         title: "Erro ao enviar feedback",
-        description: "Ocorreu um erro ao enviar seu feedback. Por favor, tente novamente.",
+        description: "Ocorreu um erro ao enviar o feedback. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -84,12 +79,18 @@ export default function FeedbackPage() {
     }
   }
 
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4 px-8">
-      <Header
-        title="Feedback"
-        mobileTitle="Feedback"
-      />
+      <Header title="Feedback" mobileTitle="Feedback" />
       <Card className="bg-[#10111F] border">
         <CardHeader>
           <CardTitle className="text-xl">Envie sua opinião</CardTitle>
@@ -134,7 +135,11 @@ export default function FeedbackPage() {
                 id="feedback-detail"
                 value={detail}
                 onChange={(e) => setDetail(e.target.value)}
-                placeholder={feedbackType === "bug" ? "Conte-nos em detalhes sobre o bug" : "Conte-nos em detalhes sobre a melhoria"}
+                placeholder={
+                  feedbackType === "bug"
+                    ? "Conte-nos em detalhes sobre o bug"
+                    : "Conte-nos em detalhes sobre a melhoria"
+                }
                 required
               />
             </div>
@@ -142,7 +147,9 @@ export default function FeedbackPage() {
             {/* Imagem (opcional para bug) */}
             {feedbackType === "bug" && (
               <div className="grid w-full max-w-sm items-center gap-2">
-                <Label htmlFor="feedback-image">Captura de tela (opcional)</Label>
+                <Label htmlFor="feedback-image">
+                  Captura de tela (opcional)
+                </Label>
                 <Input
                   id="feedback-image"
                   type="file"
@@ -163,7 +170,7 @@ export default function FeedbackPage() {
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                'Enviar'
+                "Enviar"
               )}
             </Button>
           </form>
