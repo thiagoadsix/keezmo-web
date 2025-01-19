@@ -22,14 +22,17 @@ import {
 import { Header } from "@/src/components/header";
 import { useToast } from "@/src/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-
-export default function FeedbackPage() {
+import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
+export default async function FeedbackPage() {
   const [feedbackType, setFeedbackType] = useState<"bug" | "improvement">("bug");
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { userId } = await auth();
+  const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -48,6 +51,7 @@ export default function FeedbackPage() {
         body: JSON.stringify(payload),
         headers: {
           "Content-Type": "application/json",
+          "x-user-email": userEmail,
         },
       });
 
