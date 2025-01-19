@@ -49,7 +49,7 @@ export default async function FeedbackPage() {
         body: JSON.stringify(payload),
         headers: {
           "Content-Type": "application/json",
-          "x-user-email": user?.emailAddresses[0].emailAddress!,
+          "x-user-email": user?.emailAddresses[0].emailAddress! || "",
         },
       });
 
