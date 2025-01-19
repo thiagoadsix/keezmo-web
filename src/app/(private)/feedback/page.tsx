@@ -66,7 +66,11 @@ export default function FeedbackPage() {
         toast({
           title: "Feedback enviado com sucesso",
           description: "Obrigado pelo seu feedback!",
+          variant: "default"
         });
+        setTitle("");
+        setDetail("");
+        setImage(null);
       }
     } catch (error) {
       toast({
