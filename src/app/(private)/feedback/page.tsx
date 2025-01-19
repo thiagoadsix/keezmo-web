@@ -23,7 +23,8 @@ import { Header } from "@/src/components/header";
 import { useToast } from "@/src/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-export default async function FeedbackPage() {
+
+export default function FeedbackPage() {
   const [feedbackType, setFeedbackType] = useState<"bug" | "improvement">("bug");
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
