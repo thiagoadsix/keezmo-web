@@ -37,7 +37,7 @@ import {
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
-  onProcessingStart: (option: 'existing' | 'upload' | undefined) => void;
+  onProcessingStart: (option: 'existing' | 'upload' | undefined, waitForCompletion: boolean) => void;
   onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
   onError: (error: string) => void;
 }
@@ -78,6 +78,7 @@ export function CreateDeckForm({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [waitForCompletion, setWaitForCompletion] = useState(true);
 
   useEffect(() => {
     const fetchExistingPdfs = async () => {
@@ -225,7 +226,7 @@ export function CreateDeckForm({
 
     setIsLoading(true);
     setError(null);
-    onProcessingStart(selectedOption);
+    onProcessingStart(selectedOption, waitForCompletion);
 
     try {
       // Deduct credits first
@@ -650,6 +651,19 @@ export function CreateDeckForm({
           </Tabs>
         </div>
       )}
+
+      <div className="flex items-center space-x-2">
+        <input
+          id="wait-for-completion"
+          type="checkbox"
+          checked={waitForCompletion}
+          onChange={(e) => setWaitForCompletion(e.target.checked)}
+          className="rounded border-neutral-700 text-primary focus:ring-primary"
+        />
+        <label htmlFor="wait-for-completion" className="text-sm">
+          Esperar o processamento terminar
+        </label>
+      </div>
 
       <div className="flex justify-between gap-4">
         <Button variant="destructive" asChild>

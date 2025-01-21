@@ -1,12 +1,15 @@
 'use client'
 
 import { FileText, Brain, Sparkles } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {Header} from "@/src/components/header"
 import { CreateDeckForm } from "@/src/components/create-deck/ai/create-deck-form"
 import { ProcessingStatus } from "@/src/components/create-deck/ai/processing-status"
 import { SuccessMessage } from "@/src/components/create-deck/success-message"
 import { ProcessStep } from "@/types/process-step"
+import { useWebSocket } from "@/src/components/websocket-provider"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/src/hooks/use-toast"
 
 const stepsForUpload: ProcessStep[] = [
   {
@@ -49,13 +52,16 @@ const stepsForExisting: ProcessStep[] = [
   }
 ]
 
-
 export default function CreateDeckPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [createdDeckId, setCreatedDeckId] = useState<string | null>(null)
   const [steps, setSteps] = useState<ProcessStep[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [waitForCompletion, setWaitForCompletion] = useState(true)
+  const { ws } = useWebSocket()
+  const router = useRouter()
+  const { toast } = useToast()
 
   const updateStepStatus = (stepId: number, status: ProcessStep['status']) => {
     setSteps(steps =>
@@ -65,8 +71,28 @@ export default function CreateDeckPage() {
     )
   }
 
-  const handleProcessingStart = (option: 'existing' | 'upload' | undefined) => {
-    if (option === 'upload') {
+  useEffect(() => {
+    if (!waitForCompletion && ws) {
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.event === "JOB_DONE" && data.deckId === createdDeckId) {
+            setIsCompleted(true)
+            setIsProcessing(false)
+          }
+        } catch (error) {
+          console.error("Erro WS:", error)
+        }
+      }
+    }
+  }, [waitForCompletion, ws, createdDeckId])
+
+  const handleProcessingStart = (
+    option: "existing" | "upload" | undefined,
+    waitForCompletion: boolean
+  ) => {
+    setWaitForCompletion(waitForCompletion)
+    if (option === "upload") {
       setSteps(stepsForUpload)
     } else {
       setSteps(stepsForExisting)
@@ -74,11 +100,17 @@ export default function CreateDeckPage() {
     setIsProcessing(true)
   }
 
-
   if (isProcessing) {
-    return (
-      <ProcessingStatus steps={steps} />
-    )
+    if (waitForCompletion) {
+      return <ProcessingStatus steps={steps} waitForCompletion={waitForCompletion} />
+    } else {
+      toast({
+        title: "Processamento em andamento",
+        description: "O processamento continuará em background. Você receberá uma notificação quando seu deck estiver pronto!",
+      })
+      router.push("/decks")
+      return null
+    }
   }
 
   if (isCompleted && createdDeckId) {
@@ -100,8 +132,10 @@ export default function CreateDeckPage() {
         <CreateDeckForm
           onSuccess={(deckId) => {
             setCreatedDeckId(deckId)
-            setIsCompleted(true)
-            setIsProcessing(false)
+            if (waitForCompletion) {
+              setIsCompleted(true)
+              setIsProcessing(false)
+            }
           }}
           onProcessingStart={handleProcessingStart}
           onStepUpdate={updateStepStatus}

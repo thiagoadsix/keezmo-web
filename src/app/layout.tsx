@@ -8,13 +8,23 @@ import { MobileSidebarProvider } from "@/src/contexts/mobile-sidebar";
 import ClientLayout from "@/src/app/client-layout";
 import "./globals.css";
 import { Toaster } from "@/src/components/ui/toaster";
-import { AccessCheck } from '@/src/components/access-check';
+import { AccessCheck } from "@/src/components/access-check";
 import { isPublicRoute } from "@/src/lib/utils";
+import { WebSocketProvider } from "../components/websocket-provider";
 
 export const metadata: Metadata = {
   title: "Keezmo - Gerador de Flashcards com IA",
-  description: "Keezmo é uma ferramenta poderosa que utiliza inteligência artificial para gerar flashcards a partir de seus PDFs, tornando o aprendizado mais fácil e eficiente.",
-  keywords: ["Keezmo", "flashcards", "gerador de flashcards", "IA", "aprendizado", "estudo", "PDFs"],
+  description:
+    "Keezmo é uma ferramenta poderosa que utiliza inteligência artificial para gerar flashcards a partir de seus PDFs, tornando o aprendizado mais fácil e eficiente.",
+  keywords: [
+    "Keezmo",
+    "flashcards",
+    "gerador de flashcards",
+    "IA",
+    "aprendizado",
+    "estudo",
+    "PDFs",
+  ],
   authors: [{ name: "Keezmo", url: "https://keezmo.com" }],
   creator: "Keezmo",
   publisher: "Keezmo",
@@ -25,7 +35,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Keezmo - Gerador de Flashcards com IA",
-    description: "Keezmo é uma ferramenta poderosa que utiliza inteligência artificial para gerar flashcards a partir de seus PDFs, tornando o aprendizado mais fácil e eficiente.",
+    description:
+      "Keezmo é uma ferramenta poderosa que utiliza inteligência artificial para gerar flashcards a partir de seus PDFs, tornando o aprendizado mais fácil e eficiente.",
     url: "https://keezmo.com",
     siteName: "Keezmo",
     images: [
@@ -68,7 +79,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+  const currentPath =
+    typeof window !== "undefined" ? window.location.pathname : "";
   const isPublic = isPublicRoute(currentPath);
 
   return (
@@ -86,18 +98,16 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <body className="min-h-screen antialiased">
-          <ThemeProvider
-            attribute="class"
-            enableSystem={true}
-          >
-            <MobileSidebarProvider>
-              <AccessCheck>
-                <ClientLayout>
-                  {children}
-                </ClientLayout>
-              </AccessCheck>
-            </MobileSidebarProvider>
-          </ThemeProvider>
+          <WebSocketProvider>
+            <ThemeProvider attribute="class" enableSystem={true}>
+              <MobileSidebarProvider>
+                <AccessCheck>
+                  <ClientLayout>{children}</ClientLayout>
+                </AccessCheck>
+              </MobileSidebarProvider>
+            </ThemeProvider>
+          </WebSocketProvider>
+
           <Toaster />
         </body>
       </html>

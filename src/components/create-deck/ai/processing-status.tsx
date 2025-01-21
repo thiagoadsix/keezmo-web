@@ -1,11 +1,15 @@
 import { Check, Loader2 } from "lucide-react"
 import { ProcessStep } from "@/types/process-step";
+import { useRouter } from "next/navigation";
 
 interface ProcessingStatusProps {
   steps: ProcessStep[];
+  waitForCompletion: boolean;
 }
 
-export function ProcessingStatus({ steps }: ProcessingStatusProps) {
+export function ProcessingStatus({ steps, waitForCompletion }: ProcessingStatusProps) {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="bg-[#10111F] rounded-md border border-neutral-800 p-8 w-full max-w-xl">
@@ -15,6 +19,11 @@ export function ProcessingStatus({ steps }: ProcessingStatusProps) {
             <p className="text-sm text-neutral-400">
               Isso pode levar alguns minutos. Por favor, não feche esta página.
             </p>
+            {!waitForCompletion && (
+              <p className="text-sm text-green-500 mt-2">
+                Você pode navegar livremente pelo app. Receberá uma notificação quando seu deck estiver pronto!
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-4">
@@ -55,6 +64,15 @@ export function ProcessingStatus({ steps }: ProcessingStatusProps) {
               </div>
             ))}
           </div>
+
+          {!waitForCompletion && (
+            <button
+              className="mt-8 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+              onClick={() => router.push("/decks")}
+            >
+              Ir para Dashboard
+            </button>
+          )}
         </div>
       </div>
     </div>
