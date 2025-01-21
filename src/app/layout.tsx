@@ -107,7 +107,6 @@ export default function RootLayout({
               </MobileSidebarProvider>
             </ThemeProvider>
           </WebSocketProvider>
-
           <Toaster />
         </body>
       </html>
