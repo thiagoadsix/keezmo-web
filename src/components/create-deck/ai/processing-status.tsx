@@ -18,7 +18,7 @@ export function ProcessingStatus({ steps, waitForCompletion }: ProcessingStatusP
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-2">Criando seu deck</h2>
             <p className="text-sm text-neutral-400">
-              Isso pode levar alguns minutos. Por favor, não feche esta página.
+              Isso pode levar alguns minutos. Caso precise sair, você pode navegar pela aplicação.
             </p>
           </div>
 
@@ -65,7 +65,7 @@ export function ProcessingStatus({ steps, waitForCompletion }: ProcessingStatusP
             <Button
               onClick={() => router.push("/decks")}
             >
-              Ir para Dashboard
+              Ir para os Decks
             </Button>
           )}
         </div>
