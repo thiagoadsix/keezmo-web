@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
   const listCommand = new ListObjectsV2Command(listParams);
   const listResponse = await s3Client.send(listCommand);
 
-  if (!listResponse.Contents) {
+  console.log(listResponse)
+
+  if (!listResponse.Contents || listResponse.Contents.length === 0) {
     return NextResponse.json([], { status: 200 });
   }
 
