@@ -37,7 +37,7 @@ import {
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
-  onProcessingStart: (option: 'existing' | 'upload' | undefined) => void;
+  onProcessingStart: (option: "existing" | "upload" | undefined) => void;
   onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
   onError: (error: string) => void;
 }
@@ -96,7 +96,7 @@ export function CreateDeckForm({
           const pdfs = await response.json();
           setExistingPdfs(pdfs);
         } else {
-          console.error('Failed to fetch existing PDFs:', response.statusText);
+          console.error("Failed to fetch existing PDFs:", response.statusText);
         }
       }
     };
@@ -396,264 +396,256 @@ export function CreateDeckForm({
         />
       </div>
 
-      {existingPdfs.length > 0 && (
-        <div className="flex flex-col gap-2 w-full">
-          <Tabs
-            value={selectedOption}
-            onValueChange={(value) =>
-              setSelectedOption(value as "existing" | "upload" | undefined)
-            }
-          >
-            <TabsList className="w-full space-x-2">
-              <TabsTrigger value="existing" className="flex-1 justify-center">
-                PDF existente
-              </TabsTrigger>
-              <TabsTrigger value="upload" className="flex-1 justify-center">
-                Novo upload
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="existing">
-              <div className="flex flex-col gap-2 w-full">
-                <div>
-                  <label htmlFor="existing-pdf">
-                    Selecione um PDF existente
-                  </label>
-                </div>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-full justify-between"
-                    >
-                      {selectedPdf
-                        ? existingPdfs.find((pdf) => pdf.url === selectedPdf)
-                            ?.name
-                        : "Selecione um PDF..."}
-                      <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput
-                        placeholder="Pesquisar PDF..."
-                        className="h-9"
-                        value={searchValue}
-                        onValueChange={setSearchValue}
-                      />
-                      <CommandList>
-                        <CommandEmpty>Nenhum PDF encontrado.</CommandEmpty>
-                        <CommandGroup>
-                          {existingPdfs
-                            .filter((pdf) =>
-                              pdf.name
-                                .toLowerCase()
-                                .includes(searchValue.toLowerCase())
-                            )
-                            .map((pdf) => (
-                              <CommandItem
-                                key={pdf.url}
-                                value={pdf.url}
-                                onSelect={(currentValue) => {
-                                  setSelectedPdf(
-                                    currentValue === selectedPdf
-                                      ? null
-                                      : currentValue
-                                  );
-                                  setSearchValue("");
-                                  setOpen(false);
-
-                                  const pdfData = existingPdfs.find(
-                                    (pdf) => pdf.url === currentValue
-                                  );
-                                  if (pdfData) {
-                                    setTotalPages(pdfData.pageCount);
-                                    setPageRange({
-                                      start: 1,
-                                      end: Math.min(pdfData.pageCount, 30),
-                                    });
-                                  }
-                                }}
-                              >
-                                {pdf.name}
-                                <Check
-                                  className={cn(
-                                    "ml-auto",
-                                    selectedPdf === pdf.url
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                {selectedPdf && totalPages > 0 && (
-                  <div className="mt-4 space-y-4">
-                    <div className="text-sm text-neutral-400">
-                      Total de páginas: {totalPages}
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm">
-                        Intervalo de páginas (máx. 30 páginas)
-                      </label>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            min={1}
-                            max={totalPages}
-                            value={pageRange.start}
-                            onChange={(e) =>
-                              handlePageRangeChange("start", e.target.value)
-                            }
-                            className="w-20"
-                          />
-                          <span>até</span>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={totalPages}
-                            value={pageRange.end}
-                            onChange={(e) =>
-                              handlePageRangeChange("end", e.target.value)
-                            }
-                            className="w-20"
-                          />
-                        </div>
-                        {pageRangeError && (
-                          <p className="text-xs text-red-500">
-                            {pageRangeError}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+      <div className="flex flex-col gap-2 w-full">
+        <Tabs
+          value={selectedOption}
+          onValueChange={(value) =>
+            setSelectedOption(value as "existing" | "upload" | undefined)
+          }
+        >
+          <TabsList className="w-full space-x-2">
+            <TabsTrigger value="existing" className="flex-1 justify-center">
+              PDF existente
+            </TabsTrigger>
+            <TabsTrigger value="upload" className="flex-1 justify-center">
+              Novo upload
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="existing">
+            <div className="flex flex-col gap-2 w-full">
+              <div>
+                <label htmlFor="existing-pdf">Selecione um PDF existente</label>
               </div>
-            </TabsContent>
-            <TabsContent value="upload">
-              <div className="flex flex-col gap-2 w-full">
-                <div>
-                  <label htmlFor="pdf">Envie o PDF</label>
-                  <span className="text-xs text-red-500">*</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Certifique-se de que o PDF contenha texto selecionável. PDFs
-                  com texto em formato de imagem ou apenas imagens não terão um
-                  bom resultado.
-                </p>
-                <div className="w-full flex items-center justify-center">
-                  <label htmlFor="pdf-upload" className="w-full cursor-pointer">
-                    <div
-                      className={`border-2 border-dashed rounded-lg p-12 w-full flex flex-col items-center justify-center gap-2 transition-colors ${
-                        selectedFileName
-                          ? "border-primary bg-primary/5"
-                          : "border-neutral-700 hover:border-primary-800"
-                      }`}
-                    >
-                      <PdfIcon
-                        className={
-                          selectedFileName ? "text-primary" : "text-neutral-400"
-                        }
-                      />
-                      <input
-                        type="file"
-                        id="pdf-upload"
-                        accept=".pdf"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
-                      {selectedFileName ? (
-                        <>
-                          <p className="text-sm text-primary font-medium">
-                            {selectedFileName}
-                          </p>
-                          <p className="text-xs text-neutral-400">
-                            Clique para trocar o arquivo
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-sm text-neutral-400 text-center">
-                            Arraste e solte seu arquivo PDF aqui ou clique para
-                            selecionar
-                          </p>
-                          <p className="text-xs text-neutral-500">
-                            Apenas arquivos PDF são aceitos
-                          </p>
-                        </>
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between"
+                  >
+                    {selectedPdf
+                      ? existingPdfs.find((pdf) => pdf.url === selectedPdf)
+                          ?.name
+                      : "Selecione um PDF..."}
+                    <ChevronsUpDown className="opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Pesquisar PDF..."
+                      className="h-9"
+                      value={searchValue}
+                      onValueChange={setSearchValue}
+                    />
+                    <CommandList>
+                      <CommandEmpty>Nenhum PDF encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {existingPdfs
+                          .filter((pdf) =>
+                            pdf.name
+                              .toLowerCase()
+                              .includes(searchValue.toLowerCase())
+                          )
+                          .map((pdf) => (
+                            <CommandItem
+                              key={pdf.url}
+                              value={pdf.url}
+                              onSelect={(currentValue) => {
+                                setSelectedPdf(
+                                  currentValue === selectedPdf
+                                    ? null
+                                    : currentValue
+                                );
+                                setSearchValue("");
+                                setOpen(false);
+
+                                const pdfData = existingPdfs.find(
+                                  (pdf) => pdf.url === currentValue
+                                );
+                                if (pdfData) {
+                                  setTotalPages(pdfData.pageCount);
+                                  setPageRange({
+                                    start: 1,
+                                    end: Math.min(pdfData.pageCount, 30),
+                                  });
+                                }
+                              }}
+                            >
+                              {pdf.name}
+                              <Check
+                                className={cn(
+                                  "ml-auto",
+                                  selectedPdf === pdf.url
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {selectedPdf && totalPages > 0 && (
+                <div className="mt-4 space-y-4">
+                  <div className="text-sm text-neutral-400">
+                    Total de páginas: {totalPages}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm">
+                      Intervalo de páginas (máx. 30 páginas)
+                    </label>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={pageRange.start}
+                          onChange={(e) =>
+                            handlePageRangeChange("start", e.target.value)
+                          }
+                          className="w-20"
+                        />
+                        <span>até</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={pageRange.end}
+                          onChange={(e) =>
+                            handlePageRangeChange("end", e.target.value)
+                          }
+                          className="w-20"
+                        />
+                      </div>
+                      {pageRangeError && (
+                        <p className="text-xs text-red-500">{pageRangeError}</p>
                       )}
                     </div>
-                  </label>
+                  </div>
                 </div>
+              )}
+            </div>
+          </TabsContent>
+          <TabsContent value="upload">
+            <div className="flex flex-col gap-2 w-full">
+              <div>
+                <label htmlFor="pdf">Envie o PDF</label>
+                <span className="text-xs text-red-500">*</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Certifique-se de que o PDF contenha texto selecionável. PDFs com
+                texto em formato de imagem ou apenas imagens não terão um bom
+                resultado.
+              </p>
+              <div className="w-full flex items-center justify-center">
+                <label htmlFor="pdf-upload" className="w-full cursor-pointer">
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-12 w-full flex flex-col items-center justify-center gap-2 transition-colors ${
+                      selectedFileName
+                        ? "border-primary bg-primary/5"
+                        : "border-neutral-700 hover:border-primary-800"
+                    }`}
+                  >
+                    <PdfIcon
+                      className={
+                        selectedFileName ? "text-primary" : "text-neutral-400"
+                      }
+                    />
+                    <input
+                      type="file"
+                      id="pdf-upload"
+                      accept=".pdf"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    {selectedFileName ? (
+                      <>
+                        <p className="text-sm text-primary font-medium">
+                          {selectedFileName}
+                        </p>
+                        <p className="text-xs text-neutral-400">
+                          Clique para trocar o arquivo
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-neutral-400 text-center">
+                          Arraste e solte seu arquivo PDF aqui ou clique para
+                          selecionar
+                        </p>
+                        <p className="text-xs text-neutral-500">
+                          Apenas arquivos PDF são aceitos
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </label>
+              </div>
 
-                <div className="flex flex-col gap-2 mt-4">
-                  <label htmlFor="custom-pdf-name">
-                    Nome personalizado do PDF
-                  </label>
-                  <Input
-                    type="text"
-                    id="custom-pdf-name"
-                    placeholder="Digite um nome para o PDF"
-                    value={customPdfName}
-                    onChange={(e) => setCustomPdfName(e.target.value)}
-                  />
-                </div>
+              <div className="flex flex-col gap-2 mt-4">
+                <label htmlFor="custom-pdf-name">
+                  Nome personalizado do PDF
+                </label>
+                <Input
+                  type="text"
+                  id="custom-pdf-name"
+                  placeholder="Digite um nome para o PDF"
+                  value={customPdfName}
+                  onChange={(e) => setCustomPdfName(e.target.value)}
+                />
+              </div>
 
-                {totalPages > 0 && (
-                  <div className="mt-4 space-y-4">
-                    <div className="text-sm text-neutral-400">
-                      Total de páginas: {totalPages}
-                    </div>
+              {totalPages > 0 && (
+                <div className="mt-4 space-y-4">
+                  <div className="text-sm text-neutral-400">
+                    Total de páginas: {totalPages}
+                  </div>
 
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm">
+                      Intervalo de páginas (máx. 30 páginas)
+                    </label>
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm">
-                        Intervalo de páginas (máx. 30 páginas)
-                      </label>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            min={1}
-                            max={totalPages}
-                            value={pageRange.start}
-                            onChange={(e) =>
-                              handlePageRangeChange("start", e.target.value)
-                            }
-                            className="w-20"
-                          />
-                          <span>até</span>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={totalPages}
-                            value={pageRange.end}
-                            onChange={(e) =>
-                              handlePageRangeChange("end", e.target.value)
-                            }
-                            className="w-20"
-                          />
-                        </div>
-                        {pageRangeError && (
-                          <p className="text-xs text-red-500">
-                            {pageRangeError}
-                          </p>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={pageRange.start}
+                          onChange={(e) =>
+                            handlePageRangeChange("start", e.target.value)
+                          }
+                          className="w-20"
+                        />
+                        <span>até</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={pageRange.end}
+                          onChange={(e) =>
+                            handlePageRangeChange("end", e.target.value)
+                          }
+                          className="w-20"
+                        />
                       </div>
+                      {pageRangeError && (
+                        <p className="text-xs text-red-500">{pageRangeError}</p>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      )}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       <div className="flex justify-between gap-4">
         <Button variant="destructive" asChild>
