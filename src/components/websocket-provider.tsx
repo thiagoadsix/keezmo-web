@@ -1,6 +1,8 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useToast } from "@/src/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { ToastAction } from "./ui/toast";
 
 type WebSocketContextValue = {
   ws: WebSocket | null;
@@ -11,6 +13,8 @@ const WebSocketContext = createContext<WebSocketContextValue>({ ws: null });
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
+
   useEffect(() => {
     const socket = new WebSocket("wss://keezmo-production.up.railway.app/ws");
 
@@ -19,9 +23,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       try {
         const data = JSON.parse(event.data);
         if (data.event === "JOB_DONE") {
+          const { deckId, name, description, cards } = data;
           toast({
-            title: `Job finalizado: Deck ${data.deckId}`,
-            description: "O deck foi criado com sucesso",
+            title: `Deck "${name}" criado com sucesso!`,
+            description: `${description} - Contém ${cards.length} cards.`,
+            variant: "default",
+            action: <ToastAction altText="Ir para lista de Decks" onClick={() => router.push(`/decks`)}>Ir para lista de Decks</ToastAction>
           });
         }
       } catch (error) {
