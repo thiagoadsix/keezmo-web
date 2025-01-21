@@ -21,10 +21,9 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     socket.onopen = () => console.log("WS conectado");
     socket.onmessage = (event) => {
       try {
-        console.log(JSON.stringify(event.data, null, 2))
         const data = JSON.parse(event.data);
         if (data.event === "JOB_DONE") {
-          const { deckId, name, description, cards } = data;
+          const { name, description, cards } = data.deck;
           toast({
             title: `Deck "${name}" criado com sucesso!`,
             description: `${description} - Contém ${cards.length} cards.`,
