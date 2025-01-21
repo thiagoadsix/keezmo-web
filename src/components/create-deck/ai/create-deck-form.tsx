@@ -81,24 +81,28 @@ export function CreateDeckForm({
 
   useEffect(() => {
     const fetchExistingPdfs = async () => {
-      const response = await apiClient<
-        { name: string; uploadDate: Date; url: string; pageCount: number }[]
-      >("api/users/pdfs", {
-        method: "GET",
-        headers: {
-          "x-user-email": user?.emailAddresses[0].emailAddress! || "",
-          "x-user-id": user?.id! || "",
-        },
-      });
+      if (user && user.emailAddresses && user.id) {
+        const response = await apiClient<
+          { name: string; uploadDate: Date; url: string; pageCount: number }[]
+        >("api/users/pdfs", {
+          method: "GET",
+          headers: {
+            "x-user-email": user.emailAddresses[0].emailAddress,
+            "x-user-id": user.id,
+          },
+        });
 
-      if (response.ok) {
-        const pdfs = await response.json();
-        setExistingPdfs(pdfs);
+        if (response.ok) {
+          const pdfs = await response.json();
+          setExistingPdfs(pdfs);
+        } else {
+          console.error('Failed to fetch existing PDFs:', response.statusText);
+        }
       }
     };
 
     fetchExistingPdfs();
-  }, [user?.emailAddresses, user?.id]);
+  }, [user?.id]);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>

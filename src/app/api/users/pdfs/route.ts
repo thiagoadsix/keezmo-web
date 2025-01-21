@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   if (!email) {
     console.warn('⚠️ [Auth] Unauthorized access attempt');
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const clerkId = req.headers.get('x-user-id');
