@@ -26,7 +26,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
           const { name, description, cards } = data.deck;
           toast({
             title: `Deck "${name}" criado com sucesso!`,
-            description: `${description} - Contém ${cards.length} cards.`,
+            description: `Contém ${cards.length} cartões.`,
             variant: "default",
             action: <ToastAction altText="Ir para lista de Decks" onClick={() => router.push(`/decks`)}>Ir para lista de Decks</ToastAction>
           });
