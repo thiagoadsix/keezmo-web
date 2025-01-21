@@ -49,7 +49,7 @@ export default function EditDeckPage() {
   }
 
   if (isProcessing) {
-    return <ProcessingStatus steps={steps} />;
+    return <ProcessingStatus steps={steps} waitForCompletion={false} />;
   }
 
   if (isCompleted) {
