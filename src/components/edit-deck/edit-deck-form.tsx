@@ -14,14 +14,19 @@ import { Deck } from "@/types/deck"
 import { Card } from "@/types/card"
 
 interface EditDeckFormProps {
-  deckId: string;
-  onSuccess: () => void;
-  onProcessingStart: () => void;
-  onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
-  onError: (error: string) => void;
+  deckId: string
+  onSuccess: () => void
+  onProcessingStart: () => void
+  onStepUpdate: (stepId: number, status: ProcessStepStatus) => void
+  onError: (error: string) => void
 }
 
-export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdate }: EditDeckFormProps) {
+export function EditDeckForm({
+  deckId,
+  onSuccess,
+  onProcessingStart,
+  onStepUpdate,
+}: EditDeckFormProps) {
   const { user } = useUser()
   const [isLoading, setIsLoading] = useState(false)
   const [deck, setDeck] = useState<Deck | null>(null)
@@ -34,142 +39,157 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
       try {
         const deckResponse = await apiClient<Deck>(`api/decks/${deckId}`, {
           headers: {
-            'x-user-email': user?.emailAddresses[0].emailAddress!
-          }
-        });
+            "x-user-email": user?.emailAddresses[0].emailAddress!,
+          },
+        })
 
         if (!deckResponse.ok) {
-          throw new Error('Failed to fetch deck');
+          throw new Error("Failed to fetch deck")
         }
 
-        const deck = await deckResponse.json();
+        const deck = await deckResponse.json()
 
-        const cardsResponse = await apiClient<Card[]>(`api/decks/${deckId}/cards`, {cache: 'no-store'});
+        const cardsResponse = await apiClient<Card[]>(
+          `api/decks/${deckId}/cards`,
+          { cache: "no-store" }
+        )
 
         if (!cardsResponse.ok) {
-          throw new Error('Failed to fetch cards');
+          throw new Error("Failed to fetch cards")
         }
 
-        const cards = await cardsResponse.json();
+        const cards = await cardsResponse.json()
 
-        const cardsWithIds = cards.map((card: Card, index: number) => ({
+        const cardsWithIds = cards.map((card: Card) => ({
           ...card,
-          id: card.id
-        }));
+          id: card.id,
+        }))
 
         setDeck({
           id: deck.id,
           title: deck.title,
           description: deck.description,
           cards: cardsWithIds,
-          createdAt: deck.createdAt
-        });
+          createdAt: deck.createdAt,
+        })
       } catch (error) {
         toast({
           variant: "destructive",
           title: "Erro ao carregar deck",
-          description: "Não foi possível carregar as informações do deck."
-        });
+          description: "Não foi possível carregar as informações do deck.",
+        })
       }
-    };
+    }
 
     if (user?.id) {
-      fetchDeckAndCards();
+      fetchDeckAndCards()
     }
-  }, [deckId, user?.id, toast]);
+  }, [deckId, user?.id, toast])
 
   const handleUpdateDeck = async () => {
-    if (!deck) return;
+    if (!deck) return
 
-    setIsLoading(true);
-    setError(null);
-    onProcessingStart();
+    setIsLoading(true)
+    setError(null)
+    onProcessingStart()
 
     try {
       // Primeiro, buscar o deck atual para preservar campos existentes
       const currentDeck = await apiClient(`api/decks/${deckId}`, {
         headers: {
-          'x-user-email': user?.emailAddresses[0].emailAddress!
-        }
-      });
+          "x-user-email": user?.emailAddresses[0].emailAddress!,
+        },
+      })
 
       // Step 1: Update deck info (sem os cards)
-      onStepUpdate(1, 'processing');
+      onStepUpdate(1, "processing")
       await apiClient(`api/decks/${deckId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'x-user-email': user?.emailAddresses[0].emailAddress!
+          "x-user-email": user?.emailAddresses[0].emailAddress!,
         },
         body: JSON.stringify({
           ...currentDeck,
           title: deck.title,
           description: deck.description,
-          updatedAt: new Date().toISOString()
-        })
-      });
-      onStepUpdate(1, 'completed');
+          updatedAt: new Date().toISOString(),
+        }),
+      })
+      onStepUpdate(1, "completed")
 
       // Step 2: Update cards
-      onStepUpdate(2, 'processing');
+      onStepUpdate(2, "processing")
       await apiClient(`api/decks/${deckId}/cards`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify({
-          cards: deck.cards
-        })
-      });
-      onStepUpdate(2, 'completed');
+          cards: deck.cards,
+        }),
+      })
+      onStepUpdate(2, "completed")
 
       // Step 3: Finalize
-      onStepUpdate(3, 'processing');
-      await new Promise(resolve => setTimeout(resolve, 500));
-      onStepUpdate(3, 'completed');
+      onStepUpdate(3, "processing")
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      onStepUpdate(3, "completed")
 
-      onSuccess();
+      onSuccess()
     } catch (error: any) {
-      console.error('Failed to update deck:', error);
-      setError(error.message || 'Erro ao atualizar o deck');
-      onStepUpdate(1, 'error');
-      onStepUpdate(2, 'waiting');
-      onStepUpdate(3, 'waiting');
+      console.error("Failed to update deck:", error)
+      setError(error.message || "Erro ao atualizar o deck")
+      onStepUpdate(1, "error")
+      onStepUpdate(2, "waiting")
+      onStepUpdate(3, "waiting")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const nextCard = () => {
     if (deck && deck.cards && currentCardIndex < (deck.cards.length || 0) - 1) {
-      setCurrentCardIndex(prev => prev + 1)
+      setCurrentCardIndex((prev) => prev + 1)
     }
   }
 
   const previousCard = () => {
     if (currentCardIndex > 0) {
-      setCurrentCardIndex(prev => prev - 1)
+      setCurrentCardIndex((prev) => prev - 1)
     }
   }
 
   if (!deck) {
-    return <div className="p-8">Carregando...</div>;
+    return <div className="p-8">Carregando...</div>
   }
 
   return (
     <div className="p-8 space-y-8">
       <div className="space-y-4">
         <div>
-          <label htmlFor="title" className="text-sm font-medium">Título</label>
+          <label htmlFor="title" className="text-sm font-medium">
+            Título
+          </label>
           <Input
             id="title"
             value={deck.title}
-            onChange={(e) => setDeck(prev => prev ? {...prev, title: e.target.value} : null)}
+            onChange={(e) =>
+              setDeck((prev) =>
+                prev ? { ...prev, title: e.target.value } : null
+              )
+            }
           />
         </div>
 
         <div>
-          <label htmlFor="description" className="text-sm font-medium">Descrição</label>
+          <label htmlFor="description" className="text-sm font-medium">
+            Descrição
+          </label>
           <Textarea
             id="description"
             value={deck.description}
-            onChange={(e) => setDeck(prev => prev ? {...prev, description: e.target.value} : null)}
+            onChange={(e) =>
+              setDeck((prev) =>
+                prev ? { ...prev, description: e.target.value } : null
+              )
+            }
           />
         </div>
       </div>
@@ -198,7 +218,7 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
               {deck.cards && (deck.cards.length || 0) > 0 && (
                 <div
                   className="transition-all duration-300 ease-in-out"
-                  style={{ minHeight: '250px' }}
+                  style={{ minHeight: "250px" }}
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -208,95 +228,136 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
                     </div>
 
                     <div className="space-y-4">
+                      {/* Pergunta */}
                       <div>
                         <label className="text-sm font-medium">Pergunta</label>
                         <Textarea
                           value={deck.cards[currentCardIndex].question}
                           onChange={(e) => {
-                            const newCards = [...(deck.cards ?? [])];
+                            const newCards = [...(deck.cards ?? [])]
                             newCards[currentCardIndex] = {
                               ...(deck.cards?.[currentCardIndex] ?? {}),
-                              id: deck.cards?.[currentCardIndex]?.id ?? crypto.randomUUID(),
+                              id:
+                                deck.cards?.[currentCardIndex]?.id ??
+                                crypto.randomUUID(),
                               question: e.target.value,
-                              options: deck.cards?.[currentCardIndex]?.options ?? [],
-                              correctAnswer: deck.cards?.[currentCardIndex]?.correctAnswer ?? '',
-                            };
-                            setDeck(prev => prev ? {...prev, cards: newCards} : null);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Resposta correta</label>
-                        <Textarea
-                          value={deck.cards[currentCardIndex].correctAnswer}
-                          onChange={(e) => {
-                            const newCards = [...(deck.cards ?? [])];
-                            const currentCard = newCards[currentCardIndex] ?? {};
-                            const newAnswer = e.target.value;
-
-                            // Encontrar se a resposta anterior estava nas opções
-                            const oldAnswerIndex = currentCard.options.indexOf(currentCard.correctAnswer);
-
-                            // Se encontrou, atualiza a opção também
-                            if (oldAnswerIndex !== -1) {
-                              currentCard.options[oldAnswerIndex] = newAnswer;
+                              options:
+                                deck.cards?.[currentCardIndex]?.options ?? [],
+                              correctAnswer:
+                                deck.cards?.[currentCardIndex]?.correctAnswer ??
+                                "",
                             }
-
-                            currentCard.correctAnswer = newAnswer;
-                            setDeck(prev => prev ? {...prev, cards: newCards} : null);
+                            setDeck((prev) =>
+                              prev ? { ...prev, cards: newCards } : null
+                            )
                           }}
                         />
                       </div>
+
+                      {/* Opções (com radio para resposta correta) */}
                       <div>
-                        <label className="text-sm font-medium">Opções incorretas</label>
-                        <div className="space-y-2">
-                          {deck.cards[currentCardIndex].options.map((option, optionIndex) => (
-                            <div key={optionIndex} className="flex gap-2">
-                              <Input
-                                value={option}
-                                onChange={(e) => {
-                                  const newCards = [...(deck.cards ?? [])];
-                                  const currentCard = newCards[currentCardIndex] ?? {};
-                                  const newValue = e.target.value;
-
-                                  if (option === currentCard.correctAnswer) {
-                                    currentCard.correctAnswer = newValue;
-                                  }
-
-                                  const newOptions = [...currentCard.options];
-                                  newOptions[optionIndex] = newValue;
-                                  currentCard.options = newOptions;
-
-                                  setDeck(prev => prev ? {...prev, cards: newCards} : null);
-                                }}
-                                placeholder={`Opção ${optionIndex + 1}`}
-                              />
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-10 w-10 shrink-0"
-                                onClick={() => {
-                                  const newCards = [...(deck.cards ?? [])];
-                                  const currentCard = newCards[currentCardIndex] ?? {};
-                                  const newOptions = currentCard.options.filter((_, i) => i !== optionIndex);
-                                  currentCard.options = newOptions;
-                                  setDeck(prev => prev ? {...prev, cards: newCards} : null);
-                                }}
+                        <label className="text-sm font-medium">Opções</label>
+                        <div className="space-y-2 mt-2">
+                          {deck.cards[currentCardIndex].options.map(
+                            (option, optionIndex) => (
+                              <div
+                                key={optionIndex}
+                                className="flex items-center gap-2"
                               >
-                                <Trash className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
+                                {/* Radio button para selecionar a correta */}
+                                <input
+                                  type="radio"
+                                  className="h-4 w-4 shrink-0"
+                                  checked={
+                                    (deck.cards?.[currentCardIndex]?.correctAnswer ===
+                                    option) ?? false
+                                  }
+                                  onChange={() => {
+                                    const newCards = [...(deck.cards || [])]
+                                    newCards[currentCardIndex].correctAnswer =
+                                      option
+                                    setDeck((prev) =>
+                                      prev ? { ...prev, cards: newCards } : null
+                                    )
+                                  }}
+                                />
 
+                                {/* Input da opção */}
+                                <Input
+                                  value={option}
+                                  onChange={(e) => {
+                                    const newCards = [...(deck.cards || [])]
+                                    const currentCard = newCards[currentCardIndex]
+                                    const newVal = e.target.value
+
+                                    // Se essa opção for a que está marcada como correta,
+                                    // atualizamos o correctAnswer para refletir a mudança
+                                    if (
+                                      currentCard.correctAnswer ===
+                                      currentCard.options[optionIndex]
+                                    ) {
+                                      currentCard.correctAnswer = newVal
+                                    }
+
+                                    // Atualiza o array de opções
+                                    const newOptions = [...currentCard.options]
+                                    newOptions[optionIndex] = newVal
+                                    currentCard.options = newOptions
+
+                                    newCards[currentCardIndex] = currentCard
+                                    setDeck((prev) =>
+                                      prev ? { ...prev, cards: newCards } : null
+                                    )
+                                  }}
+                                  placeholder={`Opção ${optionIndex + 1}`}
+                                />
+
+                                {/* Botão de remover opção */}
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-10 w-10 shrink-0"
+                                  onClick={() => {
+                                    const newCards = [...(deck.cards || [])]
+                                    const currentCard = newCards[currentCardIndex]
+
+                                    // se a opção removida for a correta, zera a "correctAnswer"
+                                    if (
+                                      currentCard.options[optionIndex] ===
+                                      currentCard.correctAnswer
+                                    ) {
+                                      currentCard.correctAnswer = ""
+                                    }
+
+                                    currentCard.options = currentCard.options.filter(
+                                      (_, i) => i !== optionIndex
+                                    )
+                                    newCards[currentCardIndex] = currentCard
+
+                                    setDeck((prev) =>
+                                      prev ? { ...prev, cards: newCards } : null
+                                    )
+                                  }}
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )
+                          )}
+
+                          {/* Botão de adicionar nova opção */}
                           <Button
                             variant="outline"
                             size="sm"
                             className="w-full mt-2"
                             onClick={() => {
-                              const newCards = [...(deck.cards ?? [])];
-                              const currentCard = newCards[currentCardIndex] ?? {};
-                              currentCard.options = [...currentCard.options, ''];
-                              setDeck(prev => prev ? {...prev, cards: newCards} : null);
+                              const newCards = [...(deck.cards ?? [])]
+                              const thisCard = newCards[currentCardIndex] ?? {}
+                              thisCard.options = [...thisCard.options, ""]
+                              newCards[currentCardIndex] = thisCard
+                              setDeck((prev) =>
+                                prev ? { ...prev, cards: newCards } : null
+                              )
                             }}
                           >
                             <Plus className="h-4 w-4 mr-2" />
@@ -314,7 +375,9 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
               variant="outline"
               size="icon"
               onClick={nextCard}
-              disabled={deck?.cards && currentCardIndex === deck.cards.length - 1}
+              disabled={
+                deck?.cards && currentCardIndex === deck.cards.length - 1
+              }
               className="h-8 w-8"
             >
               <ChevronRight className="h-4 w-4" />
@@ -327,20 +390,17 @@ export function EditDeckForm({ deckId, onSuccess, onProcessingStart, onStepUpdat
         <Button variant="destructive" asChild>
           <Link href={`/decks`}>Cancelar</Link>
         </Button>
-        <Button
-          onClick={handleUpdateDeck}
-          disabled={isLoading}
-        >
+        <Button onClick={handleUpdateDeck} disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processando...
             </>
           ) : (
-            'Salvar alterações'
+            "Salvar alterações"
           )}
         </Button>
       </div>
     </div>
-  );
+  )
 }
