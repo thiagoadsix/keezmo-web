@@ -269,8 +269,8 @@ export function EditDeckForm({
                                   type="radio"
                                   className="h-4 w-4 shrink-0"
                                   checked={
-                                    (deck.cards?.[currentCardIndex]?.correctAnswer ===
-                                    option) ?? false
+                                    deck.cards?.[currentCardIndex]?.correctAnswer ===
+                                    option
                                   }
                                   onChange={() => {
                                     const newCards = [...(deck.cards || [])]
