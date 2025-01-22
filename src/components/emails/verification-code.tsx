@@ -104,7 +104,7 @@ export default function VerificationCode({
                 fontWeight: "normal",
               }}
             >
-              Este código foi solicitado em <strong>{requestedAt}</strong>. Se
+              Este código foi solicitado em <strong>{new Date(requestedAt).toLocaleDateString('pt-BR')}</strong>. Se
               você não fez essa solicitação, pode ignorar este e-mail com
               segurança.
             </Text>

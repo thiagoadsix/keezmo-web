@@ -30,9 +30,13 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
   const [isLoading, setIsLoading] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [cards, setCards] = useState<Card[]>([{ question: '', options: [''], correctAnswerIndex: 0 }])
+  const [cards, setCards] = useState<Card[]>([{ question: '', options: [''], correctAnswerIndex: -1 }])
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [titleError, setTitleError] = useState<string | null>(null)
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
+  const [questionError, setQuestionError] = useState<string | null>(null)
+  const [optionsError, setOptionsError] = useState<string | null>(null)
 
   const nextCard = () => {
     if (currentCardIndex < cards.length - 1) {
@@ -46,12 +50,39 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
     }
   }
 
+  const validateForm = () => {
+    let isValid = true
+    if (!title) {
+      setTitleError('Title is required')
+      isValid = false
+    } else {
+      setTitleError(null)
+    }
+    if (!description) {
+      setDescriptionError('Description is required')
+      isValid = false
+    } else {
+      setDescriptionError(null)
+    }
+    if (!cards[currentCardIndex].question) {
+      setQuestionError('Question is required')
+      isValid = false
+    } else {
+      setQuestionError(null)
+    }
+    if (cards[currentCardIndex].options.some(option => !option)) {
+      setOptionsError('All options must be filled out')
+      isValid = false
+    } else {
+      setOptionsError(null)
+    }
+    return isValid
+  }
+
   const handleCreateDeck = async () => {
-    if (!title || cards.length === 0) {
-      setError('Por favor, preencha todos os campos obrigatórios')
+    if (!validateForm()) {
       return
     }
-
     setIsLoading(true)
     setError(null)
     onProcessingStart()
@@ -106,21 +137,27 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
       <div className="space-y-4">
         <div>
-          <label htmlFor="title" className="text-sm font-medium">Título</label>
+          <label htmlFor="title" className="text-sm font-medium">
+            Título <span className="text-red-500">*</span>
+          </label>
           <Input
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+          {titleError && <p className="text-red-500 text-sm mt-1">{titleError}</p>}
         </div>
 
         <div>
-          <label htmlFor="description" className="text-sm font-medium">Descrição</label>
+          <label htmlFor="description" className="text-sm font-medium">
+            Descrição <span className="text-red-500">*</span>
+          </label>
           <Textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+          {descriptionError && <p className="text-red-500 text-sm mt-1">{descriptionError}</p>}
         </div>
       </div>
 
@@ -135,7 +172,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
               variant="outline"
               size="sm"
               onClick={() => {
-                setCards(prev => [...prev, { question: '', options: [''], correctAnswerIndex: 0 }])
+                setCards(prev => [...prev, { question: '', options: [''], correctAnswerIndex: -1 }])
                 setCurrentCardIndex(cards.length)
               }}
             >
@@ -188,7 +225,9 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
 
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Pergunta</label>
+                      <label className="text-sm font-medium">
+                        Pergunta <span className="text-red-500">*</span>
+                      </label>
                       <Textarea
                         value={cards[currentCardIndex].question}
                         onChange={(e) => {
@@ -200,12 +239,25 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                           setCards(newCards)
                         }}
                       />
+                      {questionError && <p className="text-red-500 text-sm mt-1">{questionError}</p>}
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Opções</label>
+                      <label className="text-sm font-medium">
+                        Opções <span className="text-red-500">*</span>
+                      </label>
                       <div className="space-y-2">
                         {cards[currentCardIndex].options.map((option, optionIndex) => (
                           <div key={optionIndex} className="flex gap-2 items-center">
+                            <input
+                              type="radio"
+                              checked={cards[currentCardIndex].correctAnswerIndex >= 0 && cards[currentCardIndex].correctAnswerIndex === optionIndex}
+                              onChange={() => {
+                                const newCards = [...cards]
+                                newCards[currentCardIndex].correctAnswerIndex = optionIndex
+                                setCards(newCards)
+                              }}
+                              className="h-4 w-4 shrink-0"
+                            />
                             <Input
                               value={option}
                               onChange={(e) => {
@@ -221,18 +273,6 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-10 w-10 shrink-0 flex items-center justify-center"
-                              onClick={() => {
-                                const newCards = [...cards]
-                                newCards[currentCardIndex].correctAnswerIndex = optionIndex
-                                setCards(newCards)
-                              }}
-                            >
-                              {cards[currentCardIndex].correctAnswerIndex === optionIndex ? <Check className="h-4 w-4 text-green-500" /> : null}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
                               className="h-10 w-10 shrink-0"
                               onClick={() => {
                                 const newCards = [...cards]
@@ -240,7 +280,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                                 const newOptions = currentCard.options.filter((_, i) => i !== optionIndex)
                                 currentCard.options = newOptions
                                 if (currentCard.correctAnswerIndex === optionIndex) {
-                                  currentCard.correctAnswerIndex = 0
+                                  currentCard.correctAnswerIndex = -1
                                 } else if (currentCard.correctAnswerIndex > optionIndex) {
                                   currentCard.correctAnswerIndex -= 1
                                 }
@@ -251,6 +291,7 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
                             </Button>
                           </div>
                         ))}
+                        {optionsError && <p className="text-red-500 text-sm mt-1">{optionsError}</p>}
                         <Button
                           variant="outline"
                           size="sm"
@@ -291,7 +332,14 @@ export function CreateDeckForm({ onSuccess, onProcessingStart, onStepUpdate, onE
         </Button>
         <Button
           onClick={handleCreateDeck}
-          disabled={isLoading}
+          disabled={
+            isLoading ||
+            !title ||
+            !description ||
+            !cards[currentCardIndex].question ||
+            cards[currentCardIndex].options.some(option => !option) ||
+            cards[currentCardIndex].correctAnswerIndex === -1
+          }
         >
           {isLoading ? (
             <>

@@ -45,7 +45,7 @@ export default function PurchaseConfirmation({
               Obrigado por sua compra!
             </Text>
             <Text style={{ fontSize: "16px", margin: "0 0 24px" }}>
-              Sua compra do plano {planName} foi concluída com sucesso em <strong>{purchasedAt}</strong>.
+              Sua compra do plano {planName} foi concluída com sucesso em <strong>{new Date(purchasedAt).toLocaleDateString('pt-BR')}</strong>.
             </Text>
             <Text style={{ fontSize: "16px", margin: "0 0 24px" }}>
               Para começar a usar o {appName}, clique no link abaixo para se cadastrar:
