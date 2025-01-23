@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import type { JSX } from "react";
 import { CreditCard, Clock, LifeBuoy, Zap, Lock, Sparkles } from "lucide-react";
 
@@ -103,25 +104,7 @@ const FaqItem = ({ item }: { item: FAQItemProps }) => {
         <span className={`flex-1 text-white ${isOpen ? "text-primary" : ""}`}>
           {item.question}
         </span>
-        <svg
-          className="flex-shrink-0 w-4 h-4 ml-auto fill-current text-neutral-400 transition-transform"
-          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0)" }}
-          viewBox="0 0 16 16"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect y="7" width="16" height="2" rx="1" />
-          <rect
-            y="7"
-            width="16"
-            height="2"
-            rx="1"
-            className={`transform rotate-90 transition duration-200 ease-out ${
-              isOpen && "hidden"
-            }`}
-          />
-        </svg>
       </button>
-
       <div
         ref={accordion}
         className="transition-all duration-300 ease-in-out opacity-80 overflow-hidden"
@@ -138,10 +121,30 @@ const FaqItem = ({ item }: { item: FAQItemProps }) => {
 };
 
 export function FAQSection() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const section = document.getElementById("faq");
+      if (section) {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= window.innerHeight * 0.75) {
+          setIsVisible(true);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <section
+    <motion.section
       id="faq"
       className="w-full mx-auto flex min-h-screen justify-center items-center py-8"
+      initial={{ opacity: 0, y: 50 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8 }}
     >
       <div className="max-w-screen-xl px-4 md:px-8">
         <div className="flex flex-col md:flex-row gap-8">
@@ -163,6 +166,6 @@ export function FAQSection() {
           </ul>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

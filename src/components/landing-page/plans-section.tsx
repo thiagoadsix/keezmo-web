@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/src/components/ui/button";
 import {
   Card,
@@ -60,10 +61,30 @@ const ButtonCheckout = ({
 };
 
 export function PlansSection() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const section = document.getElementById("plans");
+      if (section) {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= window.innerHeight * 0.75) {
+          setIsVisible(true);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <section
+    <motion.section
       id="plans"
       className="flex min-h-screen items-center justify-center py-8 bg-background"
+      initial={{ opacity: 0, y: 50 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8 }}
     >
       <div className="w-full max-w-screen-xl mx-auto px-4 md:px-8 space-y-8">
         <div className="text-center">
@@ -114,6 +135,6 @@ export function PlansSection() {
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
