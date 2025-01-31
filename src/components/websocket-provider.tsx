@@ -28,7 +28,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             title: `Deck "${name}" criado com sucesso!`,
             description: `Contém ${cards.length} cartões.`,
             variant: "default",
-            action: <ToastAction altText="Ir para lista de Decks" onClick={() => router.push(`/decks`)}>Ir para lista de Decks</ToastAction>
+            action: <ToastAction className="hover:bg-primary-foreground" altText="Ir para Decks" onClick={() => router.push(`/decks`)}>Ir para Decks</ToastAction>
           });
         }
       } catch (error) {

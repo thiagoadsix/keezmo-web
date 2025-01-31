@@ -19,59 +19,44 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { fileUrl, numCards, title, description, pageStart, pageEnd } = await req.json();
+    const { url, fileUrl, pageStart, pageEnd } = await req.json();
 
-    console.log('📝 [Request] Page start:', pageStart);
-    console.log('📝 [Request] Page end:', pageEnd);
-
-    // Validações
-    if (!fileUrl) throw new Error('No file URL provided');
     if (isNaN(pageStart) || isNaN(pageEnd)) throw new Error('Invalid page range');
     if (pageEnd - pageStart + 1 > 30) throw new Error('Page range too large');
 
-    // Carregar PDF do S3 e extrair páginas específicas
-    const key = fileUrl.split('/').slice(-1)[0];
-    console.log('key', key)
-    console.log('userId', userId)
-
-    const command = new GetObjectCommand({
-      Bucket: appConfig.aws.bucket,
-      Key: `${userId}/${key}`,
-    });
-
-    const { Body } = await s3Client.send(command);
-    console.log('Body', Body)
-    const pdfBytes = await Body?.transformToByteArray();
-    console.log('pdfBytes', pdfBytes)
-    const pdfDoc = await PDFDocument.load(pdfBytes!);
-
-    // Criar novo PDF com apenas as páginas selecionadas
-    const newPdfDoc = await PDFDocument.create();
-    const pages = await newPdfDoc.copyPages(pdfDoc, Array.from(
-      { length: pageEnd - pageStart + 1 },
-      (_, i) => pageStart - 1 + i
-    ));
-
-    pages.forEach(page => newPdfDoc.addPage(page));
-
-    // Converter para bytes e depois para base64
-    const newPdfBytes = await newPdfDoc.save();
-
-    if (!numCards) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
     const body = new FormData();
     body.append('user_email', userEmail);
-    body.append('num_cards', numCards);
-    body.append('pdf_file', new Blob([newPdfBytes]));
-    body.append('title', title);
-    body.append('description', description);
 
-    console.log('🚀 [API] Calling generate-cards endpoint');
+    if (url && !fileUrl) {
+      body.append('url', url);
+    } else {
+      // Carregar PDF do S3 e extrair páginas específicas
+      const key = fileUrl.split('/').slice(-1)[0];
+
+      const command = new GetObjectCommand({
+        Bucket: appConfig.aws.bucket,
+        Key: `${userId}/${key}`,
+      });
+
+      const { Body } = await s3Client.send(command);
+      const pdfBytes = await Body?.transformToByteArray();
+      const pdfDoc = await PDFDocument.load(pdfBytes!);
+
+      // Criar novo PDF com apenas as páginas selecionadas
+      const newPdfDoc = await PDFDocument.create();
+      const pages = await newPdfDoc.copyPages(pdfDoc, Array.from(
+        { length: pageEnd - pageStart + 1 },
+        (_, i) => pageStart - 1 + i
+      ));
+
+      pages.forEach(page => newPdfDoc.addPage(page));
+
+      // Converter para bytes e depois para base64
+      const newPdfBytes = await newPdfDoc.save();
+
+      body.append('pdf_file', new Blob([newPdfBytes]));
+    }
+
     const keezmoApiClient = createApiClient(String(KEEZMO_API_URL));
 
     const response = await keezmoApiClient.post<{deckId: string}>('generate-cards', {
@@ -83,7 +68,6 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await response.json();
-    console.log('✅ [API] Request successful');
 
     return NextResponse.json({deckId: result.deckId});
 

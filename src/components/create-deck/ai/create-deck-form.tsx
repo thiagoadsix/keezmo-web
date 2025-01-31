@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -13,31 +13,26 @@ import { PDFDocument } from "pdf-lib";
 import { ProcessStepStatus } from "@/types/process-step";
 import { User } from "@/types/user";
 import config from "@/config";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/src/components/ui/popover";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../ui/card";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/src/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/src/lib/utils";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/src/components/ui/tabs";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;
-  onProcessingStart: (option: "existing" | "upload" | undefined) => void;
+  onProcessingStart: (option: "upload" | undefined) => void;
   onStepUpdate: (stepId: number, status: ProcessStepStatus) => void;
   onError: (error: string) => void;
 }
@@ -55,54 +50,18 @@ export function CreateDeckForm({
 }: CreateDeckFormProps) {
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [numCards, setNumCards] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [pageRange, setPageRange] = useState<PageRange>({ start: 1, end: 1 });
   const [pageRangeError, setPageRangeError] = useState<string | null>(null);
-  const [monthlyLimitError, setMonthlyLimitError] = useState<string | null>(
-    null
-  );
-  const [existingPdfs, setExistingPdfs] = useState<
-    { name: string; uploadDate: Date; url: string; pageCount: number }[]
-  >([]);
-  const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
-  const [customPdfName, setCustomPdfName] = useState<string>("");
-  const [selectedOption, setSelectedOption] = useState<
-    "existing" | "upload" | undefined
-  >(undefined);
+  const [monthlyLimitError, setMonthlyLimitError] = useState<boolean>(false);
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-
-  useEffect(() => {
-    const fetchExistingPdfs = async () => {
-      if (user && user.emailAddresses && user.id) {
-        const response = await apiClient<
-          { name: string; uploadDate: Date; url: string; pageCount: number }[]
-        >("api/users/pdfs", {
-          method: "GET",
-          headers: {
-            "x-user-email": user.emailAddresses[0].emailAddress,
-            "x-user-id": user.id,
-          },
-        });
-
-        if (response.ok) {
-          const pdfs = await response.json();
-          setExistingPdfs(pdfs);
-        } else {
-          console.error("Failed to fetch existing PDFs:", response.statusText);
-        }
-      }
-    };
-
-    fetchExistingPdfs();
-  }, [user?.id]);
+  const [inputType, setInputType] = useState<"file" | "url">("file");
+  const [url, setUrl] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -110,7 +69,6 @@ export function CreateDeckForm({
     const file = event.target.files?.[0];
     if (file && file.type === "application/pdf") {
       try {
-        // Obter dados do usuário para verificar o plano e limite mensal
         const userResponse = await apiClient<
           User & { pdfsUploadedThisMonth?: number }
         >("api/users/me", {
@@ -128,20 +86,17 @@ export function CreateDeckForm({
         const userPlan = userData.plan;
         const pdfsUploadedThisMonth = userData.pdfsUploadedThisMonth || 0;
 
-        // Verificar limite mensal de PDFs baseado no plano
         const maxPdfsPerMonth = config.stripe.plans.find(
           (plan) => plan.name === userPlan
         )?.maxPdfsPerMonth;
         if (maxPdfsPerMonth && pdfsUploadedThisMonth >= maxPdfsPerMonth) {
-          setMonthlyLimitError(
-            `Você atingiu o limite mensal de ${maxPdfsPerMonth} PDFs para o plano ${userPlan}`
-          );
+          setMonthlyLimitError(true);
+          setIsDialogOpen(true);
           setSelectedFile(null);
           setSelectedFileName(null);
           return;
         }
 
-        // Ler número de páginas do PDF
         const arrayBuffer = await file.arrayBuffer();
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         const pageCount = pdfDoc.getPageCount();
@@ -167,7 +122,6 @@ export function CreateDeckForm({
     }
   };
 
-  // Validação do intervalo de páginas
   const validatePageRange = (range: PageRange): boolean => {
     if (range.start < 1 || range.end > totalPages) {
       setPageRangeError("Páginas fora do intervalo válido");
@@ -194,7 +148,6 @@ export function CreateDeckForm({
         [field]: numValue,
       };
 
-      // Só valida se ambos os campos tiverem valores
       if (
         typeof newRange.start === "number" &&
         typeof newRange.end === "number"
@@ -206,57 +159,57 @@ export function CreateDeckForm({
     });
   };
 
+  const handleInputTypeChange = (type: "file" | "url") => {
+    setInputType(type);
+    if (type === "file" && error) {
+      setSelectedFile(null);
+      setSelectedFileName(null);
+      setError(null);
+    }
+    if (type === "url" && urlError) {
+      setUrl("");
+      setUrlError(null);
+    }
+  };
+
   const handleCreateDeck = async () => {
-    if (
-      !title ||
-      !numCards ||
-      (selectedOption === "existing" && !selectedPdf) ||
-      (selectedOption === "upload" && !selectedFile)
-    ) {
-      setError("Por favor, preencha todos os campos obrigatórios");
+    if (monthlyLimitError) {
+      setIsDialogOpen(true);
+      return;
+    }
+    if (inputType === "file" && !selectedFile) {
+      setError(
+        "Para criar o deck, é necessário selecionar um arquivo PDF/DOCX."
+      );
       return;
     }
 
-    if (selectedOption === "upload" && !customPdfName) {
-      setError("Por favor, insira um nome personalizado para o PDF");
-      return;
+    if (inputType === "url") {
+      if (!url) {
+        setUrlError("Por favor, insira uma URL.");
+        return;
+      }
+      if (!isValidUrl(url)) {
+        setUrlError("URL inválida. Por favor, insira uma URL válida.");
+        return;
+      }
     }
 
-    // Validar intervalo de páginas antes de enviar
     if (!validatePageRange(pageRange)) {
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    onProcessingStart(selectedOption);
+    onProcessingStart("upload");
 
     try {
-      // Deduct credits first
-      const creditsNeeded = parseInt(numCards);
-      const updateCreditsResponse = await apiClient<User>("api/users/credits", {
-        method: "POST",
-        headers: {
-          "x-user-email": user?.emailAddresses[0].emailAddress! || "",
-        },
-        body: JSON.stringify({
-          amount: creditsNeeded,
-          type: "use",
-          source: "deck_creation",
-        }),
-      });
+      onStepUpdate(1, "processing");
 
-      if (!updateCreditsResponse.ok) {
-        throw new Error("Failed to update credits");
-      }
+      let fileUrl = "";
 
-      // Step 1: Upload PDF to S3 (if a new file is selected)
-      let pdfUrl = selectedOption === "existing" ? selectedPdf : "";
-
-      if (selectedOption === "upload" && selectedFile) {
-        onStepUpdate(1, "processing");
-
-        const fileName = `${customPdfName}_${Date.now()}.pdf`;
+      if (inputType === "file") {
+        const fileName = `${selectedFileName}_${Date.now()}.pdf`;
 
         const response = await apiClient<{ uploadUrl: string }>(
           "api/s3/upload-url",
@@ -276,34 +229,31 @@ export function CreateDeckForm({
           headers: { "Content-Type": "application/pdf" },
         });
 
-        onStepUpdate(1, "completed");
-
-        pdfUrl = `${config.aws.bucketUrl}${fileName}`;
+        fileUrl = uploadUrl;
+      } else {
+        console.log("url", url);
       }
-      console.log("pdfUrl", pdfUrl);
 
-      // Step 2: Process PDF
+      onStepUpdate(1, "completed");
+
       onStepUpdate(2, "processing");
 
-      const processResponse = await apiClient<{ deckId: string }>(
-        "api/rag-pdf",
-        {
-          method: "POST",
-          headers: {
-            "x-user-email": user?.emailAddresses[0].emailAddress!,
-            "Content-Type": "application/json",
-            "x-user-id": user?.id!,
-          },
-          body: JSON.stringify({
-            fileUrl: pdfUrl,
-            numCards,
-            title,
-            description,
-            pageStart: pageRange.start,
-            pageEnd: pageRange.end,
-          }),
-        }
-      );
+      const processResponse = await apiClient<{
+        deckId: string;
+        deckTitle: string;
+      }>("api/rag-pdf", {
+        method: "POST",
+        headers: {
+          "x-user-email": user?.emailAddresses[0].emailAddress!,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileUrl: inputType === "file" ? fileUrl : undefined,
+          url: inputType === "url" ? url : undefined,
+          pageStart: pageRange.start,
+          pageEnd: pageRange.end,
+        }),
+      });
 
       if (!processResponse.ok) {
         throw new Error("Failed to process PDF");
@@ -311,7 +261,6 @@ export function CreateDeckForm({
 
       onStepUpdate(2, "completed");
 
-      // Step 3: Generate cards
       onStepUpdate(3, "processing");
       const data = await processResponse.json();
       console.log("data", data);
@@ -320,13 +269,10 @@ export function CreateDeckForm({
         throw new Error("No deck ID returned from server");
       }
 
-      console.log("Deck created successfully:", data);
       onStepUpdate(3, "completed");
 
-      // Add a small delay before showing success
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Call onSuccess with the deck ID
       onSuccess(data.deckId);
     } catch (error: any) {
       console.error("Failed to create deck:", error);
@@ -334,7 +280,6 @@ export function CreateDeckForm({
         "Ocorreu um erro ao criar o deck. Por favor, tente novamente mais tarde, ou entre em contato com o suporte."
       );
 
-      // Reset processing state if there's an error
       onStepUpdate(1, "waiting");
       onStepUpdate(2, "waiting");
       onStepUpdate(3, "waiting");
@@ -343,218 +288,60 @@ export function CreateDeckForm({
     }
   };
 
+  const isValidUrl = (url: string): boolean => {
+    // Implement URL validation logic here
+    // Return true if the URL is valid, false otherwise
+    return true; // Placeholder, actual implementation needed
+  };
+
   return (
     <div className="flex flex-col gap-6 px-8 py-6">
-      {error && (
-        <div className="bg-red-500/10 text-red-500 p-4 rounded-md">{error}</div>
-      )}
-      {monthlyLimitError && (
-        <div className="bg-red-500/10 text-red-500 p-4 rounded-md">
-          {monthlyLimitError}
-        </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex flex-col gap-2 w-full">
-          <div>
-            <label htmlFor="title">Título</label>
-            <span className="text-xs text-red-500">*</span>
-          </div>
-          <Input
-            type="text"
-            id="title"
-            placeholder="Digite o título do deck"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-2 w-full">
-          <div>
-            <label htmlFor="total-cards">Total de cards</label>
-            <span className="text-xs text-red-500">*</span>
-          </div>
-          <Input
-            type="number"
-            id="total-cards"
-            placeholder="Digite o total de cards do deck"
-            value={numCards}
-            onChange={(e) => setNumCards(e.target.value)}
-          />
-        </div>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold">Criar deck</h1>
+        <p className="text-sm text-neutral-500">
+          Crie um deck a partir de um arquivo PDF ou de uma URL.
+        </p>
       </div>
 
-      <div className="flex flex-col gap-2 w-full">
-        <div>
-          <label htmlFor="description">Descrição</label>
-        </div>
-        <Input
-          type="text"
-          id="description"
-          placeholder="Digite a descrição do deck"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-
-      <div className="flex flex-col gap-2 w-full">
-        <Tabs
-          value={selectedOption}
-          onValueChange={(value) =>
-            setSelectedOption(value as "existing" | "upload" | undefined)
-          }
-        >
-          <TabsList className="w-full space-x-2">
-            <TabsTrigger value="existing" className="flex-1 justify-center">
-              PDF existente
-            </TabsTrigger>
-            <TabsTrigger value="upload" className="flex-1 justify-center">
-              Novo upload
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="existing">
-            <div className="flex flex-col gap-2 w-full">
-              <div>
-                <label htmlFor="existing-pdf">Selecione um PDF existente</label>
-              </div>
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-full justify-between"
-                  >
-                    {selectedPdf
-                      ? existingPdfs.find((pdf) => pdf.url === selectedPdf)
-                          ?.name
-                      : "Selecione um PDF..."}
-                    <ChevronsUpDown className="opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput
-                      placeholder="Pesquisar PDF..."
-                      className="h-9"
-                      value={searchValue}
-                      onValueChange={setSearchValue}
-                    />
-                    <CommandList>
-                      <CommandEmpty>Nenhum PDF encontrado.</CommandEmpty>
-                      <CommandGroup>
-                        {existingPdfs
-                          .filter((pdf) =>
-                            pdf.name
-                              .toLowerCase()
-                              .includes(searchValue.toLowerCase())
-                          )
-                          .map((pdf) => (
-                            <CommandItem
-                              key={pdf.url}
-                              value={pdf.url}
-                              onSelect={(currentValue) => {
-                                setSelectedPdf(
-                                  currentValue === selectedPdf
-                                    ? null
-                                    : currentValue
-                                );
-                                setSearchValue("");
-                                setOpen(false);
-
-                                const pdfData = existingPdfs.find(
-                                  (pdf) => pdf.url === currentValue
-                                );
-                                if (pdfData) {
-                                  setTotalPages(pdfData.pageCount);
-                                  setPageRange({
-                                    start: 1,
-                                    end: Math.min(pdfData.pageCount, 30),
-                                  });
-                                }
-                              }}
-                            >
-                              {pdf.name}
-                              <Check
-                                className={cn(
-                                  "ml-auto",
-                                  selectedPdf === pdf.url
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              {selectedPdf && totalPages > 0 && (
-                <div className="mt-4 space-y-4">
-                  <div className="text-sm text-neutral-400">
-                    Total de páginas: {totalPages}
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm">
-                      Intervalo de páginas (máx. 30 páginas)
-                    </label>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min={1}
-                          max={totalPages}
-                          value={pageRange.start}
-                          onChange={(e) =>
-                            handlePageRangeChange("start", e.target.value)
-                          }
-                          className="w-20"
-                        />
-                        <span>até</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={totalPages}
-                          value={pageRange.end}
-                          onChange={(e) =>
-                            handlePageRangeChange("end", e.target.value)
-                          }
-                          className="w-20"
-                        />
-                      </div>
-                      {pageRangeError && (
-                        <p className="text-xs text-red-500">{pageRangeError}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent value="upload">
-            <div className="flex flex-col gap-2 w-full">
-              <div>
-                <label htmlFor="pdf">Envie o PDF</label>
-                <span className="text-xs text-red-500">*</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Certifique-se de que o PDF contenha texto selecionável. PDFs com
-                texto em formato de imagem ou apenas imagens não terão um bom
-                resultado.
-              </p>
+      <Tabs defaultValue="file" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger
+            onClick={() => handleInputTypeChange("file")}
+            value="file"
+          >
+            Arquivo
+          </TabsTrigger>
+          <TabsTrigger onClick={() => handleInputTypeChange("url")} value="url">
+            URL
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="file">
+          <Card>
+            <CardHeader>
+              <CardTitle>Arquivo</CardTitle>
+              <CardDescription>
+                Envie um arquivo PDF/DOCX para criar um novo deck.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="w-full flex items-center justify-center">
                 <label htmlFor="pdf-upload" className="w-full cursor-pointer">
                   <div
                     className={`border-2 border-dashed rounded-lg p-12 w-full flex flex-col items-center justify-center gap-2 transition-colors ${
                       selectedFileName
                         ? "border-primary bg-primary/5"
-                        : "border-neutral-700 hover:border-primary-800"
+                        : error
+                          ? "border-red-500 bg-red-500/10"
+                          : "border-neutral-700 hover:border-primary-800"
                     }`}
                   >
                     <PdfIcon
                       className={
-                        selectedFileName ? "text-primary" : "text-neutral-400"
+                        selectedFileName
+                          ? "text-primary"
+                          : error
+                            ? "text-red-500"
+                            : "text-neutral-400"
                       }
                     />
                     <input
@@ -573,84 +360,105 @@ export function CreateDeckForm({
                           Clique para trocar o arquivo
                         </p>
                       </>
+                    ) : error ? (
+                      <p className="text-sm text-red-500">{error}</p>
                     ) : (
                       <>
                         <p className="text-sm text-neutral-400 text-center">
-                          Arraste e solte seu arquivo PDF aqui ou clique para
+                          Arraste e solte seu arquivo aqui ou clique para
                           selecionar
                         </p>
                         <p className="text-xs text-neutral-500">
-                          Apenas arquivos PDF são aceitos
+                          Apenas arquivos PDF/DOCX são aceitos
                         </p>
                       </>
                     )}
                   </div>
-                </label>
-              </div>
-
-              <div className="flex flex-col gap-2 mt-4">
-                <label htmlFor="custom-pdf-name">
-                  Nome personalizado do PDF
-                </label>
-                <Input
-                  type="text"
-                  id="custom-pdf-name"
-                  placeholder="Digite um nome para o PDF"
-                  value={customPdfName}
-                  onChange={(e) => setCustomPdfName(e.target.value)}
-                />
-              </div>
-
-              {totalPages > 0 && (
-                <div className="mt-4 space-y-4">
-                  <div className="text-sm text-neutral-400">
-                    Total de páginas: {totalPages}
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm">
-                      Intervalo de páginas (máx. 30 páginas)
-                    </label>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min={1}
-                          max={totalPages}
-                          value={pageRange.start}
-                          onChange={(e) =>
-                            handlePageRangeChange("start", e.target.value)
-                          }
-                          className="w-20"
-                        />
-                        <span>até</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={totalPages}
-                          value={pageRange.end}
-                          onChange={(e) =>
-                            handlePageRangeChange("end", e.target.value)
-                          }
-                          className="w-20"
-                        />
+                  {totalPages > 0 && (
+                    <div className="mt-4 space-y-4">
+                      <div className="text-sm text-neutral-400">
+                        Total de páginas: {totalPages}
                       </div>
-                      {pageRangeError && (
-                        <p className="text-xs text-red-500">{pageRangeError}</p>
-                      )}
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm">
+                          Intervalo de páginas (máx. 30 páginas)
+                        </label>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min={1}
+                              max={totalPages}
+                              value={pageRange.start}
+                              onChange={(e) =>
+                                handlePageRangeChange("start", e.target.value)
+                              }
+                              className="w-20"
+                            />
+                            <span>até</span>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={totalPages}
+                              value={pageRange.end}
+                              onChange={(e) =>
+                                handlePageRangeChange("end", e.target.value)
+                              }
+                              className="w-20"
+                            />
+                          </div>
+                          {pageRangeError && (
+                            <p className="text-xs text-red-500">
+                              {pageRangeError}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="url">
+          <Card>
+            <CardHeader>
+              <CardTitle>URL</CardTitle>
+              <CardDescription>
+                Insira uma URL para criar um novo deck.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input
+                placeholder="Insira a URL"
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  setUrlError(null);
+                }}
+                className={urlError ? "border-red-500" : ""}
+              />
+              {urlError && (
+                <p className="text-red-500 text-sm mt-1">{urlError}</p>
               )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+              <p className="text-xs text-neutral-500 mt-2">
+                Exemplos de URLs compatíveis:
+                <br />
+                - https://example.com/file.pdf
+                <br />- https://docs.google.com/document/d/1234567890abcdefg
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <div className="flex justify-between gap-4">
         <Button variant="destructive" asChild>
           <Link href="/decks/create">Cancelar</Link>
         </Button>
+
         <Button onClick={handleCreateDeck} disabled={isLoading}>
           {isLoading ? (
             <>
@@ -663,18 +471,19 @@ export function CreateDeckForm({
         </Button>
       </div>
 
-      {!isLoading && (
-        <div className="mt-4 text-sm text-muted-foreground">
-          <p>
-            Ao clicar em "Criar deck", você confirma que o PDF contém texto
-            selecionável.
-          </p>
-          <p>
-            Lembre-se: PDFs com texto em formato de imagem ou apenas imagens não
-            terão um bom resultado e os créditos não serão recuperados.
-          </p>
-        </div>
-      )}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Limite Mensal Atingido</DialogTitle>
+            <DialogDescription>
+              Você atingiu o limite mensal de PDFs para o seu plano.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setIsDialogOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
