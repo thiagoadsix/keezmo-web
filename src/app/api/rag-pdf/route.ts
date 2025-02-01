@@ -40,8 +40,11 @@ export async function POST(req: NextRequest) {
       });
       console.log('command', JSON.stringify(command, null, 2));
       const { Body } = await s3Client.send(command);
+      console.log('Body', Body);
       const pdfBytes = await Body?.transformToByteArray();
+      console.log('pdfBytes', pdfBytes);
       const pdfDoc = await PDFDocument.load(pdfBytes!);
+      console.log('pdfDoc', pdfDoc);
 
       // Criar novo PDF com apenas as páginas selecionadas
       const newPdfDoc = await PDFDocument.create();
