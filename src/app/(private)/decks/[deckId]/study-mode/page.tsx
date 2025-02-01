@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import { Card } from "@/src/components/ui/card";
-import { useParams } from "next/navigation";
-import { ListChecks, Bookmark } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { ListChecks, Bookmark, ArrowLeft } from "lucide-react";
 
 export default function StudyModeSelectionPage() {
+  const router = useRouter();
   const { deckId } = useParams();
 
   return (
     <div className="flex flex-col justify-center min-h-screen gap-8 max-w-lg mx-auto p-4 sm:p-0">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-200 hover:text-slate-400">
+        <ArrowLeft className="w-5 h-5" />
+        <span>Voltar</span>
+      </button>
       <h1 className="text-4xl font-bold text-center text-slate-200">Selecione o Modo de Estudo</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Link href={`/decks/${deckId}/study-mode/multiple-choice`}>
