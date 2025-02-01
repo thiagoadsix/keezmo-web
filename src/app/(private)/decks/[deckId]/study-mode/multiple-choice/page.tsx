@@ -110,11 +110,14 @@ export default function StudyPage() {
           } as QuestionWithMetadata;
         });
 
-        // Ordenar cards por nextReview
-        questionsWithMetadata.sort(
-          (a: QuestionWithMetadata, b: QuestionWithMetadata) =>
-            new Date(a.nextReview).getTime() - new Date(b.nextReview).getTime()
-        );
+        // Shuffle questionsWithMetadata using Fisher-Yates algorithm
+        for (let i = questionsWithMetadata.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [questionsWithMetadata[i], questionsWithMetadata[j]] = [
+            questionsWithMetadata[j],
+            questionsWithMetadata[i],
+          ];
+        }
 
         setQuestions(questionsWithMetadata);
         setStartTime(new Date().toISOString());

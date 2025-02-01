@@ -28,7 +28,8 @@ export function DecksNeedingAttention({ decks }: DecksNeedingAttentionProps) {
    */
   const renderDecks = (
     subset: DecksNeedingAttentionProps["decks"],
-    title: string
+    title: string,
+    studyMode: "multipleChoice" | "flashcard"
   ) => {
     if (subset.length === 0) {
       return (
@@ -57,7 +58,7 @@ export function DecksNeedingAttention({ decks }: DecksNeedingAttentionProps) {
               </div>
             </div>
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/decks/${deck.deckId}/study`}>Estudar</Link>
+              <Link href={`/decks/${deck.deckId}/study-mode/${studyMode}`}>Estudar</Link>
             </Button>
           </div>
         ))}
@@ -76,7 +77,7 @@ export function DecksNeedingAttention({ decks }: DecksNeedingAttentionProps) {
         <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
           <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">Sessões (Múltipla Escolha)</h2>
-            {renderDecks(multipleChoices, "múltipla escolha")}
+            {renderDecks(multipleChoices, "múltipla escolha", "multipleChoice")}
           </div>
         </div>
 
@@ -84,7 +85,7 @@ export function DecksNeedingAttention({ decks }: DecksNeedingAttentionProps) {
         <div className="bg-[#10111F] rounded-lg p-4 border border-neutral-800 flex flex-col">
           <div className="flex flex-col gap-4 flex-1">
             <h2 className="text-lg sm:text-xl font-bold">Sessões (Flashcard)</h2>
-            {renderDecks(flashcards, "flashcard")}
+            {renderDecks(flashcards, "flashcard", "flashcard")}
           </div>
         </div>
       </div>
