@@ -30,14 +30,15 @@ export async function POST(req: NextRequest) {
     if (url && !fileUrl) {
       body.append('url', url);
     } else {
+      console.log('fileUrl', fileUrl);
       // Carregar PDF do S3 e extrair páginas específicas
       const key = fileUrl.split('?')[0].split('/').slice(-1)[0];
-
+      console.log('key', key);
       const command = new GetObjectCommand({
         Bucket: appConfig.aws.bucket,
         Key: `${userId}/${key}`,
       });
-
+      console.log('command', JSON.stringify(command, null, 2));
       const { Body } = await s3Client.send(command);
       const pdfBytes = await Body?.transformToByteArray();
       const pdfDoc = await PDFDocument.load(pdfBytes!);
