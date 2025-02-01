@@ -246,6 +246,7 @@ export function CreateDeckForm({
         headers: {
           "x-user-email": user?.emailAddresses[0].emailAddress!,
           "Content-Type": "application/json",
+          "x-user-id": user?.id!,
         },
         body: JSON.stringify({
           fileUrl: inputType === "file" ? fileUrl : undefined,
