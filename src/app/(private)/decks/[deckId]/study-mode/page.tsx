@@ -11,7 +11,7 @@ export default function StudyModeSelectionPage() {
 
   return (
     <div className="flex flex-col justify-center min-h-screen gap-8 max-w-lg mx-auto p-4 sm:p-0">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-200 hover:text-slate-400">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-200 hover:text-primary-500">
         <ArrowLeft className="w-5 h-5" />
         <span>Voltar</span>
       </button>
