@@ -58,6 +58,11 @@ export async function POST(req: NextRequest) {
       // Converter para bytes e depois para base64
       const newPdfBytes = await newPdfDoc.save();
 
+      const fileExtension = key.split('.').pop();
+      console.log('fileExtension', fileExtension);
+      if (fileExtension) {
+        body.append('input_type', fileExtension);
+      }
       body.append('pdf_file', new Blob([newPdfBytes]));
     }
 
