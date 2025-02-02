@@ -6,6 +6,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { apiClient } from "@/src/lib/api-client";
 import { Dashboard } from "@/types/dashboard";
 import { getFormattedToday } from "@/src/lib/date";
+import { StudyCalendar } from "@/src/components/dashboard/study-calendar";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col px-8">
       <Header subtitle={`Hoje é ${today}`} />
       <main className="flex flex-col gap-10 py-6">
+        <StudyCalendar />
         <StatsOverview />
         <DecksNeedingAttention decks={data.decksNeedingAttention} />
         <RecentActivity />
