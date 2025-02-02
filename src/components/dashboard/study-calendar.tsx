@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { StudyStats } from "./study-stats"
 import { StudyInsights } from "./study-insights"
 import { DeckCard } from "./deck-card"
+import { QuantityMetrics } from "./quantity-metrics"
+import { RecentActivity } from "./recent-activity"
 
 interface DeckInfo {
   id: string
@@ -29,36 +31,58 @@ interface CardProgress {
   totalAttempts: number
   totalErrors: number
   consecutiveHits: number
+  lastReviewed: string
 }
+
+type Stats = {
+  totalDecks: number;
+  totalCards: number;
+  totalStudySessions: number;
+};
+
+const initialStats: Stats = {
+  totalDecks: 0,
+  totalCards: 0,
+  totalStudySessions: 0,
+};
+
 
 export function StudyCalendar() {
   const { user } = useUser();
   const [cardProgress, setCardProgress] = useState<CardProgress[]>([]);
   const [decks, setDecks] = useState<(DeckInfo | undefined)[]>([]);
+  const [stats, setStats] = useState<Stats>(initialStats);
 
   const userEmail = user?.emailAddresses[0].emailAddress;
 
   useEffect(() => {
+    if (!userEmail) return;
+
     const fetchCardProgress = async () => {
       const response = await apiClient<CardProgress[]>(`api/cards/progress/multiple-choices`, {
+        method: "GET",
         headers: {
           "x-user-email": userEmail,
         },
+        cache: "no-store",
       })
 
       if (response.ok) {
         const data = await response.json()
         const deckIds = data.map((card) => card.deckId)
         const decksResponse = await apiClient<DeckInfo[]>(`api/decks`, {
+          method: "GET",
           headers: {
             "x-user-email": userEmail,
           },
+          cache: "no-store",
         })
 
         if (decksResponse.ok) {
           const decksData = await decksResponse.json()
+          const uniqueDeckIds = Array.from(new Set(deckIds))
           const decksMap = new Map(decksData.map((deck: DeckInfo) => [deck.id, deck]))
-          const decks = deckIds.map((id) => {
+          const decks = uniqueDeckIds.map((id) => {
             return decksMap.get(id)
           })
           setDecks(decks)
@@ -68,11 +92,27 @@ export function StudyCalendar() {
       }
     }
 
+    const fetchStats = async () => {
+      const response = await apiClient<Stats>(`api/stats`, {
+        method: "GET",
+        headers: {
+          "x-user-email": userEmail,
+        },
+        cache: "no-store",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      }
+    }
+
     fetchCardProgress()
+    fetchStats()
   }, [userEmail])
 
   // Calculate stats from card progress data
-  const stats = useMemo(() => {
+  const calculatedStats = useMemo(() => {
     const totalCards = cardProgress.length
     const masteredCards = cardProgress.filter(
       (card) => card.consecutiveHits >= 3 && card.totalErrors / card.totalAttempts <= 0.2,
@@ -86,8 +126,23 @@ export function StudyCalendar() {
     const totalErrors = cardProgress.reduce((sum, card) => sum + card.totalErrors, 0)
     const averageAccuracy = ((totalAttempts - totalErrors) / totalAttempts) * 100
 
-    // This would come from the backend in a real app
-    const streak = 5
+    const reviewDates = cardProgress.map((card) => new Date(card.lastReviewed).toDateString())
+    const uniqueReviewDates = Array.from(new Set(reviewDates)).sort()
+
+    let streak = 0
+    let currentStreak = 0
+    let lastDate = new Date(uniqueReviewDates[0])
+
+    uniqueReviewDates.forEach((dateStr) => {
+      const date = new Date(dateStr)
+      if ((date.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24) === 1) {
+        currentStreak++
+      } else {
+        currentStreak = 1
+      }
+      streak = Math.max(streak, currentStreak)
+      lastDate = date
+    })
 
     return {
       totalCards,
@@ -96,7 +151,7 @@ export function StudyCalendar() {
       averageAccuracy,
       streak,
     }
-  }, [])
+  }, [cardProgress])
 
   // Calculate insights from card progress data
   const insights = useMemo(() => {
@@ -104,9 +159,20 @@ export function StudyCalendar() {
     const averageInterval = cardProgress.reduce((sum, card) => sum + card.interval, 0) / cardProgress.length
     const errorRate = cardProgress.reduce((sum, card) => sum + card.totalErrors, 0) / totalReviews
 
-    // These would come from the backend in a real app
-    const lastWeekReviews = 45
-    const thisWeekReviews = 52
+    const now = new Date()
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()))
+    const startOfLastWeek = new Date(startOfWeek)
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7)
+
+    const thisWeekReviews = cardProgress.filter((card) => {
+      const lastReviewedDate = new Date(card.lastReviewed)
+      return lastReviewedDate >= startOfWeek
+    }).length
+
+    const lastWeekReviews = cardProgress.filter((card) => {
+      const lastReviewedDate = new Date(card.lastReviewed)
+      return lastReviewedDate >= startOfLastWeek && lastReviewedDate < startOfWeek
+    }).length
 
     return {
       averageInterval,
@@ -115,7 +181,7 @@ export function StudyCalendar() {
       lastWeekReviews,
       thisWeekReviews,
     }
-  }, [])
+  }, [cardProgress])
 
   // Process and group reviews by deck - now only depends on the input data
   const reviews = useMemo(() => {
@@ -172,8 +238,9 @@ export function StudyCalendar() {
 
   return (
     <div className="w-full mx-auto space-y-6">
-      <StudyStats {...stats} />
+      <StudyStats {...calculatedStats} />
       <StudyInsights insights={insights} />
+      <QuantityMetrics totalCards={stats.totalCards} totalDecks={stats.totalDecks} totalStudySessions={stats.totalStudySessions} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -227,6 +294,7 @@ export function StudyCalendar() {
           </Tabs>
         </CardContent>
       </Card>
+      <RecentActivity />
     </div>
   )
 }
