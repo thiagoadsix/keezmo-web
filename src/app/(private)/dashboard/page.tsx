@@ -12,6 +12,7 @@ import { StudyInsights } from "@/src/components/dashboard/study-insights";
 import { RecentActivity } from "@/src/components/dashboard/recent-activity";
 import { StudySession } from "@/types/study";
 import { useUser } from "@clerk/nextjs";
+import { QuantityMetrics } from "@/src/components/dashboard/quantity-metrics";
 
 /**
  * Se quiser representar explicitamente que multipleChoices e flashcards
@@ -256,6 +257,7 @@ export default function DashboardPage() {
         <StudyStats {...calculatedStats} />
         <StudyInsights insights={insights} />
         <StudyCalendar cardProgress={cardProgress} decks={decks} stats={stats} />
+        <QuantityMetrics totalCards={stats.totalCards} totalDecks={stats.totalDecks} totalStudySessions={stats.totalStudySessions} />
         <RecentActivity multipleChoices={recentActivity.multipleChoices} flashcards={recentActivity.flashcards} isLoading={recentActivity.isLoading} />
       </main>
     </div>
