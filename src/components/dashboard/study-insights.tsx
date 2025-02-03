@@ -26,7 +26,9 @@ export function StudyInsights({ insights }: StudyInsightsProps) {
               <Timer className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Intervalo médio</span>
             </div>
-            <p className="text-2xl font-bold">{Math.round(insights.averageInterval)}h</p>
+            <p className="text-2xl font-bold">
+              {Number.isNaN(insights.averageInterval) ? '0h' : `${Math.round(insights.averageInterval)}h`}
+            </p>
             <p className="text-xs text-muted-foreground">Entre revisões</p>
           </div>
 
@@ -67,7 +69,7 @@ export function StudyInsights({ insights }: StudyInsightsProps) {
               />
               <span className="text-sm font-medium">Taxa de erro</span>
             </div>
-            <p className="text-2xl font-bold">{Math.round(insights.errorRate * 100)}%</p>
+            <p className="text-2xl font-bold">{Number.isNaN(insights.errorRate) ? '0' : `${Math.round(insights.errorRate * 100)}%`}</p>
             <p className="text-xs text-muted-foreground">Últimas 100 revisões</p>
           </div>
         </div>
