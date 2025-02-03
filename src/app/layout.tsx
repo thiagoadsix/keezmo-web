@@ -11,6 +11,8 @@ import { Toaster } from "@/src/components/ui/toaster";
 import { AccessCheck } from "@/src/components/access-check";
 import { isPublicRoute } from "@/src/lib/utils";
 import { WebSocketProvider } from "../components/websocket-provider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: "Keezmo - Gerador de Flashcards com IA",
@@ -108,6 +110,8 @@ export default function RootLayout({
             </ThemeProvider>
           </WebSocketProvider>
           <Toaster />
+          <SpeedInsights />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
