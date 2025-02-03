@@ -21,9 +21,11 @@ export function StudyStats({ totalCards, masteredCards, averageAccuracy, streak 
               <Brain className="h-4 w-4 text-blue-500" />
               <span className="text-sm font-medium">Dominância</span>
             </div>
-            <span className="text-2xl font-bold">{Math.round((masteredCards / totalCards) * 100)}%</span>
+            <span className="text-2xl font-bold">
+              {totalCards > 0 ? Math.round((masteredCards / totalCards) * 100) : 0}%
+            </span>
           </div>
-          <Progress value={(masteredCards / totalCards) * 100} className="h-2" />
+          <Progress value={totalCards > 0 ? (masteredCards / totalCards) * 100 : 0} className="h-2" />
           <p className="text-xs text-muted-foreground mt-2">
             {masteredCards} de {totalCards} cartões dominados
           </p>
@@ -38,9 +40,11 @@ export function StudyStats({ totalCards, masteredCards, averageAccuracy, streak 
               <Target className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium">Precisão</span>
             </div>
-            <span className="text-2xl font-bold">{Math.round(averageAccuracy)}%</span>
+            <span className="text-2xl font-bold">
+              {isNaN(averageAccuracy) ? 0 : Math.round(averageAccuracy)}%
+            </span>
           </div>
-          <Progress value={averageAccuracy} className="h-2" />
+          <Progress value={isNaN(averageAccuracy) ? 0 : averageAccuracy} className="h-2" />
           <p className="text-xs text-muted-foreground mt-2">
             Baseado nas suas últimas {totalCards} revisões
           </p>

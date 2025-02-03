@@ -60,7 +60,7 @@ function SessionCard({ session }: { session: StudySession }) {
             <p className="text-sm text-muted-foreground">{session.deck?.description}</p>
           </div>
           <Badge variant={session.studyType === "flashcard" ? "secondary" : "default"}>
-            {session.studyType === "flashcard" ? "Flashcard" : "Quiz"}
+            {session.studyType === "flashcard" ? "Flashcard" : "Múltipla escolha"}
           </Badge>
         </div>
 
