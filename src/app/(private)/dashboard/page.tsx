@@ -256,8 +256,8 @@ export default function DashboardPage() {
       <main className="flex flex-col gap-10 py-6">
         <StudyStats {...calculatedStats} />
         <StudyInsights insights={insights} />
-        <StudyCalendar cardProgress={cardProgress} decks={decks} stats={stats} />
         <QuantityMetrics totalCards={stats.totalCards} totalDecks={stats.totalDecks} totalStudySessions={stats.totalStudySessions} />
+        <StudyCalendar cardProgress={cardProgress} decks={decks} stats={stats} />
         <RecentActivity multipleChoices={recentActivity.multipleChoices} flashcards={recentActivity.flashcards} isLoading={recentActivity.isLoading} />
       </main>
     </div>
