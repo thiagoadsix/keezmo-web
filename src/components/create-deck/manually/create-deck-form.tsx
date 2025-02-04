@@ -2,15 +2,18 @@
 
 import { useState } from "react"
 import { useUser } from "@clerk/nextjs"
-import { Button } from "@/src/components/ui/button"
-import { Input } from "@/src/components/ui/input"
-import { Loader2, ChevronLeft, ChevronRight, Trash, Plus, Check } from "lucide-react"
+import { Loader2, ChevronLeft, ChevronRight, Trash, Plus } from "lucide-react"
 import Link from "next/link"
+
 import { apiClient } from "@/src/lib/api-client"
-import { Textarea } from "@/src/components/ui/textarea"
-import { Alert, AlertDescription } from "@/src/components/ui/alert"
+
 import { ProcessStepStatus } from "@/types/process-step"
 import { Deck } from "@/types/deck"
+
+import { Button } from "@/src/components/ui/button"
+import { Input } from "@/src/components/ui/input"
+import { Textarea } from "@/src/components/ui/textarea"
+import { Alert, AlertDescription } from "@/src/components/ui/alert"
 
 interface CreateDeckFormProps {
   onSuccess: (deckId: string) => void;

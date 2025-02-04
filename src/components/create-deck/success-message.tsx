@@ -21,7 +21,7 @@ export function SuccessMessage({ deckId, isEdit }: SuccessMessageProps) {
       </p>
       <div className="flex gap-4">
         <Button variant="outline" asChild>
-          <Link href={`/decks/${deckId}/study`}>Começar a estudar</Link>
+          <Link href={`/decks/${deckId}/study-mode/flashcards`}>Começar a estudar</Link>
         </Button>
         <Button variant="outline" asChild>
           <Link href="/decks">Ver meus decks</Link>

@@ -1,5 +1,4 @@
 export function formatDate(date: string | Date) {
-  console.log({date})
   return new Date(date).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo',
     day: '2-digit',

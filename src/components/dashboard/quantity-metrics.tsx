@@ -16,7 +16,7 @@ export function QuantityMetrics({ totalCards, totalDecks, totalStudySessions }: 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Files className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Total Cards</span>
+              <span className="text-sm font-medium">Total de cartões</span>
             </div>
             <span className="text-2xl font-bold">{totalCards}</span>
           </div>
@@ -28,7 +28,7 @@ export function QuantityMetrics({ totalCards, totalDecks, totalStudySessions }: 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Total Decks</span>
+              <span className="text-sm font-medium">Total de decks</span>
             </div>
             <span className="text-2xl font-bold">{totalDecks}</span>
           </div>
@@ -40,7 +40,7 @@ export function QuantityMetrics({ totalCards, totalDecks, totalStudySessions }: 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Study Sessions</span>
+              <span className="text-sm font-medium">Sessões de estudo</span>
             </div>
             <span className="text-2xl font-bold">{totalStudySessions}</span>
           </div>
