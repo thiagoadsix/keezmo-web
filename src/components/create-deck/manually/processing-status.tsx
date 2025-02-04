@@ -42,7 +42,7 @@ export function ProcessingStatus({ steps }: ProcessingStatusProps) {
                   ) : step.status === 'error' ? (
                     <X className="h-5 w-5 text-destructive" />
                   ) : (
-                    step.icon
+                    <step.icon className="h-5 w-5" />
                   )}
                 </div>
                 <div>
