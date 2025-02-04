@@ -42,7 +42,7 @@ export function ProcessingStatus({ steps, waitForCompletion }: ProcessingStatusP
                   ) : step.status === 'completed' ? (
                     <Check className="h-5 w-5 text-green-500" />
                   ) : (
-                    step.icon
+                    <step.icon className="h-5 w-5" />
                   )}
                 </div>
                 <div>
