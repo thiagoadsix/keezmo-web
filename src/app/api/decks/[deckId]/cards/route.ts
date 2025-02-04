@@ -46,10 +46,10 @@ export async function PUT(
   const deckId = (await params).deckId;
 
   try {
-    const { cards } = await request.json();
+    const result = await request.json();
     const timestamp = new Date().toISOString();
 
-    const updatePromises = cards.map(async (card: Card) => {
+    const updatePromises = result.map(async (card: Card) => {
       const getCommand = new GetCommand({
         TableName: TABLE_NAME,
         Key: {
@@ -82,7 +82,7 @@ export async function PUT(
 
     await Promise.all(updatePromises);
 
-    return NextResponse.json({ message: 'Cards updated successfully' });
+    return NextResponse.json({ });
   } catch (error: any) {
     console.error('❌ [Error] Failed to update cards:', error);
     return NextResponse.json({ error: 'Failed to update cards' }, { status: 500 });

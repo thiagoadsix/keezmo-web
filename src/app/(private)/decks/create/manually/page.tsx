@@ -21,6 +21,7 @@ export default function CreateDeckPage() {
       )}
       <main className="">
         <DeckForm
+          mode="create"
           onProcessingStart={() => {
             setError(null)
           }}

@@ -3,6 +3,7 @@ export interface FlashCard {
   question: string
   options: string[]
   correctAnswerIndex: number
+  correctAnswer: string
 }
 
 export interface FormValues {
@@ -12,6 +13,7 @@ export interface FormValues {
     question: string
     options: string[]
     correctAnswerIndex: number
+    id: string
   }[]
 }
 

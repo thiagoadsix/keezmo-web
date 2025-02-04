@@ -83,7 +83,7 @@ export async function PUT(
 
     await dynamoDbClient.send(command);
 
-    return NextResponse.json({ message: 'Deck updated successfully' });
+    return NextResponse.json({ });
   } catch (error: any) {
     console.error('Failed to update deck:', error);
     return NextResponse.json(

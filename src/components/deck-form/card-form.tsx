@@ -3,8 +3,6 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { Copy, HelpCircle, Plus, Trash2 } from "lucide-react"
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import type { UseFormRegister } from "react-hook-form"
 
 import { Button } from "@/src/components/ui/button"
@@ -14,7 +12,6 @@ import { RadioGroup } from "@/src/components/ui/radio-group"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/src/components/ui/tooltip"
 
-import { SortableOption } from "./sortable-option"
 import { CardNavigation } from "./card-navigation"
 import type { FlashCard, FormValues } from "./types"
 import { OptionInput } from "./option-input"
@@ -59,7 +56,6 @@ export function CardForm({
   errors,
   touchedFields,
 }: CardFormProps) {
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))
   const questionInputRef = React.useRef<HTMLTextAreaElement>(null)
 
   return (
@@ -122,7 +118,7 @@ export function CardForm({
                   // @ts-ignore
                   questionInputRef.current = e
                 }}
-                value={card.question}
+                value={card?.question}
                 onChange={(e) => {
                   onQuestionChange(e.target.value)
                   autoResizeTextArea(e.target)
@@ -157,8 +153,8 @@ export function CardForm({
                 </Tooltip>
               </div>
               <div className="mt-1.5 space-y-2">
-              <RadioGroup value={String(card.correctAnswerIndex)} onValueChange={onCorrectAnswerChange}>
-                  {card.options.map((option, optionIndex) => (
+              <RadioGroup value={String(card?.correctAnswerIndex)} onValueChange={onCorrectAnswerChange}>
+                  {card?.options?.map((option, optionIndex) => (
                     <OptionInput
                       key={optionIndex}
                       option={option}

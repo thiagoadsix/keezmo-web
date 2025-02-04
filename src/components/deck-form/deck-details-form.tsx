@@ -1,4 +1,4 @@
-import { ArrowRight, Trash2 } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import type { UseFormRegister, FieldErrors } from "react-hook-form"
 
@@ -32,6 +32,7 @@ export function DeckDetailsForm({
   canProceedToCards,
   onProceed,
 }: DeckDetailsFormProps) {
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -69,7 +70,7 @@ export function DeckDetailsForm({
       </div>
 
       <div className="flex justify-between pt-6">
-        <Button variant="outline" asChild>
+        <Button variant="destructive" asChild>
           <Link href="/decks">Cancelar</Link>
         </Button>
         <Button type="button" disabled={!canProceedToCards} onClick={onProceed}>

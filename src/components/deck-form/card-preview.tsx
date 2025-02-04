@@ -23,17 +23,17 @@ export function CardPreview({ card, open, onOpenChange }: CardPreviewProps) {
           <CardContent className="pt-6">
             <div className="prose prose-sm dark:prose-invert">
               <h3 className="text-lg font-semibold leading-tight tracking-tight">
-                {card.question || "Sua pergunta aparecerá aqui"}
+                {card?.question || "Sua pergunta aparecerá aqui"}
               </h3>
               <div className="mt-4 space-y-2">
-                {card.options.map((option: string, index: number) => (
+                {card?.options?.map((option: string, index: number) => (
                   <div
                     key={index}
                     className={`flex items-center gap-3 rounded-lg border p-4 ${
-                      index === card.correctAnswerIndex ? "border-green-500 bg-green-500/10 text-green-500" : ""
+                      index === card?.correctAnswerIndex ? "border-green-500 bg-green-500/10 text-green-500" : ""
                     }`}
                   >
-                    {index === card.correctAnswerIndex ? (
+                    {index === card?.correctAnswerIndex ? (
                       <Check className="h-5 w-5 shrink-0" />
                     ) : (
                       <div className="h-5 w-5" />

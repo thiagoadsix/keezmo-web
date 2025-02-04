@@ -5,48 +5,49 @@ import { useState } from "react"
 import { Button } from "@/src/components/ui/button"
 import { Dialog, DialogContent } from "@/src/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
+import { formatDate } from "@/src/lib/date"
 import { Separator } from "@/src/components/ui/separator"
 
-import { formatDate } from "@/src/lib/date"
-import type { ProcessStep } from "@/types/process-step"
-
 import { ProcessingStatus } from "./processing-status"
+import type { ProcessStep } from "@/types/process-step"
 
 interface SuccessDialogProps {
   open: boolean
+  mode: "create" | "edit"
   deckId: string
   title: string
   description: string
   cardCount: number
   createdAt: string
+  updatedAt: string
 }
 
-const initialSteps: ProcessStep[] = [
+const getInitialSteps = (mode: "create" | "edit"): ProcessStep[] => [
   {
     id: 1,
-    title: "Criando estrutura",
-    description: "Preparando a estrutura do deck",
+    title: mode === "create" ? "Criando estrutura" : "Atualizando estrutura",
+    description: mode === "create" ? "Preparando a estrutura do deck" : "Atualizando informações do deck",
     icon: FileText,
     status: "waiting",
   },
   {
     id: 2,
     title: "Processando conteúdo",
-    description: "Gerando flashcards",
+    description: mode === "create" ? "Gerando cartões" : "Atualizando cartões",
     icon: Brain,
     status: "waiting",
   },
   {
     id: 3,
     title: "Finalizando",
-    description: "Salvando seu deck",
+    description: mode === "create" ? "Salvando seu deck" : "Salvando alterações",
     icon: Sparkles,
     status: "waiting",
   },
 ]
 
-export function SuccessDialog({ open, deckId, title, description, cardCount, createdAt }: SuccessDialogProps) {
-  const [steps, setSteps] = useState<ProcessStep[]>(initialSteps)
+export function SuccessDialog({ open, mode, deckId, title, description, cardCount, createdAt, updatedAt }: SuccessDialogProps) {
+  const [steps, setSteps] = useState<ProcessStep[]>(getInitialSteps(mode))
   const [isProcessing, setIsProcessing] = useState(true)
 
   // Simulate the processing steps
@@ -98,9 +99,13 @@ export function SuccessDialog({ open, deckId, title, description, cardCount, cre
               <Check className="h-4 w-4 text-green-500" />
             </div>
             <div>
-              <h2 className="font-semibold">Deck criado com sucesso!</h2>
+              <h2 className="font-semibold">
+                {mode === "create" ? "Deck criado com sucesso!" : "Deck atualizado com sucesso!"}
+              </h2>
               <p className="text-sm text-muted-foreground">
-                Seu deck foi criado. Você pode começar a estudar ou ver mais detalhes.
+                {mode === "create"
+                  ? "Seu deck foi criado. Você pode começar a estudar ou ver mais detalhes."
+                  : "Seus alterações foram salvas. Você pode continuar estudando ou ver o deck atualizado."}
               </p>
             </div>
           </div>
@@ -119,7 +124,9 @@ export function SuccessDialog({ open, deckId, title, description, cardCount, cre
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  <span>Criado em {formatDate(createdAt)}</span>
+                  <span>
+                    {mode === "create" ? "Criado" : "Atualizado"} {mode === "create" ? formatDate(createdAt) : formatDate(updatedAt)}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -135,8 +142,8 @@ export function SuccessDialog({ open, deckId, title, description, cardCount, cre
               <Button asChild className="justify-start" variant="outline">
                 <Link href={`/decks/${deckId}/study-mode/flashcards`}>
                   <ListStart className="mr-2 h-4 w-4" />
-                  Flashcards
-                  <span className="ml-auto text-xs text-muted-foreground">Pratique com cartões auto-pausados</span>
+                  Cartões
+                  <span className="ml-auto text-xs text-muted-foreground">Pratique com cartões auto-paced</span>
                 </Link>
               </Button>
               <Button asChild className="justify-start" variant="outline">
