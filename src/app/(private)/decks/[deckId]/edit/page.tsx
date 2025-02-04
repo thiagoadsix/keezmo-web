@@ -14,21 +14,21 @@ const initialSteps: ProcessStep[] = [
     id: 1,
     title: 'Atualizando deck',
     description: 'Salvando as alterações do deck',
-    icon: <FileText className="h-5 w-5" />,
+    icon: FileText,
     status: 'waiting'
   },
   {
     id: 2,
     title: 'Processando conteúdo',
     description: 'Atualizando os cartões existentes',
-    icon: <Brain className="h-5 w-5" />,
+    icon: Brain,
     status: 'waiting'
   },
   {
     id: 3,
     title: 'Finalizando',
     description: 'Aplicando as mudanças',
-    icon: <Sparkles className="h-5 w-5" />,
+    icon: Sparkles,
     status: 'waiting'
   }
 ];

@@ -31,7 +31,6 @@ import {
 import { apiClient } from "@/src/lib/api-client";
 
 import type { Deck } from "@/types/deck";
-import type { ProcessStepStatus } from "@/types/process-step";
 
 import { CardForm } from "./card-form";
 import { CardPreview } from "./card-preview";
