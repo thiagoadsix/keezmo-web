@@ -302,7 +302,7 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
       <div aria-live="polite" className="sr-only">
         {announcement}
       </div>
-      <div className="container max-w">
+      <div className="w-full">
         <Card>
           <CardHeader>
             <CardDescription>
