@@ -19,7 +19,7 @@ export default function CreateDeckPage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <main className="">
+      <main>
         <DeckForm
           mode="create"
           onProcessingStart={() => {

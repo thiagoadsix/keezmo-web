@@ -80,7 +80,7 @@ export default function EditDeckPage() {
         title="Editar deck"
         mobileTitle="Editar deck"
       />
-      <main className="bg-[#10111F] w-full h-full rounded-lg border">
+      <main>
         <DeckForm
           mode="edit"
           initialData={{
