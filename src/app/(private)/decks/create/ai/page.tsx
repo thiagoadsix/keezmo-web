@@ -13,21 +13,21 @@ const stepsForUpload: ProcessStep[] = [
     id: 1,
     title: 'Enviando PDF',
     description: 'Fazendo upload do arquivo para processamento',
-    icon: <FileText className="h-5 w-5" />,
+    icon: FileText,
     status: 'waiting'
   },
   {
     id: 2,
     title: 'Analisando conteúdo',
     description: 'Extraindo e processando o conteúdo do PDF',
-    icon: <Brain className="h-5 w-5" />,
+    icon: Brain,
     status: 'waiting'
   },
   {
     id: 3,
     title: 'Gerando cards',
     description: 'Criando cards de estudo com IA',
-    icon: <Sparkles className="h-5 w-5" />,
+    icon: Sparkles,
     status: 'waiting'
   }
 ]
@@ -37,14 +37,14 @@ const stepsForExisting: ProcessStep[] = [
     id: 2,
     title: 'Analisando conteúdo',
     description: 'Extraindo e processando o conteúdo do PDF',
-    icon: <Brain className="h-5 w-5" />,
+    icon: Brain,
     status: 'waiting'
   },
   {
     id: 3,
     title: 'Gerando cards',
     description: 'Criando cards de estudo com IA',
-    icon: <Sparkles className="h-5 w-5" />,
+    icon: Sparkles,
     status: 'waiting'
   }
 ]
