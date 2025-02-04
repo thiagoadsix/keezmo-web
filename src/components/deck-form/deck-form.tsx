@@ -356,7 +356,7 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
                       </div>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setShowPreview(true)}>
                             <Eye className="h-4 w-4 mr-2" />
                             Pré-visualizar
                           </Button>
@@ -366,6 +366,7 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => {
