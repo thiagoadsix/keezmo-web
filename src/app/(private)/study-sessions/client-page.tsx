@@ -64,7 +64,7 @@ export function ClientStudySessionsPage({ studySessions }: ClientStudySessionsPa
         <StatsOverview studySessions={studySessions} />
       </div>
 
-      <div className="flex flex-col gap-8 bg-muted/50 rounded-lg p-6">
+      <div className="flex flex-col gap-8 border rounded-lg p-6">
         <div className="flex flex-col md:flex-row gap-6 justify-between">
           {/* Left side filters */}
           <div className="space-y-6 flex-1">
@@ -149,7 +149,7 @@ export function ClientStudySessionsPage({ studySessions }: ClientStudySessionsPa
 
       <div className="py-6">
         {filteredSessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/50 rounded-lg">
+          <div className="flex flex-col items-center justify-center py-16 text-center rounded-lg">
             <Brain className="h-12 w-12 text-muted-foreground/50" />
             <h3 className="mt-4 text-lg font-semibold">Nenhuma sessão encontrada</h3>
             <p className="text-muted-foreground">Tente ajustar os filtros ou criar uma nova sessão de estudo.</p>

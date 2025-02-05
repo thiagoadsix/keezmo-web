@@ -1,188 +1,477 @@
-"use client";
+"use client"
 
-import React, { useState, FormEvent } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/src/components/ui/card";
-import { Label } from "@/src/components/ui/label";
-import { Input } from "@/src/components/ui/input";
-import { Textarea } from "@/src/components/ui/textarea";
-import { Button } from "@/src/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/src/components/ui/select";
-import { Header } from "@/src/components/header";
-import { useToast } from "@/src/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { ImagePlus, Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as React from "react"
+import * as z from "zod"
+
+import { Button } from "@/src/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/src/components/ui/form"
+import { Input } from "@/src/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
+import { Textarea } from "@/src/components/ui/textarea"
+
+import { useToast } from "@/src/hooks/use-toast"
+import { Header } from "@/src/components/header"
+
+const MAX_FILE_SIZE = 5000000 // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+
+export const improvementSchema = z.object({
+  title: z
+    .string()
+    .min(3, "Título deve ter no mínimo 3 caracteres")
+    .max(100, "Título deve ter no máximo 100 caracteres"),
+  area: z.enum(["interface", "performance", "usability", "other"], {
+    required_error: "Selecione uma área",
+  }),
+  description: z
+    .string()
+    .min(10, "Descrição deve ter no mínimo 10 caracteres")
+    .max(500, "Descrição deve ter no máximo 500 caracteres"),
+})
+
+export const bugSchema = z.object({
+  title: z
+    .string()
+    .min(3, "Título deve ter no mínimo 3 caracteres")
+    .max(100, "Título deve ter no máximo 100 caracteres"),
+  severity: z.enum(["critical", "high", "medium", "low"], {
+    required_error: "Selecione a severidade",
+  }),
+  description: z
+    .string()
+    .min(10, "Descrição deve ter no mínimo 10 caracteres")
+    .max(500, "Descrição deve ter no máximo 500 caracteres"),
+  image: z
+    .any()
+    .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), {
+      message: "Imagem deve ter no máximo 5MB",
+    })
+    .refine((file) => !file || (file instanceof File && ACCEPTED_IMAGE_TYPES.includes(file.type)), {
+      message: "Apenas imagens .jpg, .jpeg, .png e .webp são aceitas",
+    })
+    .optional(),
+})
+
+export const featureSchema = z.object({
+  title: z
+    .string()
+    .min(3, "Título deve ter no mínimo 3 caracteres")
+    .max(100, "Título deve ter no máximo 100 caracteres"),
+  description: z
+    .string()
+    .min(10, "Descrição deve ter no mínimo 10 caracteres")
+    .max(500, "Descrição deve ter no máximo 500 caracteres"),
+  benefit: z
+    .string()
+    .min(10, "Benefício deve ter no mínimo 10 caracteres")
+    .max(500, "Benefício deve ter no máximo 500 caracteres"),
+})
+
+export type ImprovementForm = z.infer<typeof improvementSchema>
+export type BugForm = z.infer<typeof bugSchema>
+export type FeatureForm = z.infer<typeof featureSchema>
 
 export default function FeedbackPage() {
-  const [feedbackType, setFeedbackType] = useState<"bug" | "improvement">(
-    "bug"
-  );
-  const [title, setTitle] = useState("");
-  const [detail, setDetail] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const { user } = useUser();
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = React.useState<"improvement" | "bug" | "feature">("improvement")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  const improvementForm = useForm<ImprovementForm>({
+    resolver: zodResolver(improvementSchema),
+    defaultValues: {
+      title: "",
+      area: undefined,
+      description: "",
+    },
+  })
 
-    let base64ImageString: string | null = null;
+  const bugForm = useForm<BugForm>({
+    resolver: zodResolver(bugSchema),
+    defaultValues: {
+      title: "",
+      severity: undefined,
+      description: "",
+      image: undefined,
+    },
+  })
 
-    if (image) {
-      base64ImageString = await fileToBase64(image);
-    }
+  const featureForm = useForm<FeatureForm>({
+    resolver: zodResolver(featureSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      benefit: "",
+    },
+  })
 
-    const payload = {
-      type: feedbackType,
-      title,
-      detail,
-      image: base64ImageString,
-    };
-
+  async function onSubmitImprovement(data: ImprovementForm) {
     try {
+      setIsSubmitting(true)
+
       const response = await fetch("/api/feedback", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          type: "improvement",
+          ...data,
+        }),
         headers: {
           "Content-Type": "application/json",
-          "x-user-email": user?.emailAddresses[0].emailAddress || "",
         },
-      });
+      })
 
       if (response.ok) {
         toast({
-          title: "Feedback enviado com sucesso",
-          description: "Obrigado pelo seu feedback!",
-          variant: "default"
-        });
-        setTitle("");
-        setDetail("");
-        setImage(null);
+          title: "Sucesso!",
+          description: "Sua sugestão de melhoria foi enviada.",
+        })
+        improvementForm.reset()
+      } else {
+        throw new Error("Falha ao enviar feedback")
       }
     } catch (error) {
       toast({
-        title: "Erro ao enviar feedback",
-        description: "Ocorreu um erro ao enviar o feedback. Por favor, tente novamente.",
         variant: "destructive",
-      });
+        title: "Erro!",
+        description: "Ocorreu um erro ao enviar sua sugestão.",
+      })
     } finally {
-      setLoading(false);
+      setIsSubmitting(false)
     }
   }
 
-  function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
+  async function onSubmitBug(data: BugForm) {
+    try {
+      setIsSubmitting(true)
+
+      let base64ImageString: string | null = null
+      if (data.image) {
+        base64ImageString = await fileToBase64(data.image)
+      }
+
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "bug",
+          ...data,
+          image: base64ImageString,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Sucesso!",
+          description: "Seu reporte de bug foi enviado.",
+        })
+        bugForm.reset()
+      } else {
+        throw new Error("Falha ao enviar feedback")
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro!",
+        description: "Ocorreu um erro ao enviar seu reporte.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function onSubmitFeature(data: FeatureForm) {
+    try {
+      setIsSubmitting(true)
+
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "feature",
+          ...data,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Sucesso!",
+          description: "Sua sugestão de funcionalidade foi enviada.",
+        })
+        featureForm.reset()
+      } else {
+        throw new Error("Falha ao enviar feedback")
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro!",
+        description: "Ocorreu um erro ao enviar sua sugestão.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <div className="flex flex-col gap-4 px-8">
+    <div className="flex flex-col px-8">
       <Header title="Feedback" mobileTitle="Feedback" />
-      <Card className="bg-[#10111F] border">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Envie sua opinião</CardTitle>
+          <CardDescription>Compartilhe suas sugestões, reporte bugs ou sugira novas funcionalidades</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Tipo de Feedback */}
-            <div className="grid w-full max-w-sm items-center gap-2">
-              <Label htmlFor="feedback-type">Tipo de Feedback</Label>
-              <Select
-                value={feedbackType}
-                onValueChange={(val: "bug" | "improvement") =>
-                  setFeedbackType(val)
-                }
-              >
-                <SelectTrigger id="feedback-type">
-                  <SelectValue placeholder="Selecione o tipo de feedback" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bug">Bug</SelectItem>
-                  <SelectItem value="improvement">Melhoria</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="improvement">Melhoria</TabsTrigger>
+              <TabsTrigger value="bug">Bug</TabsTrigger>
+              <TabsTrigger value="feature">Nova Função</TabsTrigger>
+            </TabsList>
 
-            {/* Título */}
-            <div className="grid w-full max-w-sm items-center gap-2">
-              <Label htmlFor="feedback-title">Título</Label>
-              <Input
-                id="feedback-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Descreva de forma resumida"
-                required
-              />
-            </div>
+            <TabsContent value="improvement">
+              <Form {...improvementForm}>
+                <form onSubmit={improvementForm.handleSubmit(onSubmitImprovement)} className="space-y-4 pt-4">
+                  <FormField
+                    control={improvementForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título da sugestão</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite um título para sua sugestão" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            {/* Detalhes */}
-            <div className="grid w-full max-w-sm items-center gap-2">
-              <Label htmlFor="feedback-detail">Detalhes</Label>
-              <Textarea
-                id="feedback-detail"
-                value={detail}
-                onChange={(e) => setDetail(e.target.value)}
-                placeholder={
-                  feedbackType === "bug"
-                    ? "Conte-nos em detalhes sobre o bug"
-                    : "Conte-nos em detalhes sobre a melhoria"
-                }
-                required
-              />
-            </div>
+                  <FormField
+                    control={improvementForm.control}
+                    name="area"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Área</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a área" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-background">
+                            <SelectItem value="interface">Interface</SelectItem>
+                            <SelectItem value="performance">Performance</SelectItem>
+                            <SelectItem value="usability">Usabilidade</SelectItem>
+                            <SelectItem value="other">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            {/* Imagem (opcional para bug) */}
-            {feedbackType === "bug" && (
-              <div className="grid w-full max-w-sm items-center gap-2">
-                <Label htmlFor="feedback-image">
-                  Captura de tela (opcional)
-                </Label>
-                <Input
-                  id="feedback-image"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      setImage(e.target.files[0]);
-                    } else {
-                      setImage(null);
-                    }
-                  }}
-                />
-              </div>
-            )}
+                  <FormField
+                    control={improvementForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Descreva sua sugestão de melhoria em detalhes" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            {/* Botão de Envio */}
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                "Enviar"
-              )}
-            </Button>
-          </form>
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isSubmitting ? "Enviando..." : "Enviar feedback"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </TabsContent>
+
+            <TabsContent value="bug">
+              <Form {...bugForm}>
+                <form onSubmit={bugForm.handleSubmit(onSubmitBug)} className="space-y-4 pt-4">
+                  <FormField
+                    control={bugForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título do bug</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite um título descritivo para o bug" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={bugForm.control}
+                    name="severity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Severidade</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a severidade" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-background">
+                            <SelectItem value="critical">Crítico</SelectItem>
+                            <SelectItem value="high">Alto</SelectItem>
+                            <SelectItem value="medium">Médio</SelectItem>
+                            <SelectItem value="low">Baixo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={bugForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrição do bug</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Descreva o bug, como reproduzi-lo e o comportamento esperado"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={bugForm.control}
+                    name="image"
+                    render={({ field: { value, onChange, ...field } }) => (
+                      <FormItem>
+                        <FormLabel>Imagem (opcional)</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => document.getElementById("bug-image")?.click()}
+                            >
+                              <ImagePlus className="mr-2 h-4 w-4" />
+                              {value ? "Trocar imagem" : "Adicionar imagem"}
+                            </Button>
+                            {value && <span className="text-sm text-muted-foreground">{value.name}</span>}
+                            <Input
+                              id="bug-image"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                onChange(file)
+                              }}
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isSubmitting ? "Enviando..." : "Enviar feedback"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </TabsContent>
+
+            <TabsContent value="feature">
+              <Form {...featureForm}>
+                <form onSubmit={featureForm.handleSubmit(onSubmitFeature)} className="space-y-4 pt-4">
+                  <FormField
+                    control={featureForm.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título da funcionalidade</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite um título para a nova funcionalidade" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={featureForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Descreva a nova funcionalidade e como ela beneficiaria os usuários"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={featureForm.control}
+                    name="benefit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Benefício principal</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Qual o principal benefício desta nova funcionalidade?" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isSubmitting ? "Enviando..." : "Enviar feedback"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
-        <CardFooter className="text-sm text-muted-foreground">
-          Obrigado pelo seu feedback!
-        </CardFooter>
       </Card>
     </div>
-  );
+  )
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = (error) => reject(error)
+  })
 }
