@@ -1,6 +1,8 @@
 import Link from "next/link"
-import { ArrowLeft, ListChecks, Bookmark, Clock, Trophy, Zap, ChevronRight } from "lucide-react"
+import { ArrowLeft, ListChecks, Bookmark, Clock, Trophy, Zap } from "lucide-react"
 import type React from "react"
+import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 
 import { apiClient } from "@/src/lib/api-client"
 
@@ -8,10 +10,7 @@ import { Button } from "@/src/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
 import { Progress } from "@/src/components/ui/progress"
-import { Skeleton } from "@/src/components/ui/skeleton"
 import { CardProgress } from "@/types/card-progress"
-import { auth } from "@clerk/nextjs/server";
-import { clerkClient } from "@clerk/nextjs/server";
 import { cn } from "@/src/lib/utils"
 
 interface StudyModeStats {
@@ -30,44 +29,8 @@ interface StudyModeCardProps {
   isLoading?: boolean
 }
 
-function StudyModeCardSkeleton() {
-  return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-11 w-11 rounded-xl" />
-            <div>
-              <Skeleton className="h-8 w-40" />
-              <div className="flex items-center gap-2 mt-1">
-                <Skeleton className="h-4 w-24" />
-              </div>
-            </div>
-          </div>
-          <Skeleton className="h-5 w-5" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-16 w-full" />
-        <div className="mt-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-12" />
-          </div>
-          <Skeleton className="h-2 w-full" />
-          <div className="flex items-center gap-6">
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="border-t">
-        <div className="flex w-full items-center justify-between">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-      </CardFooter>
-    </Card>
-  )
+interface PageProps {
+  params: Promise<{ deckId: string }>;
 }
 
 function StudyModeCard({ href, icon, title, description, stats, recommended }: StudyModeCardProps) {
@@ -210,10 +173,10 @@ async function getCardProgress(deckId: string, userEmail: string) {
   }
 }
 
-export default async function StudyModeSelectionPage({ params }: { params: { deckId: string } }) {
+export default async function StudyModeSelectionPage({ params }: PageProps) {
   const { userId } = await auth();
   const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
-  const { deckId } = params;
+  const { deckId } = await params;
 
   if (!userEmail) {
     return null
