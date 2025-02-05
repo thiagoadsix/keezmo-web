@@ -120,6 +120,7 @@ export function Header({
 
       {/* Desktop Navigation */}
       <div className="hidden sm:flex items-center gap-4">
+      {rightContent && <div>{rightContent}</div>}
         <TooltipProvider>
           <Tooltip>
             <Dialog>
