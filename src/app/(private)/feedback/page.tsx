@@ -20,7 +20,7 @@ import { Header } from "@/src/components/header"
 const MAX_FILE_SIZE = 5000000 // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
 
-export const improvementSchema = z.object({
+const improvementSchema = z.object({
   title: z
     .string()
     .min(3, "Título deve ter no mínimo 3 caracteres")
@@ -34,7 +34,7 @@ export const improvementSchema = z.object({
     .max(500, "Descrição deve ter no máximo 500 caracteres"),
 })
 
-export const bugSchema = z.object({
+const bugSchema = z.object({
   title: z
     .string()
     .min(3, "Título deve ter no mínimo 3 caracteres")
@@ -57,7 +57,7 @@ export const bugSchema = z.object({
     .optional(),
 })
 
-export const featureSchema = z.object({
+const featureSchema = z.object({
   title: z
     .string()
     .min(3, "Título deve ter no mínimo 3 caracteres")
@@ -72,9 +72,9 @@ export const featureSchema = z.object({
     .max(500, "Benefício deve ter no máximo 500 caracteres"),
 })
 
-export type ImprovementForm = z.infer<typeof improvementSchema>
-export type BugForm = z.infer<typeof bugSchema>
-export type FeatureForm = z.infer<typeof featureSchema>
+type ImprovementForm = z.infer<typeof improvementSchema>
+type BugForm = z.infer<typeof bugSchema>
+type FeatureForm = z.infer<typeof featureSchema>
 
 export default function FeedbackPage() {
   const { toast } = useToast()
