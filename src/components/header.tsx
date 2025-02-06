@@ -102,7 +102,7 @@ export function Header({
   const totalCredits = planCredits + additionalCredits;
 
   return (
-    <header className="flex h-16 items-center justify-between px-4">
+    <header className="flex h-16 items-center justify-between">
       {/* Left side - Title and Welcome */}
       <div className="flex-1 min-w-0">
         <h1 className="text-lg font-semibold truncate sm:hidden">

@@ -1,14 +1,18 @@
-import { DataTable } from "./data-table";
-import { columns } from "./columns";
 import { auth } from "@clerk/nextjs/server";
-import { DeckHeader } from "@/src/components/decks/deck-header";
 import { clerkClient } from "@clerk/nextjs/server";
+
 import { apiClient } from "@/src/lib/api-client";
+
 import { Deck } from "@/types/deck";
+
+import { DeckHeader } from "@/src/components/decks/deck-header";
+
+import { ClientDecksPage } from "./client-page";
 
 export default async function DecksPage() {
   const { getToken, userId } = await auth();
-  const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
+  const userEmail = (await (await clerkClient()).users.getUser(userId!))
+    .emailAddresses[0].emailAddress;
 
   const response = await apiClient<Deck[]>("api/decks", {
     method: "GET",
@@ -28,7 +32,7 @@ export default async function DecksPage() {
   return (
     <div className="gap-5 flex flex-col px-8">
       <DeckHeader />
-      <DataTable columns={columns} data={decks} />
+      <ClientDecksPage decks={decks} />
     </div>
   );
 }
