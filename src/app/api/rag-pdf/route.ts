@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
     if (url && !fileUrl) {
       body.append('url', url);
+      body.append('input_type', 'url');
     } else {
       console.log('fileUrl', fileUrl);
       // Carregar PDF do S3 e extrair páginas específicas
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       if (fileExtension) {
         body.append('input_type', fileExtension);
       }
-      body.append('pdf_file', new Blob([newPdfBytes]));
+      body.append('file', new Blob([newPdfBytes]));
     }
 
     const keezmoApiClient = createApiClient(String(KEEZMO_API_URL));
