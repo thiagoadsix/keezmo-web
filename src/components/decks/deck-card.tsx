@@ -42,7 +42,7 @@ export function DeckCard({ deck, view }: DeckCardProps) {
         </div>
 
         {/* Actions */}
-        <div className={cn("flex gap-3", view === "list" ? "justify-end" : "justify-between", "sm:flex-col")}>
+        <div className={cn("flex gap-3", view === "list" ? "justify-end" : "justify-between")}>
           <Button
             asChild
             variant="default"
