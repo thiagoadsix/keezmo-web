@@ -46,14 +46,14 @@ export function DeckCard({ deck, view }: DeckCardProps) {
           <Button
             asChild
             variant="default"
-            className="flex-1 h-9 px-4 max-w-[160px] transition-all active:scale-100"
+            className="flex-1 h-9 px-4 transition-all active:scale-100"
           >
             <Link href={`/decks/${deck.id}/study-mode`} className="flex items-center justify-center gap-2">
               <GraduationCapIcon className="h-4 w-4 transition-opacity group-hover/study:opacity-70" />
               <span>Estudar</span>
             </Link>
           </Button>
-          <Button asChild variant="outline" className="flex-1 h-9 px-4 max-w-[160px] hover:bg-primary/5 hover:border-primary">
+          <Button asChild variant="outline" className="flex-1 h-9 px-4 hover:bg-primary/5 hover:border-primary">
             <Link href={`/decks/${deck.id}/edit`} className="flex items-center justify-center gap-2 hover:text-primary">
               <PencilIcon className="h-4 w-4 hover:text-primary" />
               <span>Editar</span>
