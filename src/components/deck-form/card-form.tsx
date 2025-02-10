@@ -113,6 +113,7 @@ export function CardForm({
               <Textarea
                 {...register(`cards.${cardIndex}.question`)}
                 ref={(e) => {
+                  // @ts-ignore
                   questionInputRef.current = e
                 }}
                 value={card.question}
