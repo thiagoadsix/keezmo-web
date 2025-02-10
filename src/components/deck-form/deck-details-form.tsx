@@ -32,7 +32,6 @@ export function DeckDetailsForm({
   canProceedToCards,
   onProceed,
 }: DeckDetailsFormProps) {
-
   return (
     <div className="space-y-6">
       <div className="space-y-4">

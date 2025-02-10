@@ -8,13 +8,12 @@ import type { UseFormRegister } from "react-hook-form"
 import { Button } from "@/src/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card"
 import { Label } from "@/src/components/ui/label"
-import { RadioGroup } from "@/src/components/ui/radio-group"
 import { Textarea } from "@/src/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/src/components/ui/tooltip"
 
+import { OptionInput } from "./option-input"
 import { CardNavigation } from "./card-navigation"
 import type { FlashCard, FormValues } from "./types"
-import { OptionInput } from "./option-input"
 
 interface CardFormProps {
   card: FlashCard
@@ -91,7 +90,6 @@ export function CardForm({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        type="button"
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -115,10 +113,9 @@ export function CardForm({
               <Textarea
                 {...register(`cards.${cardIndex}.question`)}
                 ref={(e) => {
-                  // @ts-ignore
                   questionInputRef.current = e
                 }}
-                value={card?.question}
+                value={card.question}
                 onChange={(e) => {
                   onQuestionChange(e.target.value)
                   autoResizeTextArea(e.target)
@@ -148,26 +145,33 @@ export function CardForm({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Selecione a resposta correta usando os botões de rádio</p>
+                    <p>Clique no checkmark para definir a resposta correta</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
               <div className="mt-1.5 space-y-2">
-              <RadioGroup value={String(card?.correctAnswerIndex)} onValueChange={onCorrectAnswerChange}>
-                  {card?.options?.map((option, optionIndex) => (
-                    <OptionInput
-                      key={optionIndex}
-                      option={option}
-                      index={optionIndex}
-                      cardIndex={cardIndex}
-                      register={register}
-                      onDelete={() => onOptionDelete(optionIndex)}
-                      onChange={(value) => onOptionChange(optionIndex, value)}
-                    />
-                  ))}
-                </RadioGroup>
+                {card.options.map((option, optionIndex) => (
+                  <OptionInput
+                    key={optionIndex}
+                    option={option}
+                    index={optionIndex}
+                    cardIndex={cardIndex}
+                    isCorrect={optionIndex === card.correctAnswerIndex}
+                    register={register}
+                    onDelete={() => onOptionDelete(optionIndex)}
+                    onChange={(value) => onOptionChange(optionIndex, value)}
+                    onSetCorrect={() => onCorrectAnswerChange(optionIndex.toString())}
+                  />
+                ))}
 
-                <Button type="button" variant="outline" size="sm" className="w-full" onClick={onAddOption}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={onAddOption}
+                  disabled={card.options.length >= 5}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar opção
                 </Button>
