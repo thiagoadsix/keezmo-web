@@ -51,7 +51,9 @@ const formSchema = z.object({
       options: z.array(z.string({ required_error: "Opção é obrigatória" }).min(1, "Opção é obrigatória")),
       correctAnswerIndex: z.number({ required_error: "Selecione uma resposta correta" }).min(0, "Selecione uma resposta correta"),
     })
-  ),
+  ).refine((cards) => cards.every((card) => card.correctAnswerIndex !== undefined && card.correctAnswerIndex !== -1), {
+    message: "Selecione uma resposta correta para cada cartão",
+  }),
 });
 
 interface DeckFormProps {
@@ -105,6 +107,7 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
     formState: { errors, isValid, touchedFields, dirtyFields },
     watch,
     setValue,
+    getValues,
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -117,6 +120,10 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
   })
 
   const progress = ((currentCardIndex + 1) / cards.length) * 100
+
+  useEffect(() => {
+    setValue("cards", cards, { shouldValidate: true });
+  }, [cards, setValue]);
 
   useEffect(() => {
     // Only load draft if in create mode and no initial data
@@ -152,34 +159,36 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
 
   // Update form values when cards change without triggering validation
   useEffect(() => {
-    setValue("title", initialData?.title || "", {
-      shouldValidate: false,
-      shouldDirty: false,
-      shouldTouch: false,
-    })
-    setValue("description", initialData?.description || "", {
-      shouldValidate: false,
-      shouldDirty: false,
-      shouldTouch: false,
-    })
-    initialData?.cards.forEach((card, index) => {
-      setValue(`cards.${index}.question`, card.question, {
+    if (initialData) {
+      setValue("title", initialData.title || "", {
         shouldValidate: false,
         shouldDirty: false,
         shouldTouch: false,
       })
-      setValue(`cards.${index}.options`, card.options, {
+      setValue("description", initialData.description || "", {
         shouldValidate: false,
         shouldDirty: false,
         shouldTouch: false,
       })
-      setValue(`cards.${index}.correctAnswerIndex`, card.correctAnswerIndex, {
-        shouldValidate: false,
-        shouldDirty: false,
-        shouldTouch: false,
+      initialData.cards.forEach((card, index) => {
+        setValue(`cards.${index}.question`, card.question, {
+          shouldValidate: false,
+          shouldDirty: false,
+          shouldTouch: false,
+        })
+        setValue(`cards.${index}.options`, card.options, {
+          shouldValidate: false,
+          shouldDirty: false,
+          shouldTouch: false,
+        })
+        setValue(`cards.${index}.correctAnswerIndex`, card.correctAnswerIndex, {
+          shouldValidate: false,
+          shouldDirty: false,
+          shouldTouch: false,
+        })
       })
-    })
-  }, [initialData, cards, setValue])
+    }
+  }, [initialData, setValue])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -434,6 +443,7 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
                         const newCards = [...cards]
                         newCards[currentCardIndex].correctAnswerIndex = Number.parseInt(value)
                         setCards(newCards)
+                        setValue(`cards.${currentCardIndex}.correctAnswerIndex`, Number.parseInt(value))
                       }}
                       onDuplicate={() => {
                         const cardToDuplicate = cards[currentCardIndex]
@@ -453,7 +463,11 @@ export function DeckForm({ mode, initialData, onSuccess, onProcessingStart, onSt
                   </AnimatePresence>
 
                   <div className="flex justify-end pt-6">
-                    <Button type="submit" form="deck-form" disabled={isLoading || !isValid}>
+                    <Button
+                      type="submit"
+                      form="deck-form"
+                      disabled={isLoading || !isValid}
+                    >
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
