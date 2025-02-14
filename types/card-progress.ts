@@ -10,7 +10,7 @@ export type CardProgress = {
   interval: number;
   lastReviewed: string;
   updatedAt: string;
-  rating: "easy" | "normal" | "hard";
+  rating: "again" | "easy" | "normal" | "hard";
   easyCount?: number;
   normalCount?: number;
   hardCount?: number;

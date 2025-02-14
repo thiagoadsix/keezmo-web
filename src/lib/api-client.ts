@@ -17,22 +17,22 @@ export const apiClient = ky.create({
         // if (token) {
         //   request.headers.set("Authorization", `Bearer ${token}`);
         // }
-        console.log("Iniciando requisição:", request.url);
+        // console.log("Iniciando requisição:", request.url);
       },
     ],
     afterResponse: [
       async (request, options, response) => {
-        console.log(
-          `Resposta recebida para ${request.url}:`,
-          response.status
-        );
+        // console.log(
+        //   `Resposta recebida para ${request.url}:`,
+        //   response.status
+        // );
       },
     ],
     beforeRetry: [
       ({ retryCount, request }) => {
-        console.warn(
-          `Tentativa ${retryCount} para ${request.url} falhou. Retentando...`
-        );
+        // console.warn(
+        //   `Tentativa ${retryCount} para ${request.url} falhou. Retentando...`
+        // );
       },
     ],
   },

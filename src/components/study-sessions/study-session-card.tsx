@@ -60,7 +60,7 @@ export function StudySessionCard({ studySession, view = "grid" }: StudySessionCa
               Fácil: {studySession.ratings?.filter((r) => r.rating === "easy").length}
             </span>
             <span className="text-yellow-500">
-              Médio: {studySession.ratings?.filter((r) => r.rating === "normal").length}
+              Normal: {studySession.ratings?.filter((r) => r.rating === "normal").length}
             </span>
             <span className="text-red-500">
               Difícil: {studySession.ratings?.filter((r) => r.rating === "hard").length}

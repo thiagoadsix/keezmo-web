@@ -20,6 +20,6 @@ export type StudySession = {
   }>
   ratings?: Array<{
     questionId: string
-    rating: "easy" | "normal" | "hard"
+    rating: "again" | "easy" | "normal" | "hard"
   }>
 }

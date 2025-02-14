@@ -1,194 +1,74 @@
-import Link from "next/link"
-import { ArrowLeft, ListChecks, Bookmark, Clock, Trophy, Zap } from "lucide-react"
+"use client"
+
 import type React from "react"
-import { auth } from "@clerk/nextjs/server";
-import { clerkClient } from "@clerk/nextjs/server";
+import Link from "next/link"
+import { ArrowLeft, ListChecks, Bookmark, Zap } from "lucide-react"
 
 import { apiClient } from "@/src/lib/api-client"
 
 import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/src/components/ui/card"
-import { Badge } from "@/src/components/ui/badge"
-import { Progress } from "@/src/components/ui/progress"
 import { CardProgress } from "@/types/card-progress"
-import { cn } from "@/src/lib/utils"
+import { StudyModeClient } from "./study-mode-client";
+import { useUser } from "@clerk/nextjs";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-interface StudyModeStats {
-  completionRate: number
-  averageTime: string
-  totalAttempts: number
-}
+export default function StudyModeSelectionPage() {
+  const { user } = useUser();
+  const params = useParams();
+  const deckId = params.deckId as string;
 
-interface StudyModeCardProps {
-  href: string
-  icon: React.ReactNode
-  title: string
-  description: string
-  stats: StudyModeStats
-  recommended?: boolean
-  isLoading?: boolean
-}
+  const [flashcardProgress, setFlashcardProgress] = useState<CardProgress[]>([]);
+  const [multipleChoiceProgress, setMultipleChoiceProgress] = useState<CardProgress[]>([]);
 
-interface PageProps {
-  params: Promise<{ deckId: string }>;
-}
+  useEffect(() => {
+    if (!user?.emailAddresses[0].emailAddress) return;
 
-function StudyModeCard({ href, icon, title, description, stats, recommended }: StudyModeCardProps) {
-  return (
-    <Link href={href}>
-      <Card
-        className={cn(
-          "group relative h-full overflow-hidden transition-all duration-300 hover:shadow-lg",
-          "hover:-translate-y-1 active:translate-y-0",
-          recommended && "border-primary/50 shadow-md",
-        )}
-      >
-        {/* Recommended Badge */}
-        {recommended && (
-          <div className="absolute right-4 top-4">
-            <Badge variant="default" className="shadow-sm">
-              Recomendado
-            </Badge>
-          </div>
-        )}
-
-        {/* Card Header */}
-        <CardHeader className="pb-4">
-          <div className="flex items-start gap-4">
-            <div
-              className={cn(
-                "rounded-lg p-2.5 transition-colors",
-                "bg-primary/5 text-primary group-hover:bg-primary/10",
-              )}
-            >
-              {icon}
-            </div>
-            <div className="space-y-1.5">
-              <CardTitle className="text-2xl font-semibold tracking-tight">{title}</CardTitle>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground/70" />
-                <span className="text-sm text-muted-foreground">{stats.averageTime}</span>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-
-        {/* Card Content */}
-        <CardContent className="space-y-6">
-          <CardDescription className="text-base leading-relaxed">{description}</CardDescription>
-
-          <div className="space-y-4">
-            {/* Progress Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progresso</span>
-                <span className="font-medium">{stats.completionRate}%</span>
-              </div>
-              <Progress
-                value={stats.completionRate}
-                className={cn("h-2 transition-all", "group-hover:[&>div]:bg-primary")}
-              />
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-primary/70" />
-              <span className="text-sm text-muted-foreground">{stats.totalAttempts.toLocaleString()} tentativas</span>
-            </div>
-          </div>
-        </CardContent>
-
-        {/* Card Footer */}
-        <CardFooter
-          className={cn(
-            "border-t p-0 transition-colors",
-            "bg-gradient-to-b from-muted/30 to-muted/60",
-            "group-hover:from-muted/50 group-hover:to-muted/80",
-          )}
-        >
-          <div
-            className={cn(
-              "flex w-full items-center justify-between",
-              "relative overflow-hidden",
-              "transition-all duration-300",
-            )}
-          >
-            {/* Hover effect overlay */}
-            <div
-              className={cn(
-                "absolute inset-0 opacity-0",
-                "bg-gradient-to-r from-primary/5 to-primary/10",
-                "transition-opacity duration-300",
-                "group-hover:opacity-100",
-              )}
-            />
-          </div>
-        </CardFooter>
-      </Card>
-    </Link>
-  )
-}
-
-async function getCardProgress(deckId: string, userEmail: string) {
-  try {
-    const flashcardProgressResponse = await apiClient<CardProgress[]>(`api/cards/progress/flashcards?deckId=${deckId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-email": userEmail,
-      },
-      cache: "no-store",
-    })
-    const flashcardProgress = await flashcardProgressResponse.json()
-
-    const multipleChoiceProgressResponse = await apiClient<CardProgress[]>(`api/cards/progress/multiple-choices?deckId=${deckId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-email": userEmail,
-      },
-      cache: "no-store",
-    })
-    const multipleChoiceProgress = await multipleChoiceProgressResponse.json()
-
-    return {
-      flashcard: {
-        totalAttempts: flashcardProgress.reduce((sum, card) => sum + card.totalAttempts, 0),
-        completionRate: Math.round(
-          (flashcardProgress.filter((card) => card.totalAttempts > 0).length / flashcardProgress.length) * 100,
-        ),
-      },
-      multipleChoice: {
-        totalAttempts: multipleChoiceProgress.reduce((sum, card) => sum + card.totalAttempts, 0),
-        completionRate: Math.round(
-          (multipleChoiceProgress.filter((card) => card.totalAttempts > 0).length / multipleChoiceProgress.length) *
-            100,
-        ),
-      },
+    async function fetchFlashcardProgress() {
+      const flashcardProgressResponse = await apiClient<CardProgress[]>(`api/cards/progress/flashcards?deckId=${deckId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": user?.emailAddresses[0].emailAddress!,
+        },
+        cache: "no-store",
+      })
+      const flashcardProgress = await flashcardProgressResponse.json()
+      setFlashcardProgress(flashcardProgress);
     }
-  } catch (error) {
-    console.error("Error fetching card progress:", error)
-    return {
-      flashcard: { totalAttempts: 0, completionRate: 0 },
-      multipleChoice: { totalAttempts: 0, completionRate: 0 },
+
+    async function fetchMultipleChoiceProgress() {
+      const multipleChoiceProgressResponse = await apiClient<CardProgress[]>(`api/cards/progress/multiple-choices?deckId=${deckId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": user?.emailAddresses[0].emailAddress!,
+        },
+        cache: "no-store",
+      })
+      const multipleChoiceProgress = await multipleChoiceProgressResponse.json()
+      setMultipleChoiceProgress(multipleChoiceProgress);
     }
-  }
-}
 
-export default async function StudyModeSelectionPage({ params }: PageProps) {
-  const { userId } = await auth();
-  const userEmail = (await (await clerkClient()).users.getUser(userId!)).emailAddresses[0].emailAddress;
-  const { deckId } = await params;
+    fetchFlashcardProgress();
+    fetchMultipleChoiceProgress();
+  }, [deckId, user?.emailAddresses])
 
-  if (!userEmail) {
-    return null
-  }
+  console.log({ flashcardProgress: JSON.stringify(flashcardProgress, null, 2) })
 
-  let progress = {
-    flashcard: { totalAttempts: 0, completionRate: 0 },
-    multipleChoice: { totalAttempts: 0, completionRate: 0 },
+  const progress = {
+    flashcard: {
+      totalAttempts: flashcardProgress.length === 0 ? 0 : flashcardProgress.reduce((sum, card) => sum + card.totalAttempts, 0),
+      completionRate: flashcardProgress.length === 0 ? 0 : Math.round(
+        (flashcardProgress.filter((card) => card.totalAttempts > 0).length / flashcardProgress.length) * 100,
+      ),
+    },
+    multipleChoice: {
+      totalAttempts: multipleChoiceProgress.length === 0 ? 0 : multipleChoiceProgress.reduce((sum, card) => sum + card.totalAttempts, 0),
+      completionRate: multipleChoiceProgress.length === 0 ? 0 : Math.round(
+        (multipleChoiceProgress.filter((card) => card.totalAttempts > 0).length / multipleChoiceProgress.length) *
+          100,
+      ),
+    },
   };
-  if (typeof deckId === 'string') {
-    progress = await getCardProgress(deckId, userEmail)
-  }
 
   const studyModes = [
     {
@@ -237,7 +117,7 @@ export default async function StudyModeSelectionPage({ params }: PageProps) {
 
         <div className="grid gap-6 sm:grid-cols-2">
           {studyModes.map((mode) => (
-            <StudyModeCard key={mode.title} {...mode} />
+            <StudyModeClient key={mode.title} {...mode} />
           ))}
         </div>
 

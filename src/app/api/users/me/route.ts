@@ -36,20 +36,18 @@ export async function GET(req: NextRequest) {
       Prefix: user.clerkId,
     };
 
-    console.log({listParams});
+    // const listCommand = new ListObjectsV2Command(listParams);
+    // const listResponse = await s3Client.send(listCommand);
 
-    const listCommand = new ListObjectsV2Command(listParams);
-    const listResponse = await s3Client.send(listCommand);
+    // console.log({listResponse: JSON.stringify(listResponse, null, 2)});
 
-    console.log({listResponse: JSON.stringify(listResponse, null, 2)});
+    // const pdfsUploadedThisMonth = listResponse.Contents?.filter((object) => {
+    //   const uploadDate = new Date(object.LastModified!);
+    //   return uploadDate.getMonth() === currentMonth && uploadDate.getFullYear() === currentYear;
+    // }).length || 0;
 
-    const pdfsUploadedThisMonth = listResponse.Contents?.filter((object) => {
-      const uploadDate = new Date(object.LastModified!);
-      return uploadDate.getMonth() === currentMonth && uploadDate.getFullYear() === currentYear;
-    }).length || 0;
-
-    user.pdfsUploadedThisMonth = pdfsUploadedThisMonth;
-    console.log({user});
+    // user.pdfsUploadedThisMonth = pdfsUploadedThisMonth;
+    user.pdfsUploadedThisMonth = 0;
   }
 
   return NextResponse.json(user, { status: 200 });

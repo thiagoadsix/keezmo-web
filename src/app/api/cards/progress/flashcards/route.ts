@@ -59,6 +59,8 @@ export async function GET(req: NextRequest) {
       return cardProgress;
     });
 
+    console.log({ responseItems })
+
     return NextResponse.json(responseItems, { status: 200 });
   } catch (error: any) {
     console.error("Erro na rota GET de Card Progress:", error);
@@ -75,6 +77,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body: CardProgress = await req.json();
+
+    console.log({ body })
 
     const now = new Date().toISOString();
 
@@ -105,6 +109,7 @@ export async function POST(req: NextRequest) {
       ":totalErrors": body.totalErrors || 0,
       ":updatedAt": now,
       ":zero": 0,
+      ":cardType": "flashcard",
     };
 
     // Construir as expressões de atualização dinamicamente
@@ -136,7 +141,8 @@ export async function POST(req: NextRequest) {
           #intervalAttr = :reviewInterval,
           totalAttempts = :totalAttempts,
           totalErrors = :totalErrors,
-          updatedAt = :updatedAt
+          updatedAt = :updatedAt,
+          cardType = :cardType
         ${updateExpressions.length > 0 ? ", " + updateExpressions.join(", ") : ""}
       `,
       ExpressionAttributeNames: {
@@ -145,6 +151,8 @@ export async function POST(req: NextRequest) {
       ExpressionAttributeValues: expressionAttributeValues,
       ReturnValues: "UPDATED_NEW",
     });
+
+    console.log({ commandInput: JSON.stringify(command, null, 2) })
 
     await dynamoDbClient.send(command);
 

@@ -94,6 +94,8 @@ export async function GET(req: NextRequest) {
     })
   );
 
+  console.log(studySessions);
+
   return NextResponse.json(studySessions, { status: 200 });
 }
 
