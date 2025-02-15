@@ -33,14 +33,17 @@ interface FlashCardProps {
 
 export function FlashCard({ question, progress, showAnswer, onShowAnswer, onRating }: FlashCardProps) {
   const cardProgress = progress
-  const lastReviewDate = new Date(cardProgress?.lastReviewed!)
-  const formattedLastReview = lastReviewDate.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
+  let formattedLastReview = "Nunca revisado"
+  if (cardProgress?.lastReviewed) {
+    const lastReviewDate = new Date(cardProgress.lastReviewed)
+    formattedLastReview = lastReviewDate.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
 
   return (
     <Card className="p-6 min-h-[200px] flex flex-col justify-between">

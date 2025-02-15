@@ -73,7 +73,7 @@ export function StudyCalendar({ cardProgress, decks }: StudyCalendarProps) {
         // Then by review time
         return new Date(a.nextReview).getTime() - new Date(b.nextReview).getTime()
       })
-  }, []) // Only recalculate if deck or cardProgress changes (which are static in this example)
+  }, [cardProgress, decks]) // Only recalculate if deck or cardProgress changes (which are static in this example)
 
   const reviewsCount = reviews.reduce((acc, r) => acc + r.cardsToReview, 0)
   const learningCount = reviews.reduce((acc, r) => acc + r.cardsToLearn, 0)
