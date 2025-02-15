@@ -33,8 +33,6 @@ export function ClientStudySessionsPage({ studySessions }: ClientStudySessionsPa
   const [view, setView] = useState<"grid" | "list">("grid")
   const [sortBy, setSortBy] = useState("date-desc")
 
-  console.log({ studySessions })
-
   const filteredSessions = studySessions
     .filter(
       (session) =>

@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
           ratings: item.ratings,
           deck: deckResponse.Item
             ? {
-                id: String(deckResponse.Item.id),
+                id: deckId,
                 title: String(deckResponse.Item.title),
                 description: String(deckResponse.Item.description),
                 totalCards: cardsResponse.Items?.length || 0,

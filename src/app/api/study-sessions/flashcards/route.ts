@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
         ratings: item.ratings,
         deck: deck
           ? {
-              id: String(deck.id),
+              id: deckId,
               title: String(deck.title),
               description: String(deck.description),
               totalCards: cards?.length || 0,

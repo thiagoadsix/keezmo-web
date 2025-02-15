@@ -59,8 +59,6 @@ export async function GET(req: NextRequest) {
       return cardProgress;
     });
 
-    console.log({ responseItems })
-
     return NextResponse.json(responseItems, { status: 200 });
   } catch (error: any) {
     console.error("Erro na rota GET de Card Progress:", error);

@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
           studyType: item.studyType as "multipleChoice" | "flashcard",
           deck: deckResponse.Item
             ? {
-                id: String(deckResponse.Item.id),
+                id: deckId,
                 title: String(deckResponse.Item.title),
                 description: String(deckResponse.Item.description),
                 totalCards: cardsResponse.Items?.length || 0,

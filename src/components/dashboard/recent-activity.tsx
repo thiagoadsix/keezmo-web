@@ -30,7 +30,7 @@ function SessionCard({ session }: { session: StudySession }) {
   const duration = new Date(session.endTime).getTime() - new Date(session.startTime).getTime()
   const minutes = Math.round(duration / (1000 * 60))
   const accuracy = session.hits ? ((session.hits / session.totalQuestions) * 100).toFixed(0) : null
-  const formattedDate = new Intl.DateTimeFormat("en-US", {
+  const formattedDate = new Intl.DateTimeFormat("pt-BR", {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -56,7 +56,7 @@ function SessionCard({ session }: { session: StudySession }) {
         <div className="mt-4 flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5">
             <ListChecks className="h-4 w-4 text-muted-foreground" />
-            <span>{session.totalQuestions} questions</span>
+            <span>{session.totalQuestions} cartões</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -65,7 +65,7 @@ function SessionCard({ session }: { session: StudySession }) {
           {accuracy && (
             <div className="flex items-center gap-1.5">
               <FlaskConical className="h-4 w-4 text-muted-foreground" />
-              <span>{accuracy}% accuracy</span>
+              <span>{accuracy}% de precisão</span>
             </div>
           )}
         </div>
