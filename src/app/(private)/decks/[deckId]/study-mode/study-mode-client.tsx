@@ -65,22 +65,6 @@ export function StudyModeClient(props: StudyModeCardProps) {
 
         <CardContent className="space-y-6">
           <CardDescription className="text-base leading-relaxed">{description}</CardDescription>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progresso</span>
-                <span className="font-medium">{stats.completionRate}%</span>
-              </div>
-              <Progress
-                value={stats.completionRate}
-                className={cn("h-2 transition-all", "group-hover:[&>div]:bg-primary")}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-primary/70" />
-              <span className="text-sm text-muted-foreground">{stats.totalAttempts.toLocaleString()} tentativas</span>
-            </div>
-          </div>
         </CardContent>
 
         <CardFooter

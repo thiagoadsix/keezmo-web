@@ -140,7 +140,7 @@ export function ReviewMode({ questions, incorrectAnswers, onExit, onReviewComple
 
   const currentQuestion = incorrectQuestions[currentIndex]
   const progress = ((currentIndex + 1) / incorrectQuestions.length) * 100
-  const isCorrect = selectedAnswer === currentQuestion.correctAnswer
+  const isCorrect = selectedAnswer === currentQuestion?.correctAnswer
 
   const handleAnswer = () => {
     if (!selectedAnswer) return
@@ -243,9 +243,9 @@ export function ReviewMode({ questions, incorrectAnswers, onExit, onReviewComple
                       className={`flex p-4 border rounded-lg cursor-pointer hover:bg-muted peer-data-[state=checked]:border-primary
                         ${
                           isAnswered
-                            ? option === currentQuestion.correctAnswer
+                            ? option === currentQuestion?.correctAnswer
                               ? "bg-green-100 border-green-500 dark:bg-green-900/20"
-                              : option === selectedAnswer && selectedAnswer !== currentQuestion.correctAnswer
+                              : option === selectedAnswer && selectedAnswer !== currentQuestion?.correctAnswer
                                 ? "bg-red-100 border-red-500 dark:bg-red-900/20"
                                 : ""
                             : ""
@@ -297,7 +297,7 @@ export function ReviewMode({ questions, incorrectAnswers, onExit, onReviewComple
           <p className="font-medium">
             {isCorrect
               ? "Muito bem! Você entendeu o conceito corretamente."
-              : `Ainda não. A resposta correta é "${currentQuestion.correctAnswer}". Tente memorizar esta informação para a próxima vez.`}
+              : `Ainda não. A resposta correta é "${currentQuestion?.correctAnswer}". Tente memorizar esta informação para a próxima vez.`}
           </p>
         </motion.div>
       )}
