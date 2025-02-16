@@ -238,11 +238,15 @@ export function CreateDeckForm({
 
       onStepUpdate(2, "processing");
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 50000);
+
       const processResponse = await apiClient<{
         deckId: string;
         deckTitle: string;
       }>("api/rag-pdf", {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "x-user-email": user?.emailAddresses[0].emailAddress!,
           "Content-Type": "application/json",
@@ -256,6 +260,8 @@ export function CreateDeckForm({
         }),
       });
 
+      clearTimeout(timeoutId);
+
       if (!processResponse.ok) {
         throw new Error("Failed to process PDF");
       }
@@ -264,7 +270,6 @@ export function CreateDeckForm({
 
       onStepUpdate(3, "processing");
       const data = await processResponse.json();
-      console.log("data", data);
 
       if (!data.deckId) {
         throw new Error("No deck ID returned from server");
@@ -275,15 +280,20 @@ export function CreateDeckForm({
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       onSuccess(data.deckId);
-    } catch (error: any) {
-      console.error("Failed to create deck:", error);
-      onError(
-        "Ocorreu um erro ao criar o deck. Por favor, tente novamente mais tarde, ou entre em contato com o suporte."
-      );
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Request aborted due to timeout');
+        onError("The request took too long and was aborted. Please try again later.");
+      } else {
+        console.error("Failed to create deck:", err);
+        onError(
+          "Ocorreu um erro ao criar o deck. Por favor, tente novamente mais tarde, ou entre em contato com o suporte."
+        );
 
-      onStepUpdate(1, "waiting");
-      onStepUpdate(2, "waiting");
-      onStepUpdate(3, "waiting");
+        onStepUpdate(1, "waiting");
+        onStepUpdate(2, "waiting");
+        onStepUpdate(3, "waiting");
+      }
     } finally {
       setIsLoading(false);
     }
