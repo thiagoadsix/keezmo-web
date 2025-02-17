@@ -74,7 +74,7 @@ export default function StudyModeSelectionPage() {
     {
       href: `/decks/${deckId}/study-mode/multiple-choice`,
       icon: <ListChecks className="h-6 w-6" />,
-      title: "Multipla Escolha",
+      title: "Múltipla Escolha",
       description:
         "Teste seu conhecimento escolhendo a resposta correta entre várias opções. Perfeito para iniciantes e validação de conceitos.",
       stats: {
@@ -129,7 +129,7 @@ export default function StudyModeSelectionPage() {
             <div className="space-y-1">
               <h2 className="text-sm font-medium">Dica</h2>
               <p className="text-sm text-muted-foreground">
-                Comece com Multiple Choice para se familiarizar com o conteúdo, depois troque para Flashcards para
+                Comece com Múltipla Escolha para se familiarizar com o conteúdo, depois troque para Flashcards para
                 aprender mais e reter por mais tempo.
               </p>
             </div>

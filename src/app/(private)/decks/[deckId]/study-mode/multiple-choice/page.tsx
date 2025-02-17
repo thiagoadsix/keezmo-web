@@ -405,6 +405,9 @@ export default function StudyPage() {
               <Button className="flex-1" onClick={() => window.location.reload()}>
                 Iniciar Nova Sessão
               </Button>
+              <Button variant="secondary" className="flex-1" onClick={() => (window.location.href = "/decks")}>
+                Voltar aos Decks
+              </Button>
             </div>
           </CardContent>
         </CardBase>
