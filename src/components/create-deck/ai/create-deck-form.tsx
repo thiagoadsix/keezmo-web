@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { PDFDocument } from "pdf-lib";
+
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { PdfIcon } from "@/src/icons/pdf";
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
 import { apiClient } from "@/src/lib/api-client";
 import { useToast } from "@/src/hooks/use-toast";
-import { PDFDocument } from "pdf-lib";
 import { ProcessStepStatus } from "@/types/process-step";
 import { User } from "@/types/user";
 import config from "@/config";
@@ -62,6 +64,8 @@ export function CreateDeckForm({
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isTimeoutDialogOpen, setIsTimeoutDialogOpen] = useState(false);
+  const router = useRouter();
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -281,9 +285,13 @@ export function CreateDeckForm({
 
       onSuccess(data.deckId);
     } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.log('Request aborted due to timeout');
-        onError("The request took too long and was aborted. Please try again later.");
+      if (err.name === "AbortError") {
+        console.log("Request aborted due to timeout");
+        console.log("Request aborted due to timeout");
+        setIsTimeoutDialogOpen(true);
+        // Auto-redirect after 5 seconds
+        setTimeout(() => router.push("/decks"), 5000);
+        return;
       } else {
         console.error("Failed to create deck:", err);
         onError(
@@ -492,6 +500,24 @@ export function CreateDeckForm({
           </DialogHeader>
           <DialogFooter>
             <Button onClick={() => setIsDialogOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isTimeoutDialogOpen} onOpenChange={setIsTimeoutDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Processamento Demorado</DialogTitle>
+            <DialogDescription>
+              O processamento está demorando mais do que o esperado. Estamos
+              trabalhando no seu deck e você será notificado quando ele estiver
+              pronto.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => router.push("/decks")}>
+              Voltar para decks
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
